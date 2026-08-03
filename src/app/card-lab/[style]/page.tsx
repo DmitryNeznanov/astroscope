@@ -83,7 +83,7 @@ export default async function StyleGallery({
     <main className="min-h-screen bg-[#101014] px-6 py-14 font-sans text-neutral-200">
       <div className="mx-auto max-w-7xl">
         <Link
-          href="/card-lab"
+          href="/"
           className="text-sm text-neutral-500 transition hover:text-neutral-200"
         >
           ← Card Style Lab
