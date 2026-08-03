@@ -1,22 +1,25 @@
 /**
- * NEON — tarot card in neon tube sign style (default: The Hermit, IX).
- * Neon tube sign on a dark bar wall. The figure outline is drawn as glowing
- * neon tubes; layered glow via duplicated strokes + stacked drop-shadows.
+ * NEON — tarot deck as neon tube signs on a dark bar wall.
+ * Each arcana is drawn as its own scene of glowing neon tubes (wide colored
+ * "gas" stroke + thin bright core, triple drop-shadow bloom per tube group).
  *
  * Reusable gallery component:
- *   <NeonHermitCard />                       — the original Hermit card, unchanged
- *   <NeonHermitCard number={10} name="WHEEL OF FORTUNE" variant={3} />
+ *   <NeonHermitCard />                                  — the original Hermit (IX), unchanged
+ *   <NeonHermitCard number={13} name="DEATH" variant={3} />
  *
- * variant (0-7) = palette (variant % 4) + mirrored composition (variant >= 4)
- * + alternate mountain/star decor (variant % 4 >= 2). variant 0 is the
- * original look exactly.
+ * number selects the scene (1 Magician, 3 Empress, 7 Chariot, 9 Hermit,
+ * 10 Wheel, 13 Death, 17 Star, 22 Fool; anything else falls back to Hermit).
+ * variant (0-7) = palette (variant % 4) + mirrored artwork (variant >= 4)
+ * + alternate Hermit decor (variant % 4 >= 2). variant 0 + no props renders
+ * exactly the original Hermit card.
  *
- * Signature effects (all CSS-only, disabled for reduced motion): a 14s
- * POWER-OUTAGE cycle — the whole sign drops dark, then relights tube-by-tube
- * (figure, star, staff, mountain, numeral, script, frame last) with hard
- * startup stutters while a glow wash blooms on the brick wall; plus a smaller
- * whole-sign ballast buzz, a sputtering weak tube (the staff), lantern
- * flicker, a breathing frame tube, and :hover dimmer-up brightening.
+ * Effect mapping (all CSS-only, reduced-motion guarded): every scene reuses
+ * the same tube groups, so the 14s power-outage relight, ballast buzz,
+ * wall wash, frame breathing and hover dimmer work everywhere. The lantern
+ * flicker + star glow map onto each scene's light source (wand-tip spark,
+ * crown star, canopy star, wheel hub, banner rose, big star, sun); the
+ * sputtering weak tube maps onto its staff analog (wand, scepter, reins,
+ * wheel spokes, banner pole, water stream, bindle stick).
  */
 import type { CSSProperties } from "react";
 import { toRoman } from "@/lib/roman";
@@ -103,14 +106,344 @@ const PALETTES: NeonPalette[] = [
   },
 ];
 
-const MOUNTAIN_D =
-  "M 18 236 L 52 198 L 74 222 L 100 190 L 128 224 L 150 204 L 182 236";
-const MOUNTAIN_ALT_D =
-  "M 18 236 L 44 206 L 68 226 L 94 192 L 120 224 L 148 198 L 182 236";
-const STAR_D =
-  "M 140 91 L 141.4 94.6 L 145 95 L 141.4 95.4 L 140 99 L 138.6 95.4 L 135 95 L 138.6 94.6 Z";
-const STAR_ALT_D =
-  "M 140 89.5 L 141.8 93.2 L 146 95 L 141.8 96.8 L 140 100.5 L 138.2 96.8 L 134 95 L 138.2 93.2 Z";
+/** One neon tube: a wide soft "gas" stroke under a thin bright core stroke. */
+function Tube({ d, paint, w = 3.6 }: { d: string; paint: TubePaint; w?: number }) {
+  return (
+    <>
+      <path d={d} stroke={paint.tube} strokeWidth={w} opacity="0.55" />
+      <path d={d} stroke={paint.core} strokeWidth={Math.max(0.9, w * 0.36)} />
+    </>
+  );
+}
+
+const MOUNTAIN_D = "M 18 236 L 52 198 L 74 222 L 100 190 L 128 224 L 150 204 L 182 236";
+const MOUNTAIN_ALT_D = "M 18 236 L 44 206 L 68 226 L 94 192 L 120 224 L 148 198 L 182 236";
+const STAR_D = "M 140 91 L 141.4 94.6 L 145 95 L 141.4 95.4 L 140 99 L 138.6 95.4 L 135 95 L 138.6 94.6 Z";
+const STAR_ALT_D = "M 140 89.5 L 141.8 93.2 L 146 95 L 141.8 96.8 L 140 100.5 L 138.2 96.8 L 134 95 L 138.2 93.2 Z";
+
+interface SceneProps {
+  palette: NeonPalette;
+}
+
+/* IX — The Hermit: the canonical scene, byte-for-byte the original artwork. */
+function HermitArt({ palette, altDecor }: SceneProps & { altDecor: boolean }) {
+  const mountainD = altDecor ? MOUNTAIN_ALT_D : MOUNTAIN_D;
+  const starD = altDecor ? STAR_ALT_D : STAR_D;
+  return (
+    <>
+      {/* mountain — violet tubes */}
+      <g className="cl-neon-violet cl-neon-on-violet" fill="none" strokeLinecap="round" strokeLinejoin="round">
+        <path d={mountainD} stroke={palette.mountain.tube} strokeWidth="4.4" opacity="0.55" />
+        <path d={mountainD} stroke={palette.mountain.core} strokeWidth="1.6" />
+        <circle cx="18" cy="236" r="2.2" fill="#1a1424" stroke={palette.mountain.elec} strokeWidth="0.8" />
+        <circle cx="182" cy="236" r="2.2" fill="#1a1424" stroke={palette.mountain.elec} strokeWidth="0.8" />
+      </g>
+      {/* staff — cyan tube, the sign's weak tube */}
+      <g className="cl-neon-cyan cl-neon-on-cyan" fill="none" strokeLinecap="round">
+        <g className="cl-neon-weak">
+          <path d="M 66 96 Q 62 146 66 206" stroke={palette.staff.tube} strokeWidth="4" opacity="0.55" />
+          <path d="M 66 96 Q 62 146 66 206" stroke={palette.staff.core} strokeWidth="1.5" />
+          <circle cx="66" cy="96" r="2" fill="#0e1a20" stroke={palette.staff.elec} strokeWidth="0.8" />
+          <circle cx="66" cy="206" r="2" fill="#0e1a20" stroke={palette.staff.elec} strokeWidth="0.8" />
+        </g>
+      </g>
+      {/* hooded figure — amber tubes */}
+      <g className="cl-neon-amber cl-neon-on-amber" fill="none" strokeLinecap="round" strokeLinejoin="round">
+        <path
+          d="M 100 88 C 88 90 82 100 83 112 C 78 122 76 136 75 152 C 74 168 73 184 72 198 L 128 198 C 127 184 126 168 125 152 C 124 136 122 122 117 112 C 118 100 112 90 100 88 Z"
+          stroke={palette.figure.tube} strokeWidth="4.6" opacity="0.55"
+        />
+        <path
+          d="M 100 88 C 88 90 82 100 83 112 C 78 122 76 136 75 152 C 74 168 73 184 72 198 L 128 198 C 127 184 126 168 125 152 C 124 136 122 122 117 112 C 118 100 112 90 100 88 Z"
+          stroke={palette.figure.core} strokeWidth="1.7"
+        />
+        <path d="M 92 106 C 92 98 96 94 100 94 C 104 94 108 98 108 106 C 104 110 96 110 92 106 Z" stroke={palette.figure.tube} strokeWidth="3" opacity="0.5" />
+        <path d="M 92 106 C 92 98 96 94 100 94 C 104 94 108 98 108 106 C 104 110 96 110 92 106 Z" stroke={palette.figure.core} strokeWidth="1.1" />
+        <path d="M 80 122 C 74 124 69 128 67 134" stroke={palette.figure.tube} strokeWidth="3.6" opacity="0.55" />
+        <path d="M 80 122 C 74 124 69 128 67 134" stroke={palette.figure.core} strokeWidth="1.3" />
+        <path d="M 120 120 C 128 114 134 106 138 98" stroke={palette.figure.tube} strokeWidth="3.6" opacity="0.55" />
+        <path d="M 120 120 C 128 114 134 106 138 98" stroke={palette.figure.core} strokeWidth="1.3" />
+        <path d="M 100 128 L 100 196" stroke={palette.figure.tube} strokeWidth="2.6" opacity="0.4" />
+        <path d="M 100 128 L 100 196" stroke={palette.figure.core} strokeWidth="0.9" opacity="0.85" />
+        <circle cx="72" cy="198" r="2" fill="#241a10" stroke={palette.figure.elec} strokeWidth="0.8" />
+        <circle cx="128" cy="198" r="2" fill="#241a10" stroke={palette.figure.elec} strokeWidth="0.8" />
+      </g>
+      {/* lantern — amber tubes, flickering, star inside */}
+      <g className="cl-neon-flicker">
+        <g className="cl-neon-amber cl-neon-on-amber" fill="none" strokeLinecap="round" strokeLinejoin="round">
+          <path d="M 134 84 Q 140 78 146 84" stroke={palette.figure.tube} strokeWidth="2.8" opacity="0.55" />
+          <path d="M 134 84 Q 140 78 146 84" stroke={palette.figure.core} strokeWidth="1" />
+          <path d="M 132 86 L 148 86 L 150 104 L 130 104 Z" stroke={palette.figure.tube} strokeWidth="3.6" opacity="0.55" />
+          <path d="M 132 86 L 148 86 L 150 104 L 130 104 Z" stroke={palette.figure.core} strokeWidth="1.3" />
+          <circle cx="130" cy="104" r="1.8" fill="#241a10" stroke={palette.figure.elec} strokeWidth="0.7" />
+          <circle cx="150" cy="104" r="1.8" fill="#241a10" stroke={palette.figure.elec} strokeWidth="0.7" />
+        </g>
+        <path className="cl-neon-star cl-neon-on-star" d={starD} fill={palette.star.core} />
+      </g>
+      {/* ground glow pooling under the sign */}
+      <ellipse cx="100" cy="242" rx="70" ry="6" fill="#12071c" opacity="0.7" />
+    </>
+  );
+}
+
+/* I — The Magician: raised wand arm, lemniscate overhead, table with the four tools. */
+function MagicianArt({ palette }: SceneProps) {
+  return (
+    <>
+      <g className="cl-neon-violet cl-neon-on-violet" fill="none" strokeLinecap="round" strokeLinejoin="round">
+        {/* lemniscate above the head */}
+        <Tube d="M 91 58 C 91 52 100 52 100 58 C 100 64 109 64 109 58 C 109 52 100 52 100 58 C 100 64 91 64 91 58 Z" paint={palette.mountain} w={2.6} />
+        {/* table */}
+        <Tube d="M 56 172 L 144 172 M 64 172 L 64 208 M 136 172 L 136 208" paint={palette.mountain} w={3.4} />
+        {/* four suit symbols on the table: cup, sword, pentacle, wand */}
+        <Tube d="M 68 158 L 78 158 C 78 164 75 166 73 166 L 73 169 M 70 169 L 76 169" paint={palette.mountain} w={2.2} />
+        <Tube d="M 92 152 L 92 168 M 87 161 L 97 161" paint={palette.mountain} w={2.2} />
+        <Tube d="M 107 160 A 5 5 0 1 0 117 160 A 5 5 0 1 0 107 160 Z" paint={palette.mountain} w={2.2} />
+        <Tube d="M 126 166 L 134 154" paint={palette.mountain} w={2.2} />
+      </g>
+      {/* wand — cyan weak tube */}
+      <g className="cl-neon-cyan cl-neon-on-cyan" fill="none" strokeLinecap="round">
+        <g className="cl-neon-weak">
+          <Tube d="M 128 76 L 146 56" paint={palette.staff} w={3} />
+          <circle cx="128" cy="76" r="1.8" fill="#0e1a20" stroke={palette.staff.elec} strokeWidth="0.8" />
+        </g>
+      </g>
+      {/* figure — amber tubes */}
+      <g className="cl-neon-amber cl-neon-on-amber" fill="none" strokeLinecap="round" strokeLinejoin="round">
+        <Tube d="M 91 84 A 9 9 0 1 0 109 84 A 9 9 0 1 0 91 84 Z" paint={palette.figure} w={3.2} />
+        <Tube d="M 88 96 C 84 118 82 144 82 168 L 118 168 C 118 144 116 118 112 96" paint={palette.figure} w={4.4} />
+        <Tube d="M 112 100 C 120 92 125 84 130 74 M 88 100 C 84 116 84 132 87 146" paint={palette.figure} w={3.4} />
+        <circle cx="82" cy="168" r="2" fill="#241a10" stroke={palette.figure.elec} strokeWidth="0.8" />
+        <circle cx="118" cy="168" r="2" fill="#241a10" stroke={palette.figure.elec} strokeWidth="0.8" />
+      </g>
+      {/* wand-tip spark — the scene's light source */}
+      <g className="cl-neon-flicker">
+        <path className="cl-neon-star cl-neon-on-star" d="M 148 48 L 149.4 52.6 L 154 54 L 149.4 55.4 L 148 60 L 146.6 55.4 L 142 54 L 146.6 52.6 Z" fill={palette.star.core} />
+      </g>
+    </>
+  );
+}
+
+/* III — The Empress: star crown, heart shield with Venus glyph, wheat below. */
+function EmpressArt({ palette }: SceneProps) {
+  return (
+    <>
+      <g className="cl-neon-violet cl-neon-on-violet" fill="none" strokeLinecap="round" strokeLinejoin="round">
+        {/* heart shield with Venus symbol */}
+        <Tube d="M 140 154 C 136 146 126 148 128 157 C 129 163 136 168 140 172 C 144 168 151 163 152 157 C 154 148 144 146 140 154 Z" paint={palette.mountain} w={3} />
+        <Tube d="M 135 184 A 5 5 0 1 0 145 184 A 5 5 0 1 0 135 184 Z M 140 189 L 140 197 M 136 193 L 144 193" paint={palette.mountain} w={2.4} />
+        {/* wheat stalks below */}
+        <Tube d="M 46 234 C 48 222 50 212 54 204 M 54 204 L 50 208 M 54 204 L 57 209 M 53 211 L 49 215 M 53 211 L 57 215" paint={palette.mountain} w={2.2} />
+        <Tube d="M 62 234 C 64 224 66 216 70 208 M 70 208 L 66 212 M 70 208 L 73 213" paint={palette.mountain} w={2.2} />
+      </g>
+      {/* scepter — cyan weak tube with an orb top */}
+      <g className="cl-neon-cyan cl-neon-on-cyan" fill="none" strokeLinecap="round">
+        <g className="cl-neon-weak">
+          <Tube d="M 76 120 L 72 192" paint={palette.staff} w={3} />
+          <Tube d="M 73 114 A 4 4 0 1 0 81 114 A 4 4 0 1 0 73 114 Z" paint={palette.staff} w={2.4} />
+          <circle cx="72" cy="192" r="1.8" fill="#0e1a20" stroke={palette.staff.elec} strokeWidth="0.8" />
+        </g>
+      </g>
+      {/* crowned figure — amber tubes */}
+      <g className="cl-neon-amber cl-neon-on-amber" fill="none" strokeLinecap="round" strokeLinejoin="round">
+        <Tube d="M 90 84 L 92 73 L 96.5 79 L 100 71 L 103.5 79 L 108 73 L 110 84 Z" paint={palette.figure} w={3} />
+        <Tube d="M 92 94 A 8 8 0 1 0 108 94 A 8 8 0 1 0 92 94 Z" paint={palette.figure} w={3.2} />
+        <Tube d="M 84 106 C 78 140 74 180 70 212 L 130 212 C 126 180 122 140 116 106 C 110 113 90 113 84 106 Z" paint={palette.figure} w={4.4} />
+        <Tube d="M 116 112 C 124 124 130 138 134 150" paint={palette.figure} w={3.2} />
+        <circle cx="70" cy="212" r="2" fill="#241a10" stroke={palette.figure.elec} strokeWidth="0.8" />
+        <circle cx="130" cy="212" r="2" fill="#241a10" stroke={palette.figure.elec} strokeWidth="0.8" />
+      </g>
+      {/* crown star — the scene's light source */}
+      <g className="cl-neon-flicker">
+        <path className="cl-neon-star cl-neon-on-star" d="M 100 57 L 101.3 61.7 L 106 63 L 101.3 64.3 L 100 69 L 98.7 64.3 L 94 63 L 98.7 61.7 Z" fill={palette.star.core} />
+      </g>
+    </>
+  );
+}
+
+/* VII — The Chariot: starred canopy, boxy chariot, two sphinxes, city wall. */
+function ChariotArt({ palette }: SceneProps) {
+  return (
+    <>
+      <g className="cl-neon-violet cl-neon-on-violet" fill="none" strokeLinecap="round" strokeLinejoin="round">
+        {/* city wall behind */}
+        <Tube d="M 20 152 L 20 140 L 30 140 L 30 146 L 40 146 L 40 140 L 50 140 L 50 152 M 150 152 L 150 140 L 160 140 L 160 146 L 170 146 L 170 140 L 180 140 L 180 152" paint={palette.mountain} w={2.6} />
+        {/* canopy */}
+        <Tube d="M 60 104 L 140 104 M 68 104 L 68 150 M 132 104 L 132 150" paint={palette.mountain} w={3} />
+        {/* two sphinxes in front */}
+        <Tube d="M 52 238 L 52 226 C 52 219 58 215 63 219 L 70 224 L 90 224 L 90 238 Z" paint={palette.mountain} w={3} />
+        <Tube d="M 148 238 L 148 226 C 148 219 142 215 137 219 L 130 224 L 110 224 L 110 238 Z" paint={palette.mountain} w={3} />
+      </g>
+      {/* reins — cyan weak tube */}
+      <g className="cl-neon-cyan cl-neon-on-cyan" fill="none" strokeLinecap="round">
+        <g className="cl-neon-weak">
+          <Tube d="M 82 158 C 78 178 74 198 72 218 M 118 158 C 122 178 126 198 128 218" paint={palette.staff} w={2.6} />
+        </g>
+      </g>
+      {/* charioteer + chariot — amber tubes */}
+      <g className="cl-neon-amber cl-neon-on-amber" fill="none" strokeLinecap="round" strokeLinejoin="round">
+        <Tube d="M 92 124 A 8 8 0 1 0 108 124 A 8 8 0 1 0 92 124 Z" paint={palette.figure} w={3.2} />
+        <Tube d="M 89 134 L 89 162 L 111 162 L 111 134 M 90 140 L 80 156 M 110 140 L 120 156" paint={palette.figure} w={3.4} />
+        <Tube d="M 62 162 L 138 162 L 138 212 L 62 212 Z M 62 176 L 138 176" paint={palette.figure} w={4.2} />
+        <circle cx="62" cy="212" r="2" fill="#241a10" stroke={palette.figure.elec} strokeWidth="0.8" />
+        <circle cx="138" cy="212" r="2" fill="#241a10" stroke={palette.figure.elec} strokeWidth="0.8" />
+      </g>
+      {/* canopy star — the scene's light source */}
+      <g className="cl-neon-flicker">
+        <path className="cl-neon-star cl-neon-on-star" d="M 100 86 L 101.3 90.7 L 106 92 L 101.3 93.3 L 100 98 L 98.7 93.3 L 94 92 L 98.7 90.7 Z" fill={palette.star.core} />
+      </g>
+    </>
+  );
+}
+
+/* X — Wheel of Fortune: spoked wheel, sphinx above, snake and creature at sides. */
+function WheelArt({ palette }: SceneProps) {
+  return (
+    <>
+      <g className="cl-neon-violet cl-neon-on-violet" fill="none" strokeLinecap="round" strokeLinejoin="round">
+        {/* rim glyphs: T, circle, X, wave */}
+        <Tube d="M 95 114 L 105 114 M 100 114 L 100 122 M 143 156 A 3 3 0 1 0 149 156 A 3 3 0 1 0 143 156 Z M 95 194 L 105 202 M 105 194 L 95 202 M 50 156 Q 54 151 58 156 Q 62 161 66 156" paint={palette.mountain} w={2.2} />
+        {/* sphinx on top */}
+        <Tube d="M 90 96 L 90 84 C 90 78 96 76 100 80 C 104 76 110 78 110 84 L 110 96 Z M 100 80 L 100 74" paint={palette.mountain} w={2.6} />
+        {/* snake descending on the left, creature rising on the right */}
+        <Tube d="M 38 108 C 28 126 44 142 34 160 C 26 176 40 190 34 204" paint={palette.mountain} w={2.8} />
+        <Tube d="M 162 204 C 168 186 158 168 166 150 M 166 150 L 160 138 M 166 150 L 172 140" paint={palette.mountain} w={2.8} />
+      </g>
+      {/* diagonal spokes — cyan weak tube */}
+      <g className="cl-neon-cyan cl-neon-on-cyan" fill="none" strokeLinecap="round">
+        <g className="cl-neon-weak">
+          <Tube d="M 65 121 L 135 191 M 135 121 L 65 191" paint={palette.staff} w={2.6} />
+        </g>
+      </g>
+      {/* the wheel — amber tubes */}
+      <g className="cl-neon-amber cl-neon-on-amber" fill="none" strokeLinecap="round" strokeLinejoin="round">
+        <Tube d="M 50 156 A 50 50 0 1 0 150 156 A 50 50 0 1 0 50 156 Z" paint={palette.figure} w={4.4} />
+        <Tube d="M 74 156 A 26 26 0 1 0 126 156 A 26 26 0 1 0 74 156 Z" paint={palette.figure} w={3} />
+        <Tube d="M 100 106 L 100 206 M 50 156 L 150 156" paint={palette.figure} w={2.8} />
+      </g>
+      {/* hub star — the scene's light source */}
+      <g className="cl-neon-flicker">
+        <path className="cl-neon-star cl-neon-on-star" d="M 100 149 L 101.4 153.6 L 106 155 L 101.4 156.4 L 100 161 L 98.6 156.4 L 94 155 L 98.6 153.6 Z" fill={palette.star.core} />
+      </g>
+    </>
+  );
+}
+
+/* XIII — Death: skeletal rider, rose banner, sun between two towers. */
+function DeathArt({ palette }: SceneProps) {
+  return (
+    <>
+      <g className="cl-neon-violet cl-neon-on-violet" fill="none" strokeLinecap="round" strokeLinejoin="round">
+        {/* dark banner outline */}
+        <Tube d="M 128 106 L 164 112 L 164 138 L 128 132 Z" paint={palette.mountain} w={2.8} />
+        {/* horizon, two towers, sun rising between them */}
+        <Tube d="M 18 228 L 182 228" paint={palette.mountain} w={2.4} />
+        <Tube d="M 146 228 L 146 206 L 156 206 L 156 228 M 174 228 L 174 206 L 184 206 L 184 228 M 158 228 A 7 7 0 0 1 172 228" paint={palette.mountain} w={2.6} />
+      </g>
+      {/* banner pole — cyan weak tube */}
+      <g className="cl-neon-cyan cl-neon-on-cyan" fill="none" strokeLinecap="round">
+        <g className="cl-neon-weak">
+          <Tube d="M 128 104 L 128 174" paint={palette.staff} w={3} />
+          <circle cx="128" cy="104" r="1.8" fill="#0e1a20" stroke={palette.staff.elec} strokeWidth="0.8" />
+        </g>
+      </g>
+      {/* skeletal rider on horseback — amber tubes */}
+      <g className="cl-neon-amber cl-neon-on-amber" fill="none" strokeLinecap="round" strokeLinejoin="round">
+        <Tube d="M 84 178 C 84 166 96 160 112 160 C 128 160 138 166 138 178 L 138 192 L 84 192 Z" paint={palette.figure} w={4.2} />
+        <Tube d="M 90 164 C 82 156 76 150 72 140 M 72 140 L 62 146 L 70 150 M 138 170 C 146 172 148 180 146 188" paint={palette.figure} w={3.2} />
+        <Tube d="M 90 192 L 88 224 M 102 192 L 100 224 M 124 192 L 126 224 M 136 192 L 138 224" paint={palette.figure} w={3} />
+        <Tube d="M 110 160 L 108 130 M 102 140 Q 108 144 114 140 M 102 148 Q 108 152 114 148 M 112 134 C 118 138 122 142 126 146" paint={palette.figure} w={2.8} />
+        <Tube d="M 101 121 A 7 7 0 1 0 115 121 A 7 7 0 1 0 101 121 Z" paint={palette.figure} w={3.2} />
+        <circle cx="88" cy="224" r="2" fill="#241a10" stroke={palette.figure.elec} strokeWidth="0.8" />
+        <circle cx="138" cy="224" r="2" fill="#241a10" stroke={palette.figure.elec} strokeWidth="0.8" />
+      </g>
+      {/* white rose on the banner — the scene's light source */}
+      <g className="cl-neon-flicker">
+        <path className="cl-neon-star cl-neon-on-star" d="M 142 122 A 4 4 0 1 0 150 122 A 4 4 0 1 0 142 122 Z" fill={palette.star.core} />
+        <path d="M 146 119.5 C 148.5 119.5 148.5 124 146 124 C 144 124 143.5 122 145 121.5" fill="none" stroke="#1a1424" strokeWidth="0.8" />
+      </g>
+    </>
+  );
+}
+
+/* XVII — The Star: kneeling figure with two jugs, big 8-pointed star + seven small ones. */
+function StarArt({ palette }: SceneProps) {
+  const small = (x: number, y: number) => `M ${x} ${y - 3} L ${x + 3} ${y} L ${x} ${y + 3} L ${x - 3} ${y} Z`;
+  return (
+    <>
+      <g className="cl-neon-violet cl-neon-on-violet" fill="none" strokeLinecap="round" strokeLinejoin="round">
+        {/* seven small stars */}
+        <Tube d={[small(48, 62), small(70, 46), small(130, 46), small(152, 62), small(38, 92), small(162, 92), small(100, 104)].join(" ")} paint={palette.mountain} w={2} />
+        {/* ground and pool */}
+        <Tube d="M 24 208 L 92 208" paint={palette.mountain} w={2.4} />
+        <Tube d="M 104 216 Q 112 212 120 216 T 136 216 T 152 216 M 108 224 Q 116 220 124 224 T 140 224 T 156 224 M 116 232 Q 124 228 132 232 T 148 232" paint={palette.mountain} w={2.4} />
+      </g>
+      {/* pouring water — cyan weak tube: one stream to land, one to the pool */}
+      <g className="cl-neon-cyan cl-neon-on-cyan" fill="none" strokeLinecap="round">
+        <g className="cl-neon-weak">
+          <Tube d="M 59 180 C 57 188 57 196 59 204 M 108 178 C 112 188 118 198 124 206" paint={palette.staff} w={2.6} />
+        </g>
+      </g>
+      {/* kneeling figure with two jugs — amber tubes */}
+      <g className="cl-neon-amber cl-neon-on-amber" fill="none" strokeLinecap="round" strokeLinejoin="round">
+        <Tube d="M 75 138 A 7 7 0 1 0 89 138 A 7 7 0 1 0 75 138 Z" paint={palette.figure} w={3.2} />
+        <Tube d="M 76 148 C 70 162 68 176 70 192 M 70 192 L 58 204 L 80 204 M 70 192 C 78 190 86 186 90 178" paint={palette.figure} w={4} />
+        <Tube d="M 78 154 C 72 160 66 164 60 168 M 82 154 C 90 158 98 162 106 166" paint={palette.figure} w={3} />
+        <Tube d="M 54 166 L 64 166 L 62 178 L 56 178 Z M 102 164 L 112 164 L 110 176 L 104 176 Z" paint={palette.figure} w={2.8} />
+        <circle cx="58" cy="204" r="2" fill="#241a10" stroke={palette.figure.elec} strokeWidth="0.8" />
+      </g>
+      {/* the big 8-pointed star — the scene's light source */}
+      <g className="cl-neon-flicker">
+        <path className="cl-neon-star cl-neon-on-star" d="M 100 58 L 104.2 67.8 L 114 72 L 104.2 76.2 L 100 86 L 95.8 76.2 L 86 72 L 95.8 67.8 Z" fill={palette.star.core} />
+      </g>
+    </>
+  );
+}
+
+/* XXII — The Fool: profile figure at a cliff edge, bindle stick, dog, sun. */
+function FoolArt({ palette }: SceneProps) {
+  return (
+    <>
+      <g className="cl-neon-violet cl-neon-on-violet" fill="none" strokeLinecap="round" strokeLinejoin="round">
+        {/* cliff edge with crumbling face */}
+        <Tube d="M 20 216 L 126 216 M 126 216 L 122 228 L 126 240" paint={palette.mountain} w={2.8} />
+        {/* small dog at his heels */}
+        <Tube d="M 50 206 L 64 206 M 52 206 L 52 212 M 61 206 L 61 212 M 50 206 C 46 202 45 198 48 195 M 64 206 C 67 203 68 200 66 198" paint={palette.mountain} w={2.4} />
+      </g>
+      {/* bindle stick + bundle — cyan weak tube */}
+      <g className="cl-neon-cyan cl-neon-on-cyan" fill="none" strokeLinecap="round" strokeLinejoin="round">
+        <g className="cl-neon-weak">
+          <Tube d="M 92 140 L 64 110" paint={palette.staff} w={3} />
+          <Tube d="M 54 98 C 50 106 54 112 61 112 C 68 112 71 105 67 99 C 64 94 57 94 54 98 Z" paint={palette.staff} w={2.6} />
+        </g>
+      </g>
+      {/* figure in profile, mid-stride, head tilted up — amber tubes */}
+      <g className="cl-neon-amber cl-neon-on-amber" fill="none" strokeLinecap="round" strokeLinejoin="round">
+        <Tube d="M 91 124 A 7 7 0 1 0 105 124 A 7 7 0 1 0 91 124 Z M 104 120 L 107 122" paint={palette.figure} w={3.2} />
+        <Tube d="M 94 134 C 90 152 90 168 94 184 M 94 184 L 110 198 L 116 212 M 94 184 L 84 200 L 76 212" paint={palette.figure} w={4} />
+        <Tube d="M 94 142 C 88 138 84 134 80 128" paint={palette.figure} w={3} />
+        <circle cx="116" cy="212" r="2" fill="#241a10" stroke={palette.figure.elec} strokeWidth="0.8" />
+      </g>
+      {/* sun behind — the scene's light source */}
+      <g className="cl-neon-flicker">
+        <path className="cl-neon-star cl-neon-on-star" d="M 140 72 A 12 12 0 1 0 164 72 A 12 12 0 1 0 140 72 Z" fill={palette.star.core} />
+      </g>
+    </>
+  );
+}
+
+function SceneArt({ number, palette, altDecor }: SceneProps & { number: number; altDecor: boolean }) {
+  switch (number) {
+    case 1: return <MagicianArt palette={palette} />;
+    case 3: return <EmpressArt palette={palette} />;
+    case 7: return <ChariotArt palette={palette} />;
+    case 10: return <WheelArt palette={palette} />;
+    case 13: return <DeathArt palette={palette} />;
+    case 17: return <StarArt palette={palette} />;
+    case 22: return <FoolArt palette={palette} />;
+    default: return <HermitArt palette={palette} altDecor={altDecor} />;
+  }
+}
 
 export default function NeonHermitCard({
   number = 9,
@@ -235,7 +568,7 @@ export default function NeonHermitCard({
             drop-shadow(0 0 18px var(--cl-neon-s3, rgba(255, 170, 50, 0.6)));
         }
 
-        /* ---- flicker on the lantern tube ---- */
+        /* ---- flicker on the scene's light source ---- */
         @keyframes cl-neon-flicker {
           0%, 100% { opacity: 1; }
           3% { opacity: 0.55; }
@@ -260,7 +593,7 @@ export default function NeonHermitCard({
         }
         .cl-neon-buzz { animation: cl-neon-buzz 8.3s linear infinite; }
 
-        /* ---- weak tube: the staff sputters on its own rhythm ---- */
+        /* ---- weak tube: the staff-analog sputters on its own rhythm ---- */
         @keyframes cl-neon-weak {
           0%, 100% { opacity: 1; }
           11% { opacity: 0.5; }
@@ -412,83 +745,7 @@ export default function NeonHermitCard({
         {/* artwork group — mirrored as a whole for odd gallery variants;
             texts stay outside so they never flip */}
         <g transform={mirrored ? "translate(200 0) scale(-1 1)" : undefined}>
-        {/* mountain — violet tubes */}
-        <g className="cl-neon-violet cl-neon-on-violet" fill="none" strokeLinecap="round" strokeLinejoin="round">
-          <path d={altDecor ? MOUNTAIN_ALT_D : MOUNTAIN_D} stroke={palette.mountain.tube} strokeWidth="4.4" opacity="0.55" />
-          <path d={altDecor ? MOUNTAIN_ALT_D : MOUNTAIN_D} stroke={palette.mountain.core} strokeWidth="1.6" />
-          {/* electrode gaps at tube ends */}
-          <circle cx="18" cy="236" r="2.2" fill="#1a1424" stroke={palette.mountain.elec} strokeWidth="0.8" />
-          <circle cx="182" cy="236" r="2.2" fill="#1a1424" stroke={palette.mountain.elec} strokeWidth="0.8" />
-        </g>
-
-        {/* staff — cyan tube in the left hand, runs as the sign's weak tube;
-            weak-tube sputter sits on an inner group so it multiplies with the
-            outage cycle on the outer group instead of overriding it */}
-        <g className="cl-neon-cyan cl-neon-on-cyan" fill="none" strokeLinecap="round">
-          <g className="cl-neon-weak">
-            <path d="M 66 96 Q 62 146 66 206" stroke={palette.staff.tube} strokeWidth="4" opacity="0.55" />
-            <path d="M 66 96 Q 62 146 66 206" stroke={palette.staff.core} strokeWidth="1.5" />
-            <circle cx="66" cy="96" r="2" fill="#0e1a20" stroke={palette.staff.elec} strokeWidth="0.8" />
-            <circle cx="66" cy="206" r="2" fill="#0e1a20" stroke={palette.staff.elec} strokeWidth="0.8" />
-          </g>
-        </g>
-
-        {/* hooded figure — amber tubes */}
-        <g className="cl-neon-amber cl-neon-on-amber" fill="none" strokeLinecap="round" strokeLinejoin="round">
-          {/* hood + robe outline */}
-          <path
-            d="M 100 88 C 88 90 82 100 83 112 C 78 122 76 136 75 152 C 74 168 73 184 72 198 L 128 198 C 127 184 126 168 125 152 C 124 136 122 122 117 112 C 118 100 112 90 100 88 Z"
-            stroke={palette.figure.tube} strokeWidth="4.6" opacity="0.55"
-          />
-          <path
-            d="M 100 88 C 88 90 82 100 83 112 C 78 122 76 136 75 152 C 74 168 73 184 72 198 L 128 198 C 127 184 126 168 125 152 C 124 136 122 122 117 112 C 118 100 112 90 100 88 Z"
-            stroke={palette.figure.core} strokeWidth="1.7"
-          />
-          {/* hood opening */}
-          <path
-            d="M 92 106 C 92 98 96 94 100 94 C 104 94 108 98 108 106 C 104 110 96 110 92 106 Z"
-            stroke={palette.figure.tube} strokeWidth="3" opacity="0.5"
-          />
-          <path
-            d="M 92 106 C 92 98 96 94 100 94 C 104 94 108 98 108 106 C 104 110 96 110 92 106 Z"
-            stroke={palette.figure.core} strokeWidth="1.1"
-          />
-          {/* left arm reaching to the staff */}
-          <path d="M 80 122 C 74 124 69 128 67 134" stroke={palette.figure.tube} strokeWidth="3.6" opacity="0.55" />
-          <path d="M 80 122 C 74 124 69 128 67 134" stroke={palette.figure.core} strokeWidth="1.3" />
-          {/* right arm raised toward the lantern */}
-          <path d="M 120 120 C 128 114 134 106 138 98" stroke={palette.figure.tube} strokeWidth="3.6" opacity="0.55" />
-          <path d="M 120 120 C 128 114 134 106 138 98" stroke={palette.figure.core} strokeWidth="1.3" />
-          {/* robe fold */}
-          <path d="M 100 128 L 100 196" stroke={palette.figure.tube} strokeWidth="2.6" opacity="0.4" />
-          <path d="M 100 128 L 100 196" stroke={palette.figure.core} strokeWidth="0.9" opacity="0.85" />
-          {/* electrode gaps at robe hem */}
-          <circle cx="72" cy="198" r="2" fill="#241a10" stroke={palette.figure.elec} strokeWidth="0.8" />
-          <circle cx="128" cy="198" r="2" fill="#241a10" stroke={palette.figure.elec} strokeWidth="0.8" />
-        </g>
-
-        {/* lantern — amber tubes, flickering, star inside */}
-        <g className="cl-neon-flicker">
-          <g className="cl-neon-amber cl-neon-on-amber" fill="none" strokeLinecap="round" strokeLinejoin="round">
-            {/* handle */}
-            <path d="M 134 84 Q 140 78 146 84" stroke={palette.figure.tube} strokeWidth="2.8" opacity="0.55" />
-            <path d="M 134 84 Q 140 78 146 84" stroke={palette.figure.core} strokeWidth="1" />
-            {/* lantern body */}
-            <path d="M 132 86 L 148 86 L 150 104 L 130 104 Z" stroke={palette.figure.tube} strokeWidth="3.6" opacity="0.55" />
-            <path d="M 132 86 L 148 86 L 150 104 L 130 104 Z" stroke={palette.figure.core} strokeWidth="1.3" />
-            <circle cx="130" cy="104" r="1.8" fill="#241a10" stroke={palette.figure.elec} strokeWidth="0.7" />
-            <circle cx="150" cy="104" r="1.8" fill="#241a10" stroke={palette.figure.elec} strokeWidth="0.7" />
-          </g>
-          {/* small star light inside the lantern */}
-          <path
-            className="cl-neon-star cl-neon-on-star"
-            d={altDecor ? STAR_ALT_D : STAR_D}
-            fill={palette.star.core}
-          />
-        </g>
-
-        {/* ground glow pooling under the sign */}
-        <ellipse cx="100" cy="242" rx="70" ry="6" fill="#12071c" opacity="0.7" />
+          <SceneArt number={number} palette={palette} altDecor={altDecor} />
         </g>
 
         {/* card name — neon script at bottom; long names shrink and pin width */}

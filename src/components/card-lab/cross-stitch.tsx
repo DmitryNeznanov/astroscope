@@ -9,7 +9,13 @@
  * at most two stacked lines in the sampler convention, scaled in coordinate
  * space (never via transform) so any A-Z name stays fully inside the card.
  * The default render is THE HERMIT (IX): red robe, gold lantern, green hill,
- * navy sky.
+ * navy sky. The `number` prop selects a fully different stitched scene per
+ * arcana — Magician (wand, lemniscate, table of tools), Empress (star crown,
+ * heart shield, wheat), Chariot (starred canopy, sphinxes, city wall), Wheel
+ * of Fortune (geometrically plotted spoked wheel, sphinx, snake), Death
+ * (skeletal rider, rose banner, sun between towers), Star (kneeling figure,
+ * two jugs, 8-pointed star + seven small stars), Fool (cliff, dog, bundle,
+ * sun) — Hermit for any other number.
  *
  * Props: { number = 9, name = "THE HERMIT", variant = 0 }.
  * variant 0-7: four floss palettes (classic / frost / autumn / berry) x
@@ -181,6 +187,186 @@ function hermitColors(p: Palette): Record<string, string> {
     R: p.red,
     D: p.darkRed,
   };
+}
+
+/* ------------------------------------------------------------------ */
+/* Per-arcana scenes, drawn as stitch bitmaps on the same 28x42 grid.  */
+/* Legend: R red, D dark red, G gold, g glow (twinkles), v green,      */
+/* w dark green, f face, b ecru, W white, B brown, n sky, E eye (sky), */
+/* "*" white star stitch (twinkles individually), "." transparent.     */
+/* ------------------------------------------------------------------ */
+
+function legendColor(ch: string, p: Palette): string | null {
+  switch (ch) {
+    case "R": return p.red;
+    case "D": return p.darkRed;
+    case "G": return p.gold;
+    case "g": return p.glow;
+    case "v": return p.green;
+    case "w": return p.darkGreen;
+    case "f": return p.face;
+    case "b": return p.beard;
+    case "W":
+    case "*": return p.white;
+    case "B": return p.brown;
+    case "n":
+    case "E": return p.sky;
+    default: return null;
+  }
+}
+
+interface Piece {
+  ox: number;
+  oy: number;
+  rows: readonly string[];
+}
+
+/** I — The Magician: wand raised (glowing tip), lemniscate overhead,
+ *  table with cup / sword / pentacle / wand. */
+const MAGICIAN_PIECES: readonly Piece[] = [
+  { ox: 4, oy: 3, rows: [".g", "gGg", ".B", ".B", ".B", ".B", ".B", ".B", ".f"] },
+  { ox: 16, oy: 4, rows: [".GG.GG.", "G..G..G", ".GG.GG."] },
+  { ox: 6, oy: 12, rows: ["RRR"] },
+  { ox: 6, oy: 13, rows: ["..R", ".R", "R", "f"] },
+  { ox: 9, oy: 9, rows: [
+    "..DDDDD", "..fEfEf", "..fffff", "RRRRRRRR", ".RRRRRR", ".RRRRRR",
+    ".RRRRRR", ".RRRRRR", "RRRRRRRR", "RRRRRRRR", ".RRR.RR", ".RRR.RR",
+  ] },
+  { ox: 6, oy: 16, rows: [
+    "......W", "......W", "G.G...W..GGG...B", "GGG...W..G.G..B.", ".G...GGG..GGGB",
+  ] },
+  { ox: 4, oy: 21, rows: [
+    "BBBBBBBBBBBBBBBBBBBB", "B..................B", "B..................B",
+  ] },
+];
+
+/** III — The Empress: star crown (glowing), heart shield with Venus glyph,
+ *  wheat below. */
+const EMPRESS_PIECES: readonly Piece[] = [
+  { ox: 11, oy: 9, rows: ["G.GgG.G", "GGGGGGG"] },
+  { ox: 8, oy: 14, rows: [
+    ".RRRRRRR", "RRRRRRRRR", "RRRRRRRRR", "RRRRRRRRRR",
+    "RRRRRRRRRRR", "RRRRRRRRRRR", "RRRRRRRRRRRR", "RRRRRRRRRRRR",
+  ] },
+  { ox: 10, oy: 11, rows: ["b.....b", "b.....b", "b.....b", "b.....b"] },
+  { ox: 11, oy: 11, rows: ["fffff", "fEfEf", "fffff"] },
+  { ox: 4, oy: 14, rows: ["DD.DD", "DDWDD", "DDWDD", ".WWW.", "..D.."] },
+  { ox: 2, oy: 22, rows: [
+    ".G..G..G..G..G..G..G..G", "GGG.GGG.GGG.GGG.GGG.GGG.GGG.GGG.GGG",
+    "GGG.GGG.GGG.GGG.GGG.GGG.GGG.GGG.GGG", ".G..G..G..G..G..G..G..G",
+    ".G..G..G..G..G..G..G..G", ".G..G..G..G..G..G..G..G",
+  ] },
+];
+
+/** VII — The Chariot: starred canopy (glowing center star), boxy chariot,
+ *  two sphinxes, city wall behind. */
+const CHARIOT_PIECES: readonly Piece[] = [
+  { ox: 2, oy: 14, rows: ["w.w.w.w.w.w.w.w.w.w.w.w.", "wwwwwwwwwwwwwwwwwwwwwwww"] },
+  { ox: 9, oy: 9, rows: ["DDDDDDDDDDD", "D*D*DgD*D*D", "DDDDDDDDDDD"] },
+  { ox: 9, oy: 12, rows: ["B.........B", "B.........B"] },
+  { ox: 12, oy: 12, rows: ["fffff", "fEfEf"] },
+  { ox: 11, oy: 15, rows: ["RRRRRRR"] },
+  { ox: 10, oy: 16, rows: ["GGGGGGGGG", "BBBBBBBBB", "BBBBBBBBB", "BBBBBBBBB", "GGGGGGGGG"] },
+  { ox: 4, oy: 21, rows: ["....D.", "...DD.", "..DDD.", ".DDDD.", "DDDDDD", "DDDDDD"] },
+  { ox: 18, oy: 21, rows: [".D....", ".DD...", ".DDD..", ".DDDD.", "DDDDDD", "DDDDDD"] },
+];
+
+/** XIII — Death: skeletal rider on a pale horse, dark banner with a white
+ *  rose (glowing heart), sun rising between two towers. */
+const DEATH_PIECES: readonly Piece[] = [
+  { ox: 3, oy: 11, rows: ["B.B", "BBB", "BBB", "BBB", "BBB", "BBB"] },
+  { ox: 21, oy: 11, rows: ["B.B", "BBB", "BBB", "BBB", "BBB", "BBB"] },
+  { ox: 11, oy: 13, rows: [".GGG.", "GGgGG", ".GGG."] },
+  { ox: 7, oy: 15, rows: [
+    ".........W", ".........WWW", "..........WW", "..........W",
+    "WWWWWWWWWW", "WWWWWWWWWW", "WWWWWWWWWW",
+    ".W..W..W..W", ".W..W..W..W", ".W..W..W..W",
+  ] },
+  { ox: 10, oy: 10, rows: [
+    "WWW", "W.W", ".W.", "WWW.WWWWW", ".W.", "WWW", ".W.", ".W.",
+  ] },
+  { ox: 19, oy: 9, rows: ["B.WDD", "BWgWD", "B.WDD", "BDDDD", "B", "B", "B", "B", "B"] },
+];
+
+/** XVII — The Star: kneeling figure pouring two jugs (one to land, one to
+ *  the pool), big 8-pointed star (glowing core) + seven small stars. */
+const STAR_PIECES: readonly Piece[] = [
+  { ox: 11, oy: 9, rows: [
+    "...G", ".G.G.G", "...G", "GGGgGGG", "...G", ".G.G.G", "...G",
+  ] },
+  { ox: 4, oy: 8, rows: [
+    "..........*", ".*.................*", "", "....*...........*",
+    "", "", "", "..*...............*",
+  ] },
+  { ox: 9, oy: 17, rows: [
+    "...fff", "...fEf", "..RRRRR", ".RRRRRRR", ".RRRRR", "RRRRR", "RRR.RRR", "RR...R",
+  ] },
+  { ox: 5, oy: 18, rows: [
+    "..G..........G", "..G..........G", ".W..........W", "W............W", "W.............W",
+  ] },
+  { ox: 18, oy: 25, rows: ["nnnnnnn", "nnWnnnn", "nnnnnnn"] },
+];
+
+/** XXII — The Fool: figure in profile stepping toward the cliff edge, head
+ *  up, dog at heels, bundle on a stick, sun (glowing) behind. */
+const FOOL_PIECES: readonly Piece[] = [
+  { ox: 3, oy: 9, rows: ["GGG", "GgG", "GGG"] },
+  { ox: 2, oy: 10, rows: ["g...g", ".....", "..g.."] },
+  { ox: 19, oy: 20, rows: Array(8).fill("wnnnnnn") as string[] },
+  { ox: 9, oy: 10, rows: [
+    "......ff", "......fEf", "......fff", "...RRRR", "..RRRRR", "..RRRRR",
+    "..RRRR", "..RRRR", "..RRR", "..RR.R", "..R..R", ".RR...RR",
+  ] },
+  { ox: 6, oy: 9, rows: [".GB", ".G.B", "...B", "....B"] },
+  { ox: 7, oy: 21, rows: ["W..W", ".WWW", ".W.W"] },
+];
+
+/** X — Wheel of Fortune: small sphinx on top, snake left, creature right.
+ *  The wheel itself is plotted geometrically (drawWheelStitches). */
+const WHEEL_PIECES: readonly Piece[] = [
+  { ox: 16, oy: 7, rows: ["..D.", ".DDD", "DDDD"] },
+  { ox: 3, oy: 9, rows: [".v", "v.", ".v", "v.", ".v", "v.", ".v", "v.", ".v", "v.", ".v"] },
+  { ox: 21, oy: 9, rows: [".D.", "DDD", ".D.", "D.D"] },
+];
+
+const SCENE_PIECES: Record<number, readonly Piece[]> = {
+  1: MAGICIAN_PIECES,
+  3: EMPRESS_PIECES,
+  7: CHARIOT_PIECES,
+  10: WHEEL_PIECES,
+  13: DEATH_PIECES,
+  17: STAR_PIECES,
+  22: FOOL_PIECES,
+};
+
+/** X — spoked wheel plotted on the stitch grid: brown rim and 8 spokes,
+ *  white rim marks at the cardinal points, gold hub with a glowing center. */
+function drawWheelStitches(put: (x: number, y: number, ch: string) => void): void {
+  const cx = 13;
+  const cy = 15;
+  for (let y = cy - 7; y <= cy + 7; y++) {
+    for (let x = cx - 7; x <= cx + 7; x++) {
+      const dx = x - cx;
+      const dy = y - cy;
+      const d2 = dx * dx + dy * dy;
+      if (d2 >= 25 && d2 <= 42) put(x, y, "B"); // rim
+      else if (
+        d2 < 25 && d2 > 2 &&
+        (dx === 0 || dy === 0 || dx === dy || dx === -dy)
+      ) {
+        put(x, y, "B"); // spokes
+      }
+    }
+  }
+  put(cx, cy - 6, "W"); // rim marks (suit symbols, stylized)
+  put(cx, cy + 6, "W");
+  put(cx - 6, cy, "W");
+  put(cx + 6, cy, "W");
+  put(cx, cy - 1, "G"); // hub
+  put(cx, cy + 1, "G");
+  put(cx - 1, cy, "G");
+  put(cx + 1, cy, "G");
+  put(cx, cy, "g"); // glowing hub center
 }
 
 /** White star stitches scattered across the night sky. */
@@ -374,37 +560,64 @@ function buildStitches(number: number, name: string, variant: number): StitchBui
     starKeys.add(key);
   }
 
-  // 5) Staff (one hand), gold knob on top.
-  set(mx(8), 9, palette.gold);
-  for (let y = 10; y <= 23; y++) set(mx(8), y, palette.brown);
-  set(mx(9), 15, palette.red); // arm reaching the staff
-  set(mx(10), 15, palette.red);
+  // 5) Figure layer. The Hermit is the canonical scene (also the fallback
+  //    for arcana without a bespoke scene); the rest of the deck draws its
+  //    own bitmap scene into a separate layer that is mirrored on merge.
+  const bespoke = number === 10 || SCENE_PIECES[number] !== undefined;
+  if (!bespoke) {
+    // Staff (one hand), gold knob on top.
+    set(mx(8), 9, palette.gold);
+    for (let y = 10; y <= 23; y++) set(mx(8), y, palette.brown);
+    set(mx(9), 15, palette.red); // arm reaching the staff
+    set(mx(10), 15, palette.red);
 
-  // 6) Raised other arm + lantern with a white star light inside.
-  set(mx(17), 13, palette.red);
-  set(mx(18), 12, palette.red);
-  set(mx(19), 11, palette.red);
-  set(mx(20), 8, palette.gold); // hanger
-  set(mx(19), 9, palette.gold);
-  set(mx(20), 9, palette.white);
-  set(mx(21), 9, palette.gold);
-  set(mx(19), 10, palette.gold);
-  set(mx(20), 10, palette.white);
-  set(mx(21), 10, palette.gold);
-  set(mx(20), 11, palette.gold); // base
-  // Pale-gold glow stitches around the lantern (these twinkle).
-  set(mx(22), 9, palette.glow);
-  set(mx(22), 10, palette.glow);
-  set(mx(21), 12, palette.glow);
+    // Raised other arm + lantern with a white star light inside.
+    set(mx(17), 13, palette.red);
+    set(mx(18), 12, palette.red);
+    set(mx(19), 11, palette.red);
+    set(mx(20), 8, palette.gold); // hanger
+    set(mx(19), 9, palette.gold);
+    set(mx(20), 9, palette.white);
+    set(mx(21), 9, palette.gold);
+    set(mx(19), 10, palette.gold);
+    set(mx(20), 10, palette.white);
+    set(mx(21), 10, palette.gold);
+    set(mx(20), 11, palette.gold); // base
+    // Pale-gold glow stitches around the lantern (these twinkle).
+    set(mx(22), 9, palette.glow);
+    set(mx(22), 10, palette.glow);
+    set(mx(21), 12, palette.glow);
 
-  // 7) The hermit himself (mx() alone performs the horizontal mirror).
-  const hc = hermitColors(palette);
-  HERMIT.forEach((row, dy) => {
-    for (let dx = 0; dx < row.length; dx++) {
-      const color = hc[row[dx]];
-      if (color) set(mx(10 + dx), 9 + dy, color);
+    // The hermit himself (mx() alone performs the horizontal mirror).
+    const hc = hermitColors(palette);
+    HERMIT.forEach((row, dy) => {
+      for (let dx = 0; dx < row.length; dx++) {
+        const color = hc[row[dx]];
+        if (color) set(mx(10 + dx), 9 + dy, color);
+      }
+    });
+  } else {
+    const fig: CellMap = new Map();
+    const figStars: [number, number][] = [];
+    const put = (x: number, y: number, ch: string) => {
+      if (ch === "." || x < 0 || x >= GW || y < 0 || y >= GH) return;
+      const color = legendColor(ch, palette);
+      if (!color) return;
+      fig.set(`${x},${y}`, color);
+      if (ch === "*") figStars.push([x, y]);
+    };
+    if (number === 10) drawWheelStitches(put);
+    for (const piece of SCENE_PIECES[number] ?? []) {
+      piece.rows.forEach((row, dy) => {
+        for (let dx = 0; dx < row.length; dx++) put(piece.ox + dx, piece.oy + dy, row[dx]);
+      });
     }
-  });
+    for (const [key, color] of fig) {
+      const [x, y] = key.split(",").map(Number);
+      scene.set(`${mx(x)},${y}`, color);
+    }
+    for (const [x, y] of figStars) starKeys.add(`${mx(x)},${y}`);
+  }
 
   // 8) Nameplate on bare cloth: at most two stacked stitched lines in deep
   //    red floss. One-word names are centered vertically in the nameplate;
