@@ -5,6 +5,10 @@
  * title block on blueprint blue with a fine grid.
  * Signature effects (CSS-only):
  *  - draw-on drafting of the chalk linework on mount (stroke-dashoffset)
+ *  - dashed construction/projection lines MARCH continuously (dashoffset
+ *    loops, different speeds/directions per group) like live re-tracing
+ *  - plotter scan line sweeps top-to-bottom every ~6s
+ *  - dimension arrows/values blink occasionally (steps)
  *  - softly pulsing corner registration crosshairs
  *  - hover: hidden NOTE 9 annotation slides in + grid brightens
  * Self-contained: inline SVG + scoped <style>, system fonts only.
@@ -31,7 +35,7 @@ export default function BlueprintHermitCard() {
           50% { opacity: 0.8; }
         }
 
-        /* (1) draw-on drafting: solid chalk lines draw via dashoffset (needs pathLength="1") */
+        /* draw-on drafting: solid chalk lines draw via dashoffset (needs pathLength="1") */
         .cl-blueprint-draw {
           stroke-dasharray: 1;
           stroke-dashoffset: 1;
@@ -40,7 +44,7 @@ export default function BlueprintHermitCard() {
         @keyframes cl-blueprint-draft {
           to { stroke-dashoffset: 0; }
         }
-        /* dashed construction lines: dashes sweep into place while fading in */
+        /* dashed lines that only fade/sweep in once (no marching) */
         .cl-blueprint-sketch {
           opacity: 0;
           animation: cl-blueprint-sketch-in 1.2s ease-out forwards;
@@ -50,14 +54,69 @@ export default function BlueprintHermitCard() {
           to { opacity: 1; stroke-dashoffset: 0; }
         }
 
-        /* (2) registration crosshairs pulse on a loop */
+        /* (1) marching dashes — continuous re-tracing.
+           Each group's dashoffset loop distance is a common multiple of its
+           dash patterns' periods so the loop is seamless.
+           a: "14 4 2 4" centerlines (period 24), forward
+           b: "6 4" / "3 3" / "5 4" construction+projection (lcm 90), reverse
+           c: "4 3" folds / "2 2" angle arc (lcm 28), forward, faster */
+        .cl-blueprint-march-a,
+        .cl-blueprint-march-b,
+        .cl-blueprint-march-c { opacity: 0; }
+        .cl-blueprint-march-a {
+          animation: cl-blueprint-sketch-in 1.2s ease-out forwards,
+                     cl-blueprint-march-a 1.4s linear infinite;
+        }
+        .cl-blueprint-march-b {
+          animation: cl-blueprint-sketch-in 1.2s ease-out forwards,
+                     cl-blueprint-march-b 5s linear infinite;
+        }
+        .cl-blueprint-march-c {
+          animation: cl-blueprint-sketch-in 1.2s ease-out forwards,
+                     cl-blueprint-march-c 2s linear infinite;
+        }
+        @keyframes cl-blueprint-march-a { to { stroke-dashoffset: -24; } }
+        @keyframes cl-blueprint-march-b { to { stroke-dashoffset: 90; } }
+        @keyframes cl-blueprint-march-c { to { stroke-dashoffset: -28; } }
+
+        /* (2) plotter scan line sweeping top-to-bottom */
+        .cl-blueprint-scan {
+          position: absolute;
+          left: 1%;
+          right: 1%;
+          top: 0;
+          height: 2px;
+          background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.95), transparent);
+          box-shadow: 0 0 14px 4px rgba(190, 225, 255, 0.55);
+          opacity: 0;
+          pointer-events: none;
+          animation: cl-blueprint-scan 6s linear infinite;
+        }
+        @keyframes cl-blueprint-scan {
+          0% { top: -1%; opacity: 0; }
+          5% { opacity: 0.9; }
+          92% { opacity: 0.9; }
+          100% { top: 101%; opacity: 0; }
+        }
+
+        /* (3) dimension arrows/values blink occasionally (hard steps) */
+        .cl-blueprint-blink { animation: cl-blueprint-blink 7s steps(1, end) infinite; }
+        @keyframes cl-blueprint-blink {
+          0%, 86%, 100% { opacity: 1; }
+          88% { opacity: 0.2; }
+          90% { opacity: 1; }
+          93% { opacity: 0.2; }
+          95% { opacity: 1; }
+        }
+
+        /* registration crosshairs pulse on a loop */
         .cl-blueprint-reg { animation: cl-blueprint-reg-pulse 3s ease-in-out infinite; }
         @keyframes cl-blueprint-reg-pulse {
           0%, 100% { opacity: 0.35; }
           50% { opacity: 1; }
         }
 
-        /* (3) hover: grid brightens + hidden annotation slides in */
+        /* hover: grid brightens + hidden annotation slides in */
         .cl-blueprint-grid { transition: opacity 0.4s ease; }
         .cl-blueprint-grid-fine { opacity: 0.7; }
         .cl-blueprint-grid-major { opacity: 0.45; }
@@ -90,6 +149,11 @@ export default function BlueprintHermitCard() {
           .cl-blueprint-glow { animation: none; opacity: 0.45; }
           .cl-blueprint-draw { animation: none; stroke-dashoffset: 0; }
           .cl-blueprint-sketch { animation: none; opacity: 1; }
+          .cl-blueprint-march-a,
+          .cl-blueprint-march-b,
+          .cl-blueprint-march-c { animation: none; opacity: 1; }
+          .cl-blueprint-scan { animation: none; opacity: 0; }
+          .cl-blueprint-blink { animation: none; opacity: 1; }
           .cl-blueprint-reg { animation: none; opacity: 0.8; }
           .cl-blueprint-grid, .cl-blueprint-note9 { transition: none; }
         }
@@ -154,13 +218,13 @@ export default function BlueprintHermitCard() {
           </g>
         </g>
 
-        {/* construction geometry (dashed — sweeps in) */}
+        {/* construction geometry (dashed — marches continuously) */}
         <g fill="none" stroke={CHALK}>
-          <circle className="cl-blueprint-sketch" cx="200" cy="300" r="150" strokeOpacity="0.35" strokeWidth="0.7" strokeDasharray="6 4" />
-          <circle className="cl-blueprint-sketch" style={{ animationDelay: "0.15s" }} cx="200" cy="222" r="34" strokeOpacity="0.4" strokeWidth="0.6" strokeDasharray="3 3" />
-          <path className="cl-blueprint-sketch" style={{ animationDelay: "0.3s" }} d="M200,58 V470" strokeOpacity="0.5" strokeWidth="0.7" strokeDasharray="14 4 2 4" />
-          <path className="cl-blueprint-sketch" style={{ animationDelay: "0.45s" }} d="M50,300 H350" strokeOpacity="0.3" strokeWidth="0.6" strokeDasharray="14 4 2 4" />
-          <path className="cl-blueprint-sketch" style={{ animationDelay: "0.55s" }} d="M60,508 H340" strokeOpacity="0.4" strokeWidth="0.6" strokeDasharray="5 4" />
+          <circle className="cl-blueprint-march-b" cx="200" cy="300" r="150" strokeOpacity="0.35" strokeWidth="0.7" strokeDasharray="6 4" />
+          <circle className="cl-blueprint-march-b" style={{ animationDelay: "0.15s" }} cx="200" cy="222" r="34" strokeOpacity="0.4" strokeWidth="0.6" strokeDasharray="3 3" />
+          <path className="cl-blueprint-march-a" style={{ animationDelay: "0.3s" }} d="M200,58 V470" strokeOpacity="0.5" strokeWidth="0.7" strokeDasharray="14 4 2 4" />
+          <path className="cl-blueprint-march-a" style={{ animationDelay: "0.45s" }} d="M50,300 H350" strokeOpacity="0.3" strokeWidth="0.6" strokeDasharray="14 4 2 4" />
+          <path className="cl-blueprint-march-b" style={{ animationDelay: "0.55s" }} d="M60,508 H340" strokeOpacity="0.4" strokeWidth="0.6" strokeDasharray="5 4" />
         </g>
 
         {/* mountain peak (drawn) */}
@@ -179,9 +243,9 @@ export default function BlueprintHermitCard() {
           <path className="cl-blueprint-draw" pathLength={1} style={{ animationDelay: "0.95s" }} d="M178,236 C170,252 162,320 158,398" />
           <path className="cl-blueprint-draw" pathLength={1} style={{ animationDelay: "1.05s" }} d="M222,236 C230,252 238,320 242,398" />
           <path className="cl-blueprint-draw" pathLength={1} style={{ animationDelay: "1.15s" }} d="M158,398 C180,406 220,406 242,398" />
-          {/* inner folds, dashed */}
-          <path className="cl-blueprint-sketch" style={{ animationDelay: "1.3s" }} d="M192,256 C188,310 186,360 186,396" strokeWidth="0.7" strokeDasharray="4 3" strokeOpacity="0.7" />
-          <path className="cl-blueprint-sketch" style={{ animationDelay: "1.4s" }} d="M210,256 C214,310 216,360 216,396" strokeWidth="0.7" strokeDasharray="4 3" strokeOpacity="0.7" />
+          {/* inner folds, dashed (marching) */}
+          <path className="cl-blueprint-march-c" style={{ animationDelay: "1.3s" }} d="M192,256 C188,310 186,360 186,396" strokeWidth="0.7" strokeDasharray="4 3" strokeOpacity="0.7" />
+          <path className="cl-blueprint-march-c" style={{ animationDelay: "1.4s" }} d="M210,256 C214,310 216,360 216,396" strokeWidth="0.7" strokeDasharray="4 3" strokeOpacity="0.7" />
           {/* raised right arm + lantern */}
           <path className="cl-blueprint-draw" pathLength={1} style={{ animationDelay: "1.2s" }} d="M222,252 L246,220 L266,188" />
           <circle className="cl-blueprint-draw" pathLength={1} style={{ animationDelay: "1.35s" }} cx="266" cy="134" r="3.5" strokeWidth="1" />
@@ -201,15 +265,17 @@ export default function BlueprintHermitCard() {
         {/* lantern glow (animated) */}
         <circle className="cl-blueprint-glow" cx="266" cy="163" r="12" fill="#ffffff" opacity="0.3" />
 
-        {/* dimensions + projection lines (sweep in) */}
-        <g fill="none" stroke={CHALK} strokeWidth="0.7" strokeOpacity="0.85">
-          <path className="cl-blueprint-sketch" style={{ animationDelay: "1.9s" }} d="M182,206 H60 M160,400 H60" strokeDasharray="3 3" />
-          <path className="cl-blueprint-sketch" style={{ animationDelay: "2s" }} d="M66,206 V400" markerStart="url(#cl-bp-arr)" markerEnd="url(#cl-bp-arr)" />
-          <path className="cl-blueprint-sketch" style={{ animationDelay: "2.05s" }} d="M158,404 V428 M242,404 V428" strokeDasharray="3 3" />
-          <path className="cl-blueprint-sketch" style={{ animationDelay: "2.1s" }} d="M158,422 H242" markerStart="url(#cl-bp-arr)" markerEnd="url(#cl-bp-arr)" />
-          <path className="cl-blueprint-sketch" style={{ animationDelay: "2.15s" }} d="M232,250 A36,36 0 0 1 258,222" strokeDasharray="2 2" />
-          <path className="cl-blueprint-sketch" style={{ animationDelay: "2.2s" }} d="M278,158 L292,142" strokeWidth="0.8" />
-          <path className="cl-blueprint-sketch" style={{ animationDelay: "2.25s" }} d="M140,452 V508" strokeDasharray="3 3" strokeOpacity="0.5" />
+        {/* dimensions + projection lines (marching; whole group blinks) */}
+        <g className="cl-blueprint-blink" style={{ animationDelay: "2.6s" }}>
+          <g fill="none" stroke={CHALK} strokeWidth="0.7" strokeOpacity="0.85">
+            <path className="cl-blueprint-march-b" style={{ animationDelay: "1.9s" }} d="M182,206 H60 M160,400 H60" strokeDasharray="3 3" />
+            <path className="cl-blueprint-sketch" style={{ animationDelay: "2s" }} d="M66,206 V400" markerStart="url(#cl-bp-arr)" markerEnd="url(#cl-bp-arr)" />
+            <path className="cl-blueprint-march-b" style={{ animationDelay: "2.05s" }} d="M158,404 V428 M242,404 V428" strokeDasharray="3 3" />
+            <path className="cl-blueprint-sketch" style={{ animationDelay: "2.1s" }} d="M158,422 H242" markerStart="url(#cl-bp-arr)" markerEnd="url(#cl-bp-arr)" />
+            <path className="cl-blueprint-march-c" style={{ animationDelay: "2.15s" }} d="M232,250 A36,36 0 0 1 258,222" strokeDasharray="2 2" />
+            <path className="cl-blueprint-sketch" style={{ animationDelay: "2.2s" }} d="M278,158 L292,142" strokeWidth="0.8" />
+            <path className="cl-blueprint-march-b" style={{ animationDelay: "2.25s" }} d="M140,452 V508" strokeDasharray="3 3" strokeOpacity="0.5" />
+          </g>
         </g>
 
         {/* DETAIL A — lantern callout */}
@@ -226,14 +292,16 @@ export default function BlueprintHermitCard() {
           <path className="cl-blueprint-sketch" style={{ animationDelay: "2.55s" }} d="M346,146 v6 m-8,-3 h16" strokeWidth="0.5" strokeOpacity="0.7" />
         </g>
 
-        {/* text layer (fades in after drafting) */}
+        {/* text layer (fades in after drafting; dimension values blink) */}
         <g className="cl-blueprint-sketch" style={{ animationDelay: "2.4s" }} fontFamily={MONO} fill={CHALK}>
-          <text x="52" y="303" fontSize="10" textAnchor="middle" transform="rotate(-90 52 303)" letterSpacing="1">1.83</text>
-          <text x="200" y="417" fontSize="8" textAnchor="middle" letterSpacing="1">0.92</text>
-          <text x="254" y="212" fontSize="8" letterSpacing="0.5">45deg</text>
-          <text x="326" y="172" fontSize="7" textAnchor="middle" letterSpacing="0.5">DETAIL A — LANTERN</text>
-          <text x="326" y="146" fontSize="5.5" textAnchor="middle" opacity="0.8">Ø0.12</text>
-          <text x="22" y="494" fontSize="6.5" opacity="0.75" letterSpacing="0.5">NOTE 9 — LIGHT CARRIED ALOFT, FOR OTHERS</text>
+          <g className="cl-blueprint-blink" style={{ animationDelay: "4.2s" }}>
+            <text x="52" y="303" fontSize="10" textAnchor="middle" transform="rotate(-90 52 303)" letterSpacing="1">1.83</text>
+            <text x="200" y="417" fontSize="8" textAnchor="middle" letterSpacing="1">0.92</text>
+            <text x="254" y="212" fontSize="8" letterSpacing="0.5">45deg</text>
+            <text x="326" y="172" fontSize="7" textAnchor="middle" letterSpacing="0.5">DETAIL A — LANTERN</text>
+            <text x="326" y="146" fontSize="5.5" textAnchor="middle" opacity="0.8">Ø0.12</text>
+            <text x="22" y="494" fontSize="6.5" opacity="0.75" letterSpacing="0.5">NOTE 9 — LIGHT CARRIED ALOFT, FOR OTHERS</text>
+          </g>
         </g>
         <text
           x="74"
@@ -278,7 +346,10 @@ export default function BlueprintHermitCard() {
         </g>
       </svg>
 
-      {/* (3) hidden annotation, revealed on hover */}
+      {/* (2) plotter scan line */}
+      <div className="cl-blueprint-scan" aria-hidden="true" />
+
+      {/* hidden annotation, revealed on hover */}
       <figcaption className="cl-blueprint-note9">NOTE 9: solitude is load-bearing</figcaption>
     </figure>
   );

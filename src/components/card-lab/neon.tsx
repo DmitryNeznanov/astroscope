@@ -3,10 +3,12 @@
  * Neon tube sign on a dark bar wall. The Hermit outline is drawn as glowing
  * neon tubes: hooded figure + lantern in warm amber, staff in cyan, mountain
  * in violet. Layered glow via duplicated strokes + stacked drop-shadows.
- * Signature effects (all CSS-only, disabled for reduced motion): lantern
- * flicker, a whole-sign ballast buzz every ~8s, the cyan staff runs as a
- * sputtering weak tube, the frame tube breathes slowly, and :hover turns the
- * dimmer up so every glow stack intensifies.
+ * Signature effects (all CSS-only, disabled for reduced motion): a 14s
+ * POWER-OUTAGE cycle — the whole sign drops dark, then relights tube-by-tube
+ * (amber, star, cyan, violet, red, pink, frame last) with hard startup
+ * stutters while a glow wash blooms on the brick wall; plus a smaller
+ * whole-sign ballast buzz, a sputtering weak tube (the cyan staff), lantern
+ * flicker, a breathing frame tube, and :hover dimmer-up brightening.
  */
 export default function NeonHermitCard() {
   return (
@@ -35,6 +37,17 @@ export default function NeonHermitCard() {
             ),
             radial-gradient(ellipse at 50% 38%, #14111c 0%, #0a0810 55%, #050408 100%);
           box-shadow: inset 0 0 60px rgba(0, 0, 0, 0.85);
+        }
+        .cl-neon-card::after {
+          content: "";
+          position: absolute;
+          inset: 0;
+          pointer-events: none;
+          border-radius: 12px;
+          background: radial-gradient(ellipse at 50% 40%,
+            rgba(255, 170, 80, 0.16) 0%, rgba(160, 90, 255, 0.09) 45%, transparent 72%);
+          opacity: 0;
+          animation: cl-neon-wash 14s linear infinite;
         }
         .cl-neon-card svg { display: block; width: 100%; height: 100%; }
 
@@ -71,7 +84,7 @@ export default function NeonHermitCard() {
         }
         .cl-neon-frame {
           filter: drop-shadow(0 0 3px rgba(150, 160, 200, 0.35));
-          animation: cl-neon-breathe 11s ease-in-out infinite;
+          animation: cl-neon-frame-cycle 14s linear infinite;
         }
         .cl-neon-amber, .cl-neon-cyan, .cl-neon-violet,
         .cl-neon-red, .cl-neon-pink, .cl-neon-star {
@@ -97,12 +110,14 @@ export default function NeonHermitCard() {
         }
         .cl-neon-flicker { animation: cl-neon-flicker 4.2s linear infinite; }
 
-        /* ---- whole-sign ballast buzz: quick stutter every ~8s ---- */
+        /* ---- whole-sign ballast buzz: quick stutter every ~8s; sits on the
+           svg parent so its opacity multiplies with the outage keyframes —
+           a buzzing parent can never relight a tube mid-outage ---- */
         @keyframes cl-neon-buzz {
           0%, 100% { opacity: 1; filter: none; }
-          1.2% { opacity: 0.72; filter: brightness(0.82); }
+          1.2% { opacity: 0.8; filter: brightness(0.85); }
           2.1% { opacity: 1; filter: none; }
-          2.8% { opacity: 0.85; filter: brightness(0.9); }
+          2.8% { opacity: 0.88; filter: brightness(0.92); }
           3.6% { opacity: 1; filter: none; }
         }
         .cl-neon-buzz { animation: cl-neon-buzz 8.3s linear infinite; }
@@ -120,10 +135,52 @@ export default function NeonHermitCard() {
         }
         .cl-neon-weak { animation: cl-neon-weak 6.7s linear infinite; }
 
-        /* ---- very slow breathing on the frame tube ---- */
-        @keyframes cl-neon-breathe {
-          0%, 100% { filter: drop-shadow(0 0 2px rgba(150, 160, 200, 0.22)); opacity: 0.75; }
-          50% { filter: drop-shadow(0 0 5px rgba(170, 180, 220, 0.5)); opacity: 1; }
+        /* ---- POWER OUTAGE: one shared 14s cycle, staggered tube-by-tube relight ---- */
+        /* amber tubes (figure + lantern) strike first, then star, cyan staff,
+           violet mountain, red numeral, pink script; frame relights last */
+        @keyframes cl-neon-on-amber {
+          0%, 3% { opacity: 0; } 3.6% { opacity: 0.9; } 4.3% { opacity: 0.15; }
+          5% { opacity: 1; } 5.6% { opacity: 0.4; } 6.4%, 100% { opacity: 1; }
+        }
+        @keyframes cl-neon-on-star {
+          0%, 4% { opacity: 0; } 4.6% { opacity: 1; } 5.3% { opacity: 0.3; }
+          6.1% { opacity: 1; } 6.9% { opacity: 0.45; } 7.7%, 100% { opacity: 1; }
+        }
+        @keyframes cl-neon-on-cyan {
+          0%, 5.5% { opacity: 0; } 6.1% { opacity: 0.8; } 6.7% { opacity: 0.2; }
+          7.3% { opacity: 0.95; } 7.9% { opacity: 0.5; } 8.7%, 100% { opacity: 1; }
+        }
+        @keyframes cl-neon-on-violet {
+          0%, 7.5% { opacity: 0; } 8.1% { opacity: 0.85; } 8.8% { opacity: 0.25; }
+          9.5% { opacity: 1; } 10.1% { opacity: 0.55; } 10.9%, 100% { opacity: 1; }
+        }
+        @keyframes cl-neon-on-red {
+          0%, 9.5% { opacity: 0; } 10.1% { opacity: 0.9; }
+          10.7% { opacity: 0.3; } 11.5%, 100% { opacity: 1; }
+        }
+        @keyframes cl-neon-on-pink {
+          0%, 11.5% { opacity: 0; } 12.1% { opacity: 0.85; } 12.8% { opacity: 0.2; }
+          13.5% { opacity: 0.95; } 14.1% { opacity: 0.5; } 14.9%, 100% { opacity: 1; }
+        }
+        .cl-neon-on-amber { animation: cl-neon-on-amber 14s linear infinite; }
+        .cl-neon-on-star { animation: cl-neon-on-star 14s linear infinite; }
+        .cl-neon-on-cyan { animation: cl-neon-on-cyan 14s linear infinite; }
+        .cl-neon-on-violet { animation: cl-neon-on-violet 14s linear infinite; }
+        .cl-neon-on-red { animation: cl-neon-on-red 14s linear infinite; }
+        .cl-neon-on-pink { animation: cl-neon-on-pink 14s linear infinite; }
+
+        /* frame tube: dark during the outage, relights last, then breathes */
+        @keyframes cl-neon-frame-cycle {
+          0%, 13% { opacity: 0.12; filter: drop-shadow(0 0 1.5px rgba(150, 160, 200, 0.15)); }
+          17%, 85% { opacity: 1; filter: drop-shadow(0 0 5px rgba(170, 180, 220, 0.5)); }
+          55% { opacity: 0.75; filter: drop-shadow(0 0 2.5px rgba(150, 160, 200, 0.28)); }
+          100% { opacity: 0.12; filter: drop-shadow(0 0 1.5px rgba(150, 160, 200, 0.15)); }
+        }
+
+        /* brick-wall glow wash, blooming as the tubes relight */
+        @keyframes cl-neon-wash {
+          0%, 3% { opacity: 0; } 8% { opacity: 0.55; }
+          16% { opacity: 0.3; } 28%, 100% { opacity: 0; }
         }
 
         /* ---- hover: dimmer turned up, all tubes brighten ---- */
@@ -174,7 +231,14 @@ export default function NeonHermitCard() {
           .cl-neon-flicker,
           .cl-neon-buzz,
           .cl-neon-weak,
-          .cl-neon-frame { animation: none; }
+          .cl-neon-frame,
+          .cl-neon-on-amber,
+          .cl-neon-on-star,
+          .cl-neon-on-cyan,
+          .cl-neon-on-violet,
+          .cl-neon-on-red,
+          .cl-neon-on-pink { animation: none; }
+          .cl-neon-card::after { animation: none; opacity: 0; }
         }
       `}</style>
 
@@ -194,7 +258,7 @@ export default function NeonHermitCard() {
 
         {/* IX — small red neon numeral, top center */}
         <text
-          className="cl-neon-red"
+          className="cl-neon-red cl-neon-on-red"
           x="100"
           y="36"
           textAnchor="middle"
@@ -208,7 +272,7 @@ export default function NeonHermitCard() {
         </text>
 
         {/* mountain — violet tubes */}
-        <g className="cl-neon-violet" fill="none" strokeLinecap="round" strokeLinejoin="round">
+        <g className="cl-neon-violet cl-neon-on-violet" fill="none" strokeLinecap="round" strokeLinejoin="round">
           <path
             d="M 18 236 L 52 198 L 74 222 L 100 190 L 128 224 L 150 204 L 182 236"
             stroke="#8a4fd0"
@@ -225,41 +289,28 @@ export default function NeonHermitCard() {
           <circle cx="182" cy="236" r="2.2" fill="#1a1424" stroke="#5a3d80" strokeWidth="0.8" />
         </g>
 
-        {/* staff — cyan tube in the left hand, runs as the sign's weak tube */}
-        <g className="cl-neon-cyan cl-neon-weak" fill="none" strokeLinecap="round">
-          <path d="M 66 96 Q 62 146 66 206" stroke="#1e9ec4" strokeWidth="4" opacity="0.55" />
-          <path d="M 66 96 Q 62 146 66 206" stroke="#d8f8ff" strokeWidth="1.5" />
-          <circle cx="66" cy="96" r="2" fill="#0e1a20" stroke="#2a7a94" strokeWidth="0.8" />
-          <circle cx="66" cy="206" r="2" fill="#0e1a20" stroke="#2a7a94" strokeWidth="0.8" />
+        {/* staff — cyan tube in the left hand, runs as the sign's weak tube;
+            weak-tube sputter sits on an inner group so it multiplies with the
+            outage cycle on the outer group instead of overriding it */}
+        <g className="cl-neon-cyan cl-neon-on-cyan" fill="none" strokeLinecap="round">
+          <g className="cl-neon-weak">
+            <path d="M 66 96 Q 62 146 66 206" stroke="#1e9ec4" strokeWidth="4" opacity="0.55" />
+            <path d="M 66 96 Q 62 146 66 206" stroke="#d8f8ff" strokeWidth="1.5" />
+            <circle cx="66" cy="96" r="2" fill="#0e1a20" stroke="#2a7a94" strokeWidth="0.8" />
+            <circle cx="66" cy="206" r="2" fill="#0e1a20" stroke="#2a7a94" strokeWidth="0.8" />
+          </g>
         </g>
 
         {/* hooded figure — amber tubes */}
-        <g className="cl-neon-amber" fill="none" strokeLinecap="round" strokeLinejoin="round">
+        <g className="cl-neon-amber cl-neon-on-amber" fill="none" strokeLinecap="round" strokeLinejoin="round">
           {/* hood + robe outline */}
           <path
-            d="M 100 88
-               C 88 90 82 100 83 112
-               C 78 122 76 136 75 152
-               C 74 168 73 184 72 198
-               L 128 198
-               C 127 184 126 168 125 152
-               C 124 136 122 122 117 112
-               C 118 100 112 90 100 88 Z"
-            stroke="#e08a1e"
-            strokeWidth="4.6"
-            opacity="0.55"
+            d="M 100 88 C 88 90 82 100 83 112 C 78 122 76 136 75 152 C 74 168 73 184 72 198 L 128 198 C 127 184 126 168 125 152 C 124 136 122 122 117 112 C 118 100 112 90 100 88 Z"
+            stroke="#e08a1e" strokeWidth="4.6" opacity="0.55"
           />
           <path
-            d="M 100 88
-               C 88 90 82 100 83 112
-               C 78 122 76 136 75 152
-               C 74 168 73 184 72 198
-               L 128 198
-               C 127 184 126 168 125 152
-               C 124 136 122 122 117 112
-               C 118 100 112 90 100 88 Z"
-            stroke="#ffe9c4"
-            strokeWidth="1.7"
+            d="M 100 88 C 88 90 82 100 83 112 C 78 122 76 136 75 152 C 74 168 73 184 72 198 L 128 198 C 127 184 126 168 125 152 C 124 136 122 122 117 112 C 118 100 112 90 100 88 Z"
+            stroke="#ffe9c4" strokeWidth="1.7"
           />
           {/* hood opening */}
           <path
@@ -289,7 +340,7 @@ export default function NeonHermitCard() {
 
         {/* lantern — amber tubes, flickering, star inside */}
         <g className="cl-neon-flicker">
-          <g className="cl-neon-amber" fill="none" strokeLinecap="round" strokeLinejoin="round">
+          <g className="cl-neon-amber cl-neon-on-amber" fill="none" strokeLinecap="round" strokeLinejoin="round">
             {/* handle */}
             <path d="M 134 84 Q 140 78 146 84" stroke="#e08a1e" strokeWidth="2.8" opacity="0.55" />
             <path d="M 134 84 Q 140 78 146 84" stroke="#ffe9c4" strokeWidth="1" />
@@ -310,7 +361,7 @@ export default function NeonHermitCard() {
           </g>
           {/* small star light inside the lantern */}
           <path
-            className="cl-neon-star"
+            className="cl-neon-star cl-neon-on-star"
             d="M 140 91 L 141.4 94.6 L 145 95 L 141.4 95.4 L 140 99 L 138.6 95.4 L 135 95 L 138.6 94.6 Z"
             fill="#fff4d6"
           />
@@ -321,7 +372,7 @@ export default function NeonHermitCard() {
 
         {/* THE HERMIT — neon script at bottom */}
         <text
-          className="cl-neon-pink"
+          className="cl-neon-pink cl-neon-on-pink"
           x="100"
           y="274"
           textAnchor="middle"

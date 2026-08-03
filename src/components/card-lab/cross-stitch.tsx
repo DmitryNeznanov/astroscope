@@ -9,8 +9,11 @@
  * a white star inside and glow stitches that twinkle with a soft irregular
  * blink. Signature effects (CSS-only): on mount the border is "stitched" with
  * a quick stepped clip-path wipe, then the scene is stitched row by row over
- * ~2.8s in steps(20); on hover the fabric warms as if held up to the light
- * and the lantern twinkle speeds up. Reduced motion = fully stitched at once.
+ * ~2.8s in steps(20); the sky stars twinkle individually on staggered delays
+ * like a starfield; the border checker's red and gold floss slowly trade
+ * places (steps swap on the paths, independent of the wipe on the group);
+ * on hover the fabric warms as if held up to the light and the lantern
+ * twinkle speeds up. Reduced motion = fully stitched, fully static.
  * Server-component safe: no hooks, no client code.
  */
 
@@ -87,6 +90,9 @@ const STARS: readonly (readonly [number, number])[] = [
   [7, 6], [22, 3], [24, 7], [3, 10],
   [24, 13], [4, 16], [23, 17], [6, 20], [21, 20], [20, 16],
 ];
+
+/** Cell keys of the sky stars, so each can twinkle on its own delay. */
+const STAR_KEYS = new Set(STARS.map(([x, y]) => `${x},${y}`));
 
 /** Where the green hill crest starts for each column (scene rows 2..27). */
 function hillTop(x: number): number {
@@ -197,13 +203,15 @@ function buildStitches(): { border: CellMap; scene: CellMap } {
 }
 
 /** Group stitches by floss color into one SVG path per color — except the
- *  lantern-glow stitches, which each get their own path so they can twinkle
- *  on staggered delays (glowIndex = delay slot). */
-type StitchPath = { color: string; d: string; glowIndex?: number };
+ *  lantern-glow stitches and the sky-star stitches, which each get their own
+ *  path so they can twinkle on staggered delays (glowIndex / starIndex =
+ *  delay slot). */
+type StitchPath = { color: string; d: string; glowIndex?: number; starIndex?: number };
 
 function groupPaths(cells: CellMap): StitchPath[] {
   const groups = new Map<string, string[]>();
   const glowSegs: string[] = [];
+  const starSegs: string[] = [];
   for (const [key, color] of cells) {
     const [x, y] = key.split(",").map(Number);
     const x0 = x * CS + 1.3;
@@ -216,6 +224,10 @@ function groupPaths(cells: CellMap): StitchPath[] {
       glowSegs.push(seg);
       continue;
     }
+    if (STAR_KEYS.has(key)) {
+      starSegs.push(seg);
+      continue;
+    }
     const arr = groups.get(color);
     if (arr) arr.push(seg);
     else groups.set(color, [seg]);
@@ -225,6 +237,7 @@ function groupPaths(cells: CellMap): StitchPath[] {
     d: segs.join(""),
   }));
   glowSegs.forEach((d, i) => out.push({ color: FLOSS.glow, d, glowIndex: i }));
+  starSegs.forEach((d, i) => out.push({ color: FLOSS.white, d, starIndex: i }));
   return out;
 }
 
@@ -283,12 +296,41 @@ export default function CrossStitchHermitCard() {
           animation: cl-cs-twinkle 2.6s ease-in-out infinite;
         }
         @keyframes cl-cs-twinkle {
-          0%, 100% { opacity: 0.45; }
+          0%, 100% { opacity: 0.5; }
           17% { opacity: 0.95; }
-          31% { opacity: 0.55; }
+          31% { opacity: 0.6; }
           54% { opacity: 1; }
-          68% { opacity: 0.4; }
+          68% { opacity: 0.45; }
           84% { opacity: 0.8; }
+        }
+        /* Starfield: each star stitch blinks on its own delay/duration. */
+        .cl-cs-card .cl-cs-star {
+          animation: cl-cs-starblink 3s ease-in-out infinite;
+        }
+        @keyframes cl-cs-starblink {
+          0%, 100% { opacity: 1; }
+          6% { opacity: 0.25; }
+          12% { opacity: 1; }
+          61% { opacity: 1; }
+          64% { opacity: 0.5; }
+          67% { opacity: 1; }
+        }
+        /* Border checker: the two floss colors slowly trade places. The swap
+           lives on the paths (stroke), the wipe on the parent <g> (clip-path),
+           so the two never fight. */
+        .cl-cs-card .cl-cs-swap-red {
+          animation: cl-cs-swap-red 5s steps(1) 1.2s infinite;
+        }
+        .cl-cs-card .cl-cs-swap-gold {
+          animation: cl-cs-swap-gold 5s steps(1) 1.2s infinite;
+        }
+        @keyframes cl-cs-swap-red {
+          0%, 100% { stroke: #a62c3a; }
+          50% { stroke: #d9a441; }
+        }
+        @keyframes cl-cs-swap-gold {
+          0%, 100% { stroke: #d9a441; }
+          50% { stroke: #a62c3a; }
         }
         /* Held up to the light: warm brightness shift, livelier lantern. */
         .cl-cs-card:hover .cl-cs-aida {
@@ -303,7 +345,10 @@ export default function CrossStitchHermitCard() {
         @media (prefers-reduced-motion: reduce) {
           .cl-cs-card .cl-cs-border-wipe,
           .cl-cs-card .cl-cs-scene-wipe,
-          .cl-cs-card .cl-cs-glow {
+          .cl-cs-card .cl-cs-glow,
+          .cl-cs-card .cl-cs-star,
+          .cl-cs-card .cl-cs-swap-red,
+          .cl-cs-card .cl-cs-swap-gold {
             animation: none;
           }
           .cl-cs-card .cl-cs-aida,
@@ -327,23 +372,47 @@ export default function CrossStitchHermitCard() {
               stroke={color}
               strokeWidth={2.3}
               strokeLinecap="round"
+              className={
+                color === FLOSS.red
+                  ? "cl-cs-swap-red"
+                  : color === FLOSS.gold
+                    ? "cl-cs-swap-gold"
+                    : undefined
+              }
             />
           ))}
         </g>
         <g className="cl-cs-scene-wipe">
-          {SCENE_PATHS.map(({ color, d, glowIndex }) => (
+          {SCENE_PATHS.map(({ color, d, glowIndex, starIndex }) => (
             <path
-              key={glowIndex !== undefined ? `glow-${glowIndex}` : color}
+              key={
+                glowIndex !== undefined
+                  ? `glow-${glowIndex}`
+                  : starIndex !== undefined
+                    ? `star-${starIndex}`
+                    : color
+              }
               d={d}
               fill="none"
               stroke={color}
-              strokeWidth={2.3}
+              strokeWidth={glowIndex !== undefined ? 3.2 : 2.3}
               strokeLinecap="round"
-              className={glowIndex !== undefined ? "cl-cs-glow" : undefined}
+              className={
+                glowIndex !== undefined
+                  ? "cl-cs-glow"
+                  : starIndex !== undefined
+                    ? "cl-cs-star"
+                    : undefined
+              }
               style={
                 glowIndex !== undefined
                   ? { animationDelay: `${glowIndex * 0.7}s` }
-                  : undefined
+                  : starIndex !== undefined
+                    ? {
+                        animationDelay: `${((starIndex * 0.7) % 4.2).toFixed(2)}s`,
+                        animationDuration: `${2.6 + (starIndex % 3) * 0.9}s`,
+                      }
+                    : undefined
               }
             />
           ))}

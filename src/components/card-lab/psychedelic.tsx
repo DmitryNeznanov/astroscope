@@ -285,25 +285,37 @@ export default function PsychedelicCard() {
           25% { transform: translateY(-1.5px) skewX(-1.2deg) }
           75% { transform: translateY(1.5px) skewX(1.2deg) }
         }
+        @keyframes cl-psy-bob {
+          0%, 100% { transform: translateY(0) rotate(0deg) }
+          50% { transform: translateY(-3px) rotate(2.5deg) }
+        }
         .cl-psy-glow { animation: cl-psy-pulse 3.2s ease-in-out infinite }
         .cl-psy-rings {
           transform-box: view-box;
           transform-origin: ${LX}px ${LY}px;
-          animation: cl-psy-spin 120s linear infinite, cl-psy-hue 24s linear infinite;
+          animation: cl-psy-spin 12s linear infinite, cl-psy-hue 14s linear infinite;
         }
         .cl-psy-title {
           transform-box: fill-box;
           transform-origin: center;
           animation: cl-psy-wobble 5s ease-in-out infinite;
         }
+        .cl-psy-paisley {
+          transform-box: fill-box;
+          transform-origin: center;
+          animation: cl-psy-bob 6s ease-in-out infinite;
+        }
+        .cl-psy-paisley-2 { animation-duration: 7.3s; animation-delay: -1.5s }
+        .cl-psy-paisley-3 { animation-duration: 5.4s; animation-delay: -2.6s }
+        .cl-psy-paisley-4 { animation-duration: 6.8s; animation-delay: -3.8s }
         .cl-psy-card:hover .cl-psy-rings {
-          animation-duration: 12s, 24s;
+          animation-duration: 4s, 14s;
         }
         .cl-psy-card:hover .cl-psy-rings-wrap {
-          filter: saturate(1.4);
+          filter: saturate(1.6);
         }
         @media (prefers-reduced-motion: reduce) {
-          .cl-psy-glow, .cl-psy-rings, .cl-psy-title { animation: none }
+          .cl-psy-glow, .cl-psy-rings, .cl-psy-title, .cl-psy-paisley { animation: none }
         }
       `}</style>
       <svg
@@ -323,11 +335,11 @@ export default function PsychedelicCard() {
         {/* Ornamental sun with hidden IX. */}
         <SunSeal />
 
-        {/* Paisley flourishes. */}
-        <Paisley x={66} y={452} s={1} rot={-14} />
-        <Paisley x={334} y={452} s={1} rot={14} flip />
-        <Paisley x={72} y={84} s={0.55} rot={-24} />
-        <Paisley x={328} y={84} s={0.55} rot={24} flip />
+        {/* Paisley flourishes (wrapped so CSS bobbing composes with placement). */}
+        <g className="cl-psy-paisley cl-psy-paisley-1"><Paisley x={66} y={452} s={1} rot={-14} /></g>
+        <g className="cl-psy-paisley cl-psy-paisley-2"><Paisley x={334} y={452} s={1} rot={14} flip /></g>
+        <g className="cl-psy-paisley cl-psy-paisley-3"><Paisley x={72} y={84} s={0.55} rot={-24} /></g>
+        <g className="cl-psy-paisley cl-psy-paisley-4"><Paisley x={328} y={84} s={0.55} rot={24} flip /></g>
 
         {/* The hermit himself. */}
         <HermitFigure />

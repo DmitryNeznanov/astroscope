@@ -79,15 +79,16 @@ const FIGURE: Facet[] = [
 const LANTERN: Facet[] = [
   { points: "133,72.5 129.5,76 136.5,76", fill: "#8a5f30" },
   { points: "129.5,76 136.5,76 137.5,78 128.5,78", fill: "#6b4a26" },
-  { points: "128.5,78 137.5,78 133,84.5", fill: "#ffe9a8" },
-  { points: "137.5,78 138,90 133,84.5", fill: "#f7c25c" },
-  { points: "138,90 128,90 133,84.5", fill: "#e09a35" },
-  { points: "128,90 128.5,78 133,84.5", fill: "#ffd97a" },
+  { points: "128.5,78 137.5,78 133,84.5", fill: "#ffe9a8", className: "cl-lowpoly-lf" },
+  { points: "137.5,78 138,90 133,84.5", fill: "#f7c25c", className: "cl-lowpoly-lf cl-lowpoly-lf2" },
+  { points: "138,90 128,90 133,84.5", fill: "#e09a35", className: "cl-lowpoly-lf cl-lowpoly-lf3" },
+  { points: "128,90 128.5,78 133,84.5", fill: "#ffd97a", className: "cl-lowpoly-lf cl-lowpoly-lf4" },
   { points: "130,90 136,90 133,96", fill: "#6b4a26" },
 ];
 
 const STAR_CORE: Facet = {
-  points: "133,81.6 135.6,84.5 133,87.4 130.4,84.5",
+  points:
+    "133,80.2 134.3,83.2 137.8,84.5 134.3,85.8 133,88.8 131.7,85.8 128.2,84.5 131.7,83.2",
   fill: "#fff8e2",
   className: "cl-lowpoly-core",
 };
@@ -142,15 +143,24 @@ export default function LowpolyHermitCard() {
           from { opacity: 0; }
         }
 
-        /* facet shimmer — slow low-amplitude opacity waves, staggered per layer */
-        .cl-lowpoly-sh-sky { animation: cl-lowpoly-shimmer 9s ease-in-out 0s infinite; }
-        .cl-lowpoly-sh-ridge { animation: cl-lowpoly-shimmer 11s ease-in-out -3s infinite; }
-        .cl-lowpoly-sh-peak { animation: cl-lowpoly-shimmer 10s ease-in-out -6s infinite; }
-        .cl-lowpoly-sh-figure { animation: cl-lowpoly-shimmer 12s ease-in-out -8s infinite; }
-        .cl-lowpoly-sh-fore { animation: cl-lowpoly-shimmer 13s ease-in-out -4s infinite; }
+        /* light waves — bold opacity swing rolling down through the layers in sequence */
+        .cl-lowpoly-sh-sky { animation: cl-lowpoly-shimmer 8s ease-in-out 0s infinite, cl-lowpoly-flash 18s linear 0s infinite; }
+        .cl-lowpoly-sh-ridge { animation: cl-lowpoly-shimmer 8s ease-in-out -1.2s infinite; }
+        .cl-lowpoly-sh-peak { animation: cl-lowpoly-shimmer 8s ease-in-out -2.4s infinite, cl-lowpoly-flash 18s linear -6s infinite; }
+        .cl-lowpoly-sh-figure { animation: cl-lowpoly-shimmer 8s ease-in-out -3.6s infinite, cl-lowpoly-flash 18s linear -12s infinite; }
+        .cl-lowpoly-sh-fore { animation: cl-lowpoly-shimmer 8s ease-in-out -4.8s infinite; }
         @keyframes cl-lowpoly-shimmer {
           0%, 100% { opacity: 1; }
-          50% { opacity: 0.86; }
+          50% { opacity: 0.7; }
+        }
+
+        /* facet flash — one group catches light hard, roughly every 6s, rotating groups */
+        @keyframes cl-lowpoly-flash {
+          0%, 1% { filter: brightness(1); }
+          2% { filter: brightness(1.75); }
+          3% { filter: brightness(1.1); }
+          4% { filter: brightness(1.45); }
+          5.5%, 100% { filter: brightness(1); }
         }
 
         /* stars twinkle on their own quicker beat */
@@ -168,11 +178,26 @@ export default function LowpolyHermitCard() {
           transition: transform 0.6s ease;
         }
         .cl-lowpoly-core {
-          animation: cl-lowpoly-flicker 3.8s ease-in-out infinite;
+          animation: cl-lowpoly-flicker 3.8s ease-in-out infinite, cl-lowpoly-spin 20s linear infinite;
+          transform-box: fill-box;
+          transform-origin: center;
         }
         @keyframes cl-lowpoly-flicker {
           0%, 100% { opacity: 0.55; }
           50% { opacity: 0.95; }
+        }
+        @keyframes cl-lowpoly-spin {
+          to { transform: rotate(360deg); }
+        }
+
+        /* lantern gold facets — brightness ripple cycling outward around the core */
+        .cl-lowpoly-lf { animation: cl-lowpoly-ripple 2.4s ease-in-out infinite; }
+        .cl-lowpoly-lf2 { animation-delay: -0.6s; }
+        .cl-lowpoly-lf3 { animation-delay: -1.2s; }
+        .cl-lowpoly-lf4 { animation-delay: -1.8s; }
+        @keyframes cl-lowpoly-ripple {
+          0%, 100% { filter: brightness(1); }
+          50% { filter: brightness(1.45); }
         }
 
         /* hover faux-parallax — layers drift in opposing directions */
@@ -191,7 +216,8 @@ export default function LowpolyHermitCard() {
         @media (prefers-reduced-motion: reduce) {
           .cl-lowpoly-mount, .cl-lowpoly-sh-sky, .cl-lowpoly-sh-ridge,
           .cl-lowpoly-sh-peak, .cl-lowpoly-sh-figure, .cl-lowpoly-sh-fore,
-          .cl-lowpoly-stars, .cl-lowpoly-glow, .cl-lowpoly-core {
+          .cl-lowpoly-stars, .cl-lowpoly-glow, .cl-lowpoly-core,
+          .cl-lowpoly-lf {
             animation: none;
           }
           .cl-lowpoly-l-sky, .cl-lowpoly-l-stars, .cl-lowpoly-l-ridge,

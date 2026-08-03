@@ -94,16 +94,40 @@ export default function ArtNouveauHermitCard() {
           transform: translateY(-4px);
           box-shadow: 0 14px 28px rgba(61, 47, 34, .28), 0 4px 10px rgba(61, 47, 34, .18);
         }
-        .cl-an-halo-glow { opacity: 0; transition: opacity .4s ease; }
-        .cl-an-card:hover .cl-an-halo-glow { opacity: .45; }
+        .cl-an-halo-glow { animation: cl-an-breathe 5s ease-in-out infinite; }
+        @keyframes cl-an-breathe { 0%, 100% { opacity: .12; } 50% { opacity: .6; } }
         .cl-an-glow { animation: cl-an-pulse 4.5s ease-in-out infinite; }
         @keyframes cl-an-pulse { 0%, 100% { opacity: .35; } 50% { opacity: .8; } }
         .cl-an-rays {
           transform-box: fill-box;
           transform-origin: center;
-          animation: cl-an-spin 75s linear infinite;
+          animation: cl-an-spin 27s linear infinite;
         }
         @keyframes cl-an-spin { to { transform: rotate(360deg); } }
+        .cl-an-vine-l, .cl-an-vine-r {
+          transform-box: fill-box;
+          transform-origin: 50% 100%;
+        }
+        .cl-an-vine-l { animation: cl-an-sway-l 5.6s ease-in-out infinite; }
+        .cl-an-vine-r { animation: cl-an-sway-r 6.7s ease-in-out -2.2s infinite; }
+        @keyframes cl-an-sway-l {
+          0%, 100% { transform: rotate(-1.8deg); }
+          50% { transform: rotate(1.8deg); }
+        }
+        @keyframes cl-an-sway-r {
+          0%, 100% { transform: rotate(1.5deg); }
+          50% { transform: rotate(-1.5deg); }
+        }
+        .cl-an-ribbon {
+          transform-box: fill-box;
+          transform-origin: center;
+          animation: cl-an-wave 6.2s ease-in-out infinite;
+        }
+        @keyframes cl-an-wave {
+          0%, 100% { transform: translateY(0) skewX(0deg); }
+          30% { transform: translateY(-1.6px) skewX(-1deg); }
+          65% { transform: translateY(1.2px) skewX(.8deg); }
+        }
         .cl-an-shine {
           position: absolute;
           top: -25%;
@@ -126,9 +150,11 @@ export default function ArtNouveauHermitCard() {
           100% { transform: translateX(320%) skewX(-12deg); }
         }
         @media (prefers-reduced-motion: reduce) {
-          .cl-an-glow, .cl-an-rays, .cl-an-shine { animation: none; }
+          .cl-an-glow, .cl-an-halo-glow, .cl-an-rays,
+          .cl-an-vine-l, .cl-an-vine-r, .cl-an-ribbon,
+          .cl-an-shine { animation: none; }
           .cl-an-shine { display: none; }
-          .cl-an-card, .cl-an-halo-glow { transition: none; }
+          .cl-an-card { transition: none; }
         }
       `}</style>
       <svg
@@ -162,18 +188,26 @@ export default function ArtNouveauHermitCard() {
         <path d="M 120 448 C 150 432 190 430 220 442" fill="none" stroke={SAGE_DARK} strokeWidth={1.1} opacity={0.6} />
         <path d="M 250 440 C 285 428 330 436 358 458" fill="none" stroke={SAGE_DARK} strokeWidth={1.1} opacity={0.6} />
 
-        {/* ————— Whiplash curves framing the scene ————— */}
-        <g fill="none" stroke={GOLD} strokeWidth={2.4} strokeLinecap="round">
-          <path d="M 70 502 C 40 420 88 380 58 300 C 38 240 78 200 60 140 C 52 112 60 92 76 84" />
-          <path d="M 58 300 C 82 290 94 270 90 250" strokeWidth={1.8} />
-          <path d="M 330 502 C 360 420 312 380 342 300 C 362 240 322 200 340 140 C 348 112 340 92 324 84" />
-          <path d="M 342 300 C 318 290 306 270 310 250" strokeWidth={1.8} />
+        {/* ————— Whiplash curves framing the scene (swaying vines) ————— */}
+        <g className="cl-an-vine-l">
+          <g fill="none" stroke={GOLD} strokeWidth={2.4} strokeLinecap="round">
+            <path d="M 70 502 C 40 420 88 380 58 300 C 38 240 78 200 60 140 C 52 112 60 92 76 84" />
+            <path d="M 58 300 C 82 290 94 270 90 250" strokeWidth={1.8} />
+          </g>
+          <g fill={SAGE} stroke={INK} strokeWidth={0.8}>
+            <path d="M 66 396 C 56 388 52 376 54 366 C 62 374 66 384 66 396 Z" />
+            <path d="M 64 210 C 54 202 50 190 52 180 C 60 188 64 198 64 210 Z" />
+          </g>
         </g>
-        <g fill={SAGE} stroke={INK} strokeWidth={0.8}>
-          <path d="M 66 396 C 56 388 52 376 54 366 C 62 374 66 384 66 396 Z" />
-          <path d="M 64 210 C 54 202 50 190 52 180 C 60 188 64 198 64 210 Z" />
-          <path d="M 334 396 C 344 388 348 376 346 366 C 338 374 334 384 334 396 Z" />
-          <path d="M 336 210 C 346 202 350 190 348 180 C 340 188 336 198 336 210 Z" />
+        <g className="cl-an-vine-r">
+          <g fill="none" stroke={GOLD} strokeWidth={2.4} strokeLinecap="round">
+            <path d="M 330 502 C 360 420 312 380 342 300 C 362 240 322 200 340 140 C 348 112 340 92 324 84" />
+            <path d="M 342 300 C 318 290 306 270 310 250" strokeWidth={1.8} />
+          </g>
+          <g fill={SAGE} stroke={INK} strokeWidth={0.8}>
+            <path d="M 334 396 C 344 388 348 376 346 366 C 338 374 334 384 334 396 Z" />
+            <path d="M 336 210 C 346 202 350 190 348 180 C 340 188 336 198 336 210 Z" />
+          </g>
         </g>
 
         {/* ————— Scattered stars ————— */}
@@ -338,26 +372,28 @@ export default function ArtNouveauHermitCard() {
         <path d="M 168 32 C 160 28 154 22 152 14 C 160 18 166 24 168 32 Z" fill={SAGE} stroke={INK} strokeWidth={0.8} />
         <path d="M 232 32 C 240 28 246 22 248 14 C 240 18 234 24 232 32 Z" fill={SAGE} stroke={INK} strokeWidth={0.8} />
 
-        {/* ————— Ribbon banner with title ————— */}
-        <path d="M 56 514 L 36 505 L 45 531 L 36 557 L 56 548 Z" fill={TERRACOTTA_DARK} stroke={INK} strokeWidth={1.4} />
-        <path d="M 344 514 L 364 505 L 355 531 L 364 557 L 344 548 Z" fill={TERRACOTTA_DARK} stroke={INK} strokeWidth={1.4} />
-        <path
-          d="M 56 514 C 120 502 280 502 344 514 L 344 548 C 280 536 120 536 56 548 Z"
-          fill={TERRACOTTA}
-          stroke={INK}
-          strokeWidth={1.8}
-        />
-        <text
-          x={200}
-          y={536}
-          textAnchor="middle"
-          fontFamily="Georgia, 'Iowan Old Style', 'Times New Roman', serif"
-          fontSize={17}
-          letterSpacing={4}
-          fill={CREAM}
-        >
-          THE HERMIT
-        </text>
+        {/* ————— Ribbon banner with title (undulating) ————— */}
+        <g className="cl-an-ribbon">
+          <path d="M 56 514 L 36 505 L 45 531 L 36 557 L 56 548 Z" fill={TERRACOTTA_DARK} stroke={INK} strokeWidth={1.4} />
+          <path d="M 344 514 L 364 505 L 355 531 L 364 557 L 344 548 Z" fill={TERRACOTTA_DARK} stroke={INK} strokeWidth={1.4} />
+          <path
+            d="M 56 514 C 120 502 280 502 344 514 L 344 548 C 280 536 120 536 56 548 Z"
+            fill={TERRACOTTA}
+            stroke={INK}
+            strokeWidth={1.8}
+          />
+          <text
+            x={200}
+            y={536}
+            textAnchor="middle"
+            fontFamily="Georgia, 'Iowan Old Style', 'Times New Roman', serif"
+            fontSize={17}
+            letterSpacing={4}
+            fill={CREAM}
+          >
+            THE HERMIT
+          </text>
+        </g>
       </svg>
       <div className="cl-an-shine" aria-hidden="true" />
     </figure>

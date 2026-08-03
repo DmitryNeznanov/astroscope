@@ -8,6 +8,8 @@
  * Server-component safe: no hooks, no client code.
  */
 
+import type { ReactNode } from "react";
+
 /** Logical-pixel palette: deep purples, one warm amber ramp, off-white. */
 const PALETTE: Record<string, string> = {
   s: "#f4ecd8", // star off-white
@@ -115,14 +117,22 @@ function PixelGlyph({
 }
 
 export default function PixelHermitCard() {
-  // Rasterize the bitmap into crisp rects (slight overdraw avoids hairlines).
-  const cells = ROWS.flatMap((raw, y) => {
+  // Chars that belong to the hermit sprite (staff, hood, robe, face, beard,
+  // lantern and its glow dither); everything else is sky/mountain background.
+  const isSprite = (ch: string) => "WHRrfbLlgo".includes(ch);
+
+  // Rasterize the bitmap into crisp rects (slight overdraw avoids hairlines),
+  // split into a background layer and a sprite layer so the sprite can bob.
+  const bgCells: ReactNode[] = [];
+  const spriteCells: ReactNode[] = [];
+  ROWS.forEach((raw, y) => {
     const row = raw.padEnd(GRID_W, ".").slice(0, GRID_W);
-    return [...row].map((ch, x) => {
+    [...row].forEach((ch, x) => {
       const fill = PALETTE[ch];
-      if (!fill) return null;
+      if (!fill) return;
       const glow = ch === "l" || ch === "L" || ch === "o" || ch === "g";
-      return (
+      const star = ch === "s" || ch === "d";
+      const cell = (
         <rect
           key={`${x}-${y}`}
           x={x}
@@ -130,9 +140,15 @@ export default function PixelHermitCard() {
           width={1.02}
           height={1.02}
           fill={fill}
-          className={glow ? "cl-pixel-glow" : undefined}
+          className={glow ? "cl-pixel-glow" : star ? "cl-pixel-star" : undefined}
+          style={
+            star
+              ? { animationDelay: `${(((x * 7 + y * 13) % 10) / 10) * 2.4}s` }
+              : undefined
+          }
         />
       );
+      (isSprite(ch) ? spriteCells : bgCells).push(cell);
     });
   });
 
@@ -160,6 +176,34 @@ export default function PixelHermitCard() {
         .cl-pixel-card:hover .cl-pixel-glow {
           animation-duration: 0.45s;
           filter: brightness(1.45) saturate(1.2);
+        }
+
+        /* Idle bob: the sprite hops one logical pixel, chunky hard steps. */
+        .cl-pixel-sprite { animation: cl-pixel-bob 1.5s linear infinite; }
+        @keyframes cl-pixel-bob {
+          0%, 49.9% { transform: translateY(0); }
+          50%, 100% { transform: translateY(1px); }
+        }
+
+        /* Screen glitch: a torn horizontal band, flashed every ~7s. */
+        .cl-pixel-glitch {
+          opacity: 0;
+          animation: cl-pixel-glitch 7s linear infinite;
+        }
+        @keyframes cl-pixel-glitch {
+          0%, 91.9% { opacity: 0; transform: translateX(0); }
+          92%, 93.4% { opacity: 1; transform: translateX(2px); }
+          93.5%, 94.9% { opacity: 1; transform: translateX(-2px); }
+          95%, 95.9% { opacity: 1; transform: translateX(1px); }
+          96%, 100% { opacity: 0; transform: translateX(0); }
+        }
+
+        /* Stars blink individually (delay staggered per star, inline). */
+        .cl-pixel-star { animation: cl-pixel-twinkle 2.4s linear infinite; }
+        @keyframes cl-pixel-twinkle {
+          0%, 69.9% { opacity: 1; }
+          70%, 89.9% { opacity: 0.15; }
+          90%, 100% { opacity: 1; }
         }
 
         /* One-shot CRT power-on stutter when the card mounts. */
@@ -225,6 +269,9 @@ export default function PixelHermitCard() {
           .cl-pixel-card { animation: none; }
           .cl-pixel-sweep { animation: none; display: none; }
           .cl-pixel-card:hover .cl-pixel-glow { animation: none; }
+          .cl-pixel-sprite { animation: none; }
+          .cl-pixel-glitch { animation: none; display: none; }
+          .cl-pixel-star { animation: none; }
         }
       `}</style>
 
@@ -236,7 +283,25 @@ export default function PixelHermitCard() {
         style={{ position: "absolute", inset: 0, width: "100%", height: "100%" }}
         aria-hidden="true"
       >
-        {cells}
+        <defs>
+          {/* Horizontal band (torso height) used by the screen-glitch tear. */}
+          <clipPath id="cl-pixel-band">
+            <rect x={0} y={13} width={GRID_W} height={6} />
+          </clipPath>
+        </defs>
+
+        {/* Sky + mountain. */}
+        {bgCells}
+
+        {/* The hermit sprite: bobs like a game idle animation. */}
+        <g className="cl-pixel-sprite">{spriteCells}</g>
+
+        {/* Screen glitch: a shifted copy of the whole scene, clipped to one
+            horizontal band, flashed for a split second every few seconds. */}
+        <g className="cl-pixel-glitch" clipPath="url(#cl-pixel-band)">
+          {bgCells}
+          {spriteCells}
+        </g>
       </svg>
 
       {/* Chrome: stepped pixel-corner frame, IX, nameplate, corner stars. */}

@@ -9,7 +9,9 @@
  * hanko seal with "IX" top-right; tall title cartouche with "THE HERMIT"
  * set vertically on the right edge. Cream washi ground, double keyline frame.
  *
- * Signature effects (CSS-only, server-component safe):
+ * Signature effects (CSS-only, server-component safe, always on):
+ *  - a shooting star streaks diagonally across the night sky every ~8s;
+ *  - pine needle clusters rustle around their branch points, staggered;
  *  - outline cloud / mist bands drift sideways, alternating directions;
  *  - the paper lantern sways gently from its hang point;
  *  - on hover the bokashi sky band shimmers and the sparkles twinkle faster.
@@ -27,11 +29,15 @@ const BAMBOO = "#c79a4e";
 const VERMILION = "#b3342a";
 const SERIF = "Georgia, 'Times New Roman', 'Hiragino Mincho ProN', serif";
 
-/** Fan of short needle strokes — a pine cluster, ukiyo-e style. */
-function pineCluster(cx: number, cy: number, scale: number, key: string) {
+/** Fan of short needle strokes — a pine cluster that rustles on its branch. */
+function pineCluster(cx: number, cy: number, scale: number, key: string, delay: string) {
   const angles = [-75, -45, -15, 15, 45, 75];
   return (
-    <g key={key}>
+    <g
+      key={key}
+      className="cl-uke-pine"
+      style={{ transformOrigin: `${cx}px ${cy}px`, animationDelay: delay }}
+    >
       {angles.map((deg) => {
         const rad = (deg * Math.PI) / 180;
         const len = 7 * scale;
@@ -117,16 +123,36 @@ export default function UkiyoEHermitCard() {
             0%, 100% { opacity: 0.85; }
             50% { opacity: 1; }
           }
+          /* Shooting star: quick diagonal streak + fade, once per cycle */
+          .cl-uke-shoot {
+            animation: cl-uke-shoot 8s linear infinite;
+            opacity: 0;
+          }
+          @keyframes cl-uke-shoot {
+            0% { transform: translate(0, 0); opacity: 0; }
+            2% { opacity: 1; }
+            11% { transform: translate(-96px, 58px); opacity: 0; }
+            100% { transform: translate(-96px, 58px); opacity: 0; }
+          }
+          /* Pine rustle: clusters rock around their branch points */
+          .cl-uke-pine {
+            transform-box: view-box;
+            animation: cl-uke-rustle 2.7s ease-in-out infinite;
+          }
+          @keyframes cl-uke-rustle {
+            0%, 100% { transform: rotate(-2.5deg); }
+            50% { transform: rotate(2.5deg); }
+          }
           /* Drifting mist: cloud bands slide sideways, alternating directions */
           .cl-uke-drift-a { animation: cl-uke-drift-a 26s ease-in-out infinite; }
           .cl-uke-drift-b { animation: cl-uke-drift-b 34s ease-in-out infinite; }
           @keyframes cl-uke-drift-a {
             0%, 100% { transform: translateX(0); }
-            50% { transform: translateX(7px); }
+            50% { transform: translateX(14px); }
           }
           @keyframes cl-uke-drift-b {
             0%, 100% { transform: translateX(0); }
-            50% { transform: translateX(-8px); }
+            50% { transform: translateX(-13px); }
           }
           /* Lantern swaying from its hang point */
           .cl-uke-sway {
@@ -154,6 +180,8 @@ export default function UkiyoEHermitCard() {
         }
         @media (prefers-reduced-motion: reduce) {
           .cl-uke-glow,
+          .cl-uke-shoot,
+          .cl-uke-pine,
           .cl-uke-drift-a,
           .cl-uke-drift-b,
           .cl-uke-sway,
@@ -201,6 +229,13 @@ export default function UkiyoEHermitCard() {
         {sparkle(140, 26, 1.9, "s2", "-1.6s")}
         {sparkle(112, 52, 1.5, "s3", "-3.1s")}
 
+        {/* ── Shooting star crossing the sky diagonally ── */}
+        <g className="cl-uke-shoot">
+          <line x1="150" y1="22" x2="168" y2="11" stroke={CREAM} strokeWidth="1.4" strokeLinecap="round" />
+          <line x1="154" y1="19.5" x2="176" y2="6" stroke={CREAM} strokeWidth="0.8" strokeLinecap="round" opacity="0.4" />
+          <circle cx="149" cy="23" r="1.3" fill="#fff6dd" />
+        </g>
+
         {/* ── Outline-only stylized clouds (drifting) ── */}
         {outlineCloud("M16,64 h20 a7,7 0 0 1 12,-4 a9,9 0 0 1 16,1 a6,6 0 0 1 11,3 h16", 1.2, "c1", "cl-uke-drift-a")}
         {outlineCloud("M22,72 h14 a5,5 0 0 1 10,-2 a7,7 0 0 1 13,2 h18", 0.8, "c2", "cl-uke-drift-b")}
@@ -226,11 +261,11 @@ export default function UkiyoEHermitCard() {
         {/* Mist band crossing the slopes, outline-only (drifting) */}
         {outlineCloud("M9,206 h24 a6,6 0 0 1 11,-3 a8,8 0 0 1 15,2 h30 a6,6 0 0 1 11,-2 h20", 1, "m1", "cl-uke-drift-b")}
 
-        {/* ── Pine in the foreground ── */}
+        {/* ── Pine in the foreground (needles rustle) ── */}
         <path d="M30,256 C29,248 30,240 34,233" fill="none" stroke={INK} strokeWidth="1.6" strokeLinecap="round" />
-        {pineCluster(35, 232, 1, "p1")}
-        {pineCluster(31, 242, 0.85, "p2")}
-        {pineCluster(28, 250, 0.7, "p3")}
+        {pineCluster(35, 232, 1, "p1", "0s")}
+        {pineCluster(31, 242, 0.85, "p2", "-0.9s")}
+        {pineCluster(28, 250, 0.7, "p3", "-1.8s")}
 
         {/* ── THE HERMIT on the peak ── */}
         {/* Raised left sleeve (indigo), arm lifting the lantern */}

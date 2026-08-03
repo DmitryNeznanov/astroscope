@@ -71,11 +71,28 @@ export default function SingleLineCard() {
         .cl-sline .cl-sline-glow {
           transform-box: fill-box;
           transform-origin: center;
-          animation: cl-sline-flicker 5s ease-in-out infinite;
+          animation: cl-sline-flicker 7s ease-in-out infinite;
         }
         @keyframes cl-sline-flicker {
-          0%, 100% { opacity: 0.7; transform: scale(1); }
-          50% { opacity: 1; transform: scale(1.08); }
+          0%, 100% { opacity: 0.85; transform: scale(1); }
+          50% { opacity: 1; transform: scale(1.02); }
+        }
+        /* signature idle effect: a bright spark perpetually re-traces
+           the drawn line. A second copy of the path shows only a short
+           60-unit gold dash; animating dashoffset through the full
+           period (2460) carries it along the whole stroke. */
+        .cl-sline .cl-sline-spark {
+          opacity: 0;
+          stroke-dasharray: 60 2400;
+          stroke-dashoffset: 0;
+          filter: drop-shadow(0 0 4px rgba(220, 171, 74, 0.9));
+          animation: cl-sline-sparktravel 7s linear 3.05s infinite backwards;
+        }
+        @keyframes cl-sline-sparktravel {
+          0% { stroke-dashoffset: 0; opacity: 0; }
+          4% { opacity: 1; }
+          96% { opacity: 1; }
+          100% { stroke-dashoffset: -2460; opacity: 0; }
         }
         /* hover: ink deepens, lantern breathes */
         .cl-sline:hover .cl-sline-ink {
@@ -101,6 +118,10 @@ export default function SingleLineCard() {
           .cl-sline .cl-sline-glow,
           .cl-sline:hover .cl-sline-glow {
             animation: none;
+          }
+          .cl-sline .cl-sline-spark {
+            animation: none;
+            opacity: 0;
           }
         }
       `}</style>
@@ -169,6 +190,19 @@ export default function SingleLineCard() {
           strokeLinecap="round"
           strokeLinejoin="round"
           opacity="0.92"
+        />
+
+        {/* spark: a short gold segment of the same stroke that
+            perpetually travels the drawn line after the draw-on */}
+        <path
+          className="cl-sline-spark"
+          d={d}
+          fill="none"
+          stroke="#e3b95c"
+          strokeWidth="2.6"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          pointerEvents="none"
         />
 
         {/* title */}

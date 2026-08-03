@@ -41,7 +41,13 @@ function CornerFan({ flip }: { flip: boolean }) {
     return `M ${cx} 14 L ${x.toFixed(1)} ${y.toFixed(1)}`;
   });
   return (
-    <g stroke={C.gold} strokeWidth="1" fill="none" opacity="0.9">
+    <g
+      className={`cl-artdeco-fan ${flip ? "cl-artdeco-fan--right" : "cl-artdeco-fan--left"}`}
+      stroke={C.gold}
+      strokeWidth="1"
+      fill="none"
+      opacity="0.9"
+    >
       {[7, 12, 17].map((r) => (
         <path
           key={r}
@@ -74,7 +80,7 @@ export default function ArtDecoHermitCard() {
         }
         .cl-artdeco-star { animation: cl-artdeco-glow 3.6s ease-in-out infinite; }
 
-        /* (1) Sunburst rays rotate very slowly around the lantern hub. */
+        /* (1a) Sunburst rays rotate very slowly around the lantern hub. */
         @keyframes cl-artdeco-spin {
           from { transform: rotate(0deg); }
           to { transform: rotate(360deg); }
@@ -85,7 +91,38 @@ export default function ArtDecoHermitCard() {
           animation: cl-artdeco-spin 75s linear infinite;
         }
 
-        /* (3a) Hover: rays subtly lengthen/brighten from the hub. */
+        /* (1b) Sunburst rays pulse rhythmically from the hub (~3s loop).
+           Separate nested group so the pulse scale and slow rotation
+           transforms never fight. */
+        @keyframes cl-artdeco-pulse {
+          0%, 100% { transform: scale(1); }
+          50% { transform: scale(1.06); }
+        }
+        .cl-artdeco-rays-pulse {
+          transform-box: view-box;
+          transform-origin: 100px 108px;
+          animation: cl-artdeco-pulse 3s ease-in-out infinite;
+        }
+
+        /* (2) Light cascade down the robe chevrons, top to bottom. */
+        @keyframes cl-artdeco-cascade {
+          0%, 100% { opacity: 0.45; stroke: ${C.gold}; }
+          25% { opacity: 1; stroke: ${C.goldLight}; }
+        }
+        .cl-artdeco-chevron { animation: cl-artdeco-cascade 2.4s ease-in-out infinite; }
+        .cl-artdeco-chevron--1 { animation-delay: 0s; }
+        .cl-artdeco-chevron--2 { animation-delay: 0.4s; }
+        .cl-artdeco-chevron--3 { animation-delay: 0.8s; }
+
+        /* (3) Corner fan ornaments shimmer alternately (left/right, ~4s). */
+        @keyframes cl-artdeco-shimmer {
+          0%, 100% { opacity: 0.45; }
+          50% { opacity: 1; }
+        }
+        .cl-artdeco-fan { animation: cl-artdeco-shimmer 4s ease-in-out infinite; }
+        .cl-artdeco-fan--right { animation-delay: 2s; }
+
+        /* (4a) Hover: rays subtly lengthen/brighten from the hub. */
         .cl-artdeco-rays-inner {
           transform-box: view-box;
           transform-origin: 100px 108px;
@@ -96,7 +133,7 @@ export default function ArtDecoHermitCard() {
           opacity: 1;
         }
 
-        /* (3b) Hover: gold frame catches light. */
+        /* (4b) Hover: gold frame catches light. */
         .cl-artdeco-frame {
           transition: stroke 0.6s ease, filter 0.6s ease;
         }
@@ -127,6 +164,9 @@ export default function ArtDecoHermitCard() {
         @media (prefers-reduced-motion: reduce) {
           .cl-artdeco-star,
           .cl-artdeco-rays,
+          .cl-artdeco-rays-pulse,
+          .cl-artdeco-chevron,
+          .cl-artdeco-fan,
           .cl-artdeco-shine { animation: none; }
           .cl-artdeco-shine { display: none; }
           .cl-artdeco-rays-inner,
@@ -148,7 +188,8 @@ export default function ArtDecoHermitCard() {
         {/* Sunburst — precise straight gold rays from the lantern.
             Outer group rotates slowly; inner group handles hover scale. */}
         <g className="cl-artdeco-rays">
-          <g className="cl-artdeco-rays-inner" opacity="0.85">
+          <g className="cl-artdeco-rays-pulse">
+            <g className="cl-artdeco-rays-inner" opacity="0.85">
             <g stroke={C.gold} strokeWidth="1.1">
               {RAYS.map((r, i) => (
                 <line
@@ -169,6 +210,7 @@ export default function ArtDecoHermitCard() {
               strokeWidth="1"
               opacity="0.8"
             />
+            </g>
           </g>
         </g>
 
@@ -195,11 +237,11 @@ export default function ArtDecoHermitCard() {
             fill={C.emerald}
           />
         </g>
-        {/* Chevron motifs across the robe */}
+        {/* Chevron motifs across the robe — lit in a top-to-bottom cascade */}
         <g stroke={C.gold} strokeWidth="1.2" fill="none">
-          <path d="M 84 162 L 100 172 L 116 162" />
-          <path d="M 80 176 L 100 187 L 120 176" />
-          <path d="M 94 154 L 100 159 L 106 154" stroke={C.goldLight} />
+          <path className="cl-artdeco-chevron cl-artdeco-chevron--1" d="M 94 154 L 100 159 L 106 154" stroke={C.goldLight} />
+          <path className="cl-artdeco-chevron cl-artdeco-chevron--2" d="M 84 162 L 100 172 L 116 162" />
+          <path className="cl-artdeco-chevron cl-artdeco-chevron--3" d="M 80 176 L 100 187 L 120 176" />
         </g>
         {/* Hood: elongated teardrop with ivory face slit */}
         <path

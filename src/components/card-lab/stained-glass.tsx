@@ -24,44 +24,59 @@ export default function StainedGlassHermit() {
           50% { opacity: 0.7; }
         }
 
-        /* (1) sun beam sweeping across the window */
+        /* (1) rose window petals slowly rotate around their center */
+        .cl-sg-rose {
+          transform-box: view-box;
+          transform-origin: 100px 54px;
+          animation: cl-sg-spin 40s linear infinite;
+        }
+        @keyframes cl-sg-spin {
+          to { transform: rotate(360deg); }
+        }
+
+        /* (2) two sun beams crossing the window at different angles/speeds */
         .cl-sg-beam {
-          opacity: 0.5;
+          opacity: 0.65;
           mix-blend-mode: screen;
-          animation: cl-sg-sweep 8s linear infinite;
+          animation: cl-sg-sweep 5s linear infinite;
           transition: opacity 0.6s ease;
+        }
+        .cl-sg-beam2 {
+          opacity: 0.35;
+          animation-duration: 11s;
+          animation-direction: reverse;
         }
         @keyframes cl-sg-sweep {
           from { transform: translateX(0); }
           to { transform: translateX(340px); }
         }
 
-        /* (2) glass breathing: low-amplitude brightness pulse, staggered */
-        .cl-sg-br1, .cl-sg-br2, .cl-sg-br3 {
+        /* (3) traveling light: brightness waves roll down through the window */
+        .cl-sg-br1, .cl-sg-br2, .cl-sg-br3, .cl-sg-br4 {
           animation: cl-sg-breathe 6s ease-in-out infinite;
         }
-        .cl-sg-br2 { animation-delay: -2s; }
-        .cl-sg-br3 { animation-delay: -4s; }
+        .cl-sg-br2 { animation-delay: -1.5s; }
+        .cl-sg-br3 { animation-delay: -3s; }
+        .cl-sg-br4 { animation-delay: -4.5s; }
         @keyframes cl-sg-breathe {
           0%, 100% { filter: brightness(1); }
-          50% { filter: brightness(1.09); }
+          50% { filter: brightness(1.18); }
         }
 
-        /* (3) hover: lantern shards flare, beam intensifies */
+        /* (4) hover: lantern shards flare, beams intensify */
         .cl-sg-lantern, .cl-sg-rays { transition: filter 0.4s ease; }
         .cl-sg-card:hover .cl-sg-lantern,
         .cl-sg-card:hover .cl-sg-rays {
           filter: brightness(1.45) saturate(1.25);
         }
-        .cl-sg-card:hover .cl-sg-beam {
-          opacity: 0.95;
-          animation-duration: 3.5s;
-        }
+        .cl-sg-card:hover .cl-sg-beam { opacity: 0.95; animation-duration: 2.5s; }
+        .cl-sg-card:hover .cl-sg-beam2 { opacity: 0.7; }
 
         @media (prefers-reduced-motion: reduce) {
           .cl-sg-glow { animation: none; opacity: 0.5; }
-          .cl-sg-beam { animation: none; opacity: 0; }
-          .cl-sg-br1, .cl-sg-br2, .cl-sg-br3 { animation: none; }
+          .cl-sg-rose { animation: none; }
+          .cl-sg-beam, .cl-sg-beam2 { animation: none; opacity: 0; }
+          .cl-sg-br1, .cl-sg-br2, .cl-sg-br3, .cl-sg-br4 { animation: none; }
           .cl-sg-lantern, .cl-sg-rays, .cl-sg-beam { transition: none; }
         }
       `}</style>
@@ -173,14 +188,14 @@ export default function StainedGlassHermit() {
           />
 
           {/* ---- foreground ground shards ---- */}
-          <g stroke={LEAD} strokeWidth="3.5" strokeLinejoin="round">
+          <g className="cl-sg-br4" stroke={LEAD} strokeWidth="3.5" strokeLinejoin="round">
             <polygon points="22,246 64,232 100,246 66,254 22,254" fill="#241d44" />
             <polygon points="100,246 140,230 178,246 178,254 66,254" fill="#2e2552" />
           </g>
 
           {/* ---- rose window with IX ---- */}
           <circle cx="100" cy="54" r="27" fill="#141026" stroke={LEAD} strokeWidth="4" />
-          <g className="cl-sg-br2" stroke={LEAD} strokeWidth="2.5" strokeLinejoin="round">
+          <g className="cl-sg-rose cl-sg-br2" stroke={LEAD} strokeWidth="2.5" strokeLinejoin="round">
             <path d="M 100 54 L 100 32 A 22 22 0 0 1 115.6 38.4 Z" fill="url(#cl-sg-ruby)" />
             <path d="M 100 54 L 115.6 38.4 A 22 22 0 0 1 122 54 Z" fill="url(#cl-sg-amethyst)" />
             <path d="M 100 54 L 122 54 A 22 22 0 0 1 115.6 69.6 Z" fill="url(#cl-sg-ruby)" />
@@ -222,13 +237,23 @@ export default function StainedGlassHermit() {
             THE HERMIT
           </text>
 
-          {/* ---- sun beam sweeping across the window (screen blend) ---- */}
+          {/* ---- sun beams sweeping across the window (screen blend) ---- */}
           <g transform="rotate(18 100 150)">
             <rect
               className="cl-sg-beam"
               x="-130"
               y="-80"
               width="110"
+              height="460"
+              fill="url(#cl-sg-beamgrad)"
+            />
+          </g>
+          <g transform="rotate(-26 100 150)">
+            <rect
+              className="cl-sg-beam cl-sg-beam2"
+              x="-320"
+              y="-80"
+              width="70"
               height="460"
               fill="url(#cl-sg-beamgrad)"
             />

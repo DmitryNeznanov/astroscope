@@ -9,8 +9,12 @@
  * Signature effects (CSS-only):
  *  - hover: exploded shadow box — layers separate vertically, deepest moving
  *    most, shadows growing as layers lift;
+ *  - idle: each layer floats on its own tiny infinite translateY loop so the
+ *    diorama breathes; the crescent moon drifts slowly across the sky;
  *  - lantern halo flickers like a candle (irregular keyframes);
  *  - on mount: one-shot settle-in — layers drop into the box, back to front.
+ * Idle transforms live on nested wrapper groups (cl-papercut-f*) so they never
+ * fight the hover/settle transforms on the layer groups (cl-papercut-l*).
  * Chrome: 'IX' on a hanging paper tag, 'THE HERMIT' on a torn paper strip.
  * Server-component safe: no hooks, no client code.
  */
@@ -82,6 +86,33 @@ export default function PapercutHermitCard() {
           to { transform: translateY(0); }
         }
 
+        /* ---- Idle: layers breathe on independent infinite float loops ----
+           Front layers float a touch more than back ones (parallax depth);
+           negative delays desynchronise the loops from first paint. */
+        .cl-papercut-f1, .cl-papercut-f2, .cl-papercut-f3,
+        .cl-papercut-f4, .cl-papercut-f5, .cl-papercut-f6 {
+          animation: cl-papercut-breathe 6s ease-in-out infinite alternate;
+        }
+        .cl-papercut-f1 { --cl-papercut-float: 1px;   animation-duration: 7s;   animation-delay: -2.1s; }
+        .cl-papercut-f2 { --cl-papercut-float: 1.4px; animation-duration: 6.4s; animation-delay: -4.5s; }
+        .cl-papercut-f3 { --cl-papercut-float: 1.8px; animation-duration: 5.7s; animation-delay: -1.2s; }
+        .cl-papercut-f4 { --cl-papercut-float: 2.2px; animation-duration: 5.1s; animation-delay: -3.4s; }
+        .cl-papercut-f5 { --cl-papercut-float: 2.6px; animation-duration: 4.5s; animation-delay: -0.7s; }
+        .cl-papercut-f6 { --cl-papercut-float: 3px;   animation-duration: 4s;   animation-delay: -2.8s; }
+        @keyframes cl-papercut-breathe {
+          from { transform: translateY(0); }
+          to { transform: translateY(var(--cl-papercut-float, 2px)); }
+        }
+
+        /* ---- Idle: crescent moon drifts slowly across the sky ---- */
+        .cl-papercut-moon {
+          animation: cl-papercut-moon-drift 38s ease-in-out infinite alternate;
+        }
+        @keyframes cl-papercut-moon-drift {
+          from { transform: translateX(-14px); }
+          to { transform: translateX(16px); }
+        }
+
         /* ---- Lantern halo: irregular candle flicker, not a sine wave ---- */
         .cl-papercut-glow {
           transform-box: fill-box;
@@ -110,6 +141,11 @@ export default function PapercutHermitCard() {
           .cl-papercut-tag, .cl-papercut-strip {
             animation: none;
             transition: none;
+          }
+          .cl-papercut-f1, .cl-papercut-f2, .cl-papercut-f3,
+          .cl-papercut-f4, .cl-papercut-f5, .cl-papercut-f6,
+          .cl-papercut-moon {
+            animation: none;
           }
           .cl-papercut-card:hover .cl-papercut-l1,
           .cl-papercut-card:hover .cl-papercut-l2,
@@ -164,91 +200,105 @@ export default function PapercutHermitCard() {
         <g clipPath="url(#cl-papercut-window)">
           {/* Layer 1 — dusk sky */}
           <g className="cl-papercut-l1">
-            <rect x="20" y="20" width="360" height="560" fill="url(#cl-papercut-sky)" />
-            <circle cx="80" cy="70" r="2" fill={CREAM} opacity="0.9" />
-            <circle cx="130" cy="122" r="1.6" fill={CREAM} opacity="0.8" />
-            <circle cx="250" cy="58" r="1.5" fill={CREAM} opacity="0.85" />
-            <circle cx="332" cy="152" r="1.8" fill={CREAM} opacity="0.8" />
-            <circle cx="62" cy="164" r="1.4" fill={CREAM} opacity="0.75" />
-            <path
-              d="M 348 132 L 350 137 L 355 139 L 350 141 L 348 146 L 346 141 L 341 139 L 346 137 Z"
-              fill={CREAM}
-              opacity="0.9"
-            />
-            <circle cx="300" cy="96" r="16" fill={CREAM} mask="url(#cl-papercut-moon)" />
+            <g className="cl-papercut-f1">
+              <rect x="20" y="20" width="360" height="560" fill="url(#cl-papercut-sky)" />
+              <circle cx="80" cy="70" r="2" fill={CREAM} opacity="0.9" />
+              <circle cx="130" cy="122" r="1.6" fill={CREAM} opacity="0.8" />
+              <circle cx="250" cy="58" r="1.5" fill={CREAM} opacity="0.85" />
+              <circle cx="332" cy="152" r="1.8" fill={CREAM} opacity="0.8" />
+              <circle cx="62" cy="164" r="1.4" fill={CREAM} opacity="0.75" />
+              <path
+                d="M 348 132 L 350 137 L 355 139 L 350 141 L 348 146 L 346 141 L 341 139 L 346 137 Z"
+                fill={CREAM}
+                opacity="0.9"
+              />
+              <g className="cl-papercut-moon">
+                <circle cx="300" cy="96" r="16" fill={CREAM} mask="url(#cl-papercut-moon)" />
+              </g>
+            </g>
           </g>
 
           {/* Layer 2 — far mountains (light plum) */}
           <g className="cl-papercut-l2">
-            <path
-              fill="#7a4a66"
-              d="M 20 580 L 20 332 L 68 244 L 94 270 L 140 212 L 176 257 L 226 196 L 259 251 L 302 216 L 338 263 L 380 232 L 380 580 Z"
-            />
+            <g className="cl-papercut-f2">
+              <path
+                fill="#7a4a66"
+                d="M 20 580 L 20 332 L 68 244 L 94 270 L 140 212 L 176 257 L 226 196 L 259 251 L 302 216 L 338 263 L 380 232 L 380 580 Z"
+              />
+            </g>
           </g>
 
           {/* Layer 3 — mid hills (terracotta) */}
           <g className="cl-papercut-l3">
-            <path
-              fill="#c06a47"
-              d="M 20 580 L 20 424 C 58 398 92 394 122 406 C 152 416 172 382 202 374 C 236 366 262 390 300 398 C 332 405 358 394 380 402 L 380 580 Z"
-            />
+            <g className="cl-papercut-f3">
+              <path
+                fill="#c06a47"
+                d="M 20 580 L 20 424 C 58 398 92 394 122 406 C 152 416 172 382 202 374 C 236 366 262 390 300 398 C 332 405 358 394 380 402 L 380 580 Z"
+              />
+            </g>
           </g>
 
           {/* Layer 4 — near hill (deep plum), crest carries the hermit */}
           <g className="cl-papercut-l4">
-            <path
-              fill={PLUM}
-              d="M 20 580 L 20 494 C 52 476 74 468 102 452 C 132 437 166 415 200 405 C 234 399 262 421 296 439 C 330 457 356 463 380 475 L 380 580 Z"
-            />
+            <g className="cl-papercut-f4">
+              <path
+                fill={PLUM}
+                d="M 20 580 L 20 494 C 52 476 74 468 102 452 C 132 437 166 415 200 405 C 234 399 262 421 296 439 C 330 457 356 463 380 475 L 380 580 Z"
+              />
+            </g>
           </g>
 
           {/* Layer 5 — the hermit (deep navy) with cream lantern cut-out */}
           <g className="cl-papercut-l5">
-            {/* Warm halo bleeding through the lantern cut-out (behind the figure) */}
-            <circle className="cl-papercut-glow" cx="241" cy="321" r="27" fill="#ffd9a0" opacity="0.6" />
-            {/* Staff in the left hand */}
-            <line x1="176" y1="318" x2="168" y2="408" stroke={NAVY} strokeWidth="4" strokeLinecap="round" />
-            {/* Hooded cloak silhouette, right arm raised */}
-            <path
-              fill={NAVY}
-              d="M 197 292
-                 C 189 294 184 301 182 309
-                 L 178 328
-                 C 174 352 171 378 170 403
-                 L 232 403
-                 C 231 386 230 370 228 354
-                 L 227 341
-                 L 244 315
-                 L 237 308
-                 L 220 329
-                 C 219 318 215 304 207 296
-                 L 203 283
-                 Z"
-            />
-            {/* Lantern hanging from the raised hand */}
-            <path
-              d="M 240 312 C 240 307 248 307 248 312"
-              fill="none"
-              stroke={NAVY}
-              strokeWidth="2.5"
-            />
-            <rect x="234" y="312" width="14" height="19" rx="2" fill={CREAM} />
-            <rect x="233" y="310" width="16" height="3" rx="1.5" fill={NAVY} />
-            {/* Star cut into the lantern paper */}
-            <path d="M 241 316 L 243 321 L 241 327 L 239 321 Z" fill={NAVY} />
+            <g className="cl-papercut-f5">
+              {/* Warm halo bleeding through the lantern cut-out (behind the figure) */}
+              <circle className="cl-papercut-glow" cx="241" cy="321" r="27" fill="#ffd9a0" opacity="0.6" />
+              {/* Staff in the left hand */}
+              <line x1="176" y1="318" x2="168" y2="408" stroke={NAVY} strokeWidth="4" strokeLinecap="round" />
+              {/* Hooded cloak silhouette, right arm raised */}
+              <path
+                fill={NAVY}
+                d="M 197 292
+                   C 189 294 184 301 182 309
+                   L 178 328
+                   C 174 352 171 378 170 403
+                   L 232 403
+                   C 231 386 230 370 228 354
+                   L 227 341
+                   L 244 315
+                   L 237 308
+                   L 220 329
+                   C 219 318 215 304 207 296
+                   L 203 283
+                   Z"
+              />
+              {/* Lantern hanging from the raised hand */}
+              <path
+                d="M 240 312 C 240 307 248 307 248 312"
+                fill="none"
+                stroke={NAVY}
+                strokeWidth="2.5"
+              />
+              <rect x="234" y="312" width="14" height="19" rx="2" fill={CREAM} />
+              <rect x="233" y="310" width="16" height="3" rx="1.5" fill={NAVY} />
+              {/* Star cut into the lantern paper */}
+              <path d="M 241 316 L 243 321 L 241 327 L 239 321 Z" fill={NAVY} />
+            </g>
           </g>
 
           {/* Layer 6 — foreground grass and rock (darkest navy) */}
           <g className="cl-papercut-l6">
-            <path
-              fill={INK}
-              d="M 20 580 L 20 522 L 28 508 L 34 520 L 44 504 L 52 520
-                 C 90 508 120 518 155 510
-                 C 190 502 215 508 245 516
-                 C 262 520 276 505 296 501
-                 C 320 497 336 512 350 516
-                 L 358 506 L 364 518 L 372 508 L 380 518 L 380 580 Z"
-            />
+            <g className="cl-papercut-f6">
+              <path
+                fill={INK}
+                d="M 20 580 L 20 522 L 28 508 L 34 520 L 44 504 L 52 520
+                   C 90 508 120 518 155 510
+                   C 190 502 215 508 245 516
+                   C 262 520 276 505 296 501
+                   C 320 497 336 512 350 516
+                   L 358 506 L 364 518 L 372 508 L 380 518 L 380 580 Z"
+              />
+            </g>
           </g>
 
           {/* Recess shading: top gradient + inner edge darkening (not a layer) */}

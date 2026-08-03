@@ -6,10 +6,13 @@
  * the scene; wireframe shapes float overhead. IX in chrome gradient,
  * THE HERMIT in italic serif with a vertical latin accent.
  *
- * Signature effects (CSS-only):
+ * Signature effects (CSS-only, always on):
+ *  - the sun slowly hue-shifts magenta-orange -> cyan-purple and back (~20s);
  *  - the sun's gap-stripes scroll downward on a seamless loop;
  *  - the floor grid scrolls toward the viewer (seamless wrap, horizon fade);
  *  - scanlines drift slowly;
+ *  - the wireframe triangle rotates, the ring pulses scale, palm fronds sway;
+ *  - every ~8s a 2-frame CRT glitch (RGB-split jitter via steps);
  *  - on hover a chrome sheen sweeps the statue (screen blend) and the
  *    pink/cyan rim lights intensify.
  * All motion is disabled under prefers-reduced-motion.
@@ -44,11 +47,6 @@ export default function VaporwaveHermitCard() {
             drop-shadow(0 0 7px rgba(34, 230, 255, 0.6))
             drop-shadow(0 0 16px rgba(34, 230, 255, 0.3));
         }
-        .cl-vapor-glow-sun {
-          filter:
-            drop-shadow(0 0 6px rgba(255, 120, 120, 0.5))
-            drop-shadow(0 0 22px rgba(255, 60, 140, 0.4));
-        }
         .cl-vapor-glow-star {
           filter:
             drop-shadow(0 0 2px rgba(255, 240, 200, 1))
@@ -60,6 +58,23 @@ export default function VaporwaveHermitCard() {
             drop-shadow(0 0 3px rgba(255, 140, 210, 0.6))
             drop-shadow(0 0 10px rgba(123, 47, 247, 0.5));
         }
+
+        /* ---- signature: sun hue-shift, magenta-orange -> cyan-purple ---- */
+        @keyframes cl-vapor-hueshift {
+          0%, 100% {
+            filter:
+              hue-rotate(0deg)
+              drop-shadow(0 0 6px rgba(255, 120, 120, 0.5))
+              drop-shadow(0 0 22px rgba(255, 60, 140, 0.4));
+          }
+          50% {
+            filter:
+              hue-rotate(200deg)
+              drop-shadow(0 0 6px rgba(120, 225, 255, 0.55))
+              drop-shadow(0 0 22px rgba(123, 47, 247, 0.45));
+          }
+        }
+        .cl-vapor-hueshift { animation: cl-vapor-hueshift 20s ease-in-out infinite; }
 
         /* ---- signature: sun gap-stripes scroll downward (period 13px) ---- */
         @keyframes cl-vapor-sunscroll {
@@ -81,6 +96,48 @@ export default function VaporwaveHermitCard() {
           to { transform: translateY(4px); }
         }
         .cl-vapor-scandrift { animation: cl-vapor-scandrift 9s linear infinite; }
+
+        /* ---- signature: whole-card CRT glitch, 2 frames every ~8s ---- */
+        @keyframes cl-vapor-glitch {
+          0%, 92.4% { transform: translateX(0); filter: none; }
+          92.5% { transform: translateX(-3px); filter: hue-rotate(90deg) saturate(2.2); }
+          93.4% { transform: translateX(2.5px); filter: hue-rotate(-70deg) saturate(1.7) contrast(1.2); }
+          94.3%, 100% { transform: translateX(0); filter: none; }
+        }
+        .cl-vapor-glitch { animation: cl-vapor-glitch 8s steps(1, end) infinite; }
+
+        /* ---- signature: wireframe triangle slow rotation ---- */
+        @keyframes cl-vapor-spin {
+          from { transform: rotate(0deg); }
+          to { transform: rotate(360deg); }
+        }
+        .cl-vapor-spin {
+          animation: cl-vapor-spin 24s linear infinite;
+          transform-box: fill-box;
+          transform-origin: center;
+        }
+
+        /* ---- signature: ring scale pulse ---- */
+        @keyframes cl-vapor-pulse {
+          0%, 100% { transform: scale(1); }
+          50% { transform: scale(1.22); }
+        }
+        .cl-vapor-pulse {
+          animation: cl-vapor-pulse 3.4s ease-in-out infinite;
+          transform-box: fill-box;
+          transform-origin: center;
+        }
+
+        /* ---- signature: palm fronds sway from the trunk top ---- */
+        @keyframes cl-vapor-sway {
+          0%, 100% { transform: rotate(-2deg); }
+          50% { transform: rotate(2deg); }
+        }
+        .cl-vapor-sway {
+          animation: cl-vapor-sway 6s ease-in-out infinite;
+          transform-box: view-box;
+          transform-origin: 35px 160px;
+        }
 
         /* ---- signature: hover chrome sheen sweep across the statue ---- */
         .cl-vapor-sheen { opacity: 0; mix-blend-mode: screen; }
@@ -116,9 +173,14 @@ export default function VaporwaveHermitCard() {
         .cl-vapor-twinkle { animation: cl-vapor-twinkle 3.2s ease-in-out infinite; }
 
         @media (prefers-reduced-motion: reduce) {
+          .cl-vapor-hueshift,
           .cl-vapor-sunscroll,
           .cl-vapor-gridscroll,
           .cl-vapor-scandrift,
+          .cl-vapor-glitch,
+          .cl-vapor-spin,
+          .cl-vapor-pulse,
+          .cl-vapor-sway,
           .cl-vapor-float,
           .cl-vapor-float-alt,
           .cl-vapor-twinkle { animation: none; }
@@ -127,7 +189,7 @@ export default function VaporwaveHermitCard() {
         }
       `}</style>
 
-      <svg viewBox="0 0 200 300" preserveAspectRatio="xMidYMid slice" role="img">
+      <svg className="cl-vapor-glitch" viewBox="0 0 200 300" preserveAspectRatio="xMidYMid slice" role="img">
         <defs>
           {/* retro sun gradient — magenta to orange */}
           <linearGradient id="clVaporSun" x1="0" y1="0" x2="0" y2="1">
@@ -221,8 +283,8 @@ export default function VaporwaveHermitCard() {
           <circle cx="186" cy="98" r="0.8" />
         </g>
 
-        {/* striped retro sun — stripes scroll downward, seamless (period 13px) */}
-        <g className="cl-vapor-glow-sun">
+        {/* striped retro sun — hue-shifts slowly, stripes scroll down seamlessly */}
+        <g className="cl-vapor-hueshift">
           <g clipPath="url(#clVaporSunClip)">
             <circle cx="100" cy="168" r="56" fill="url(#clVaporSun)" />
             <g clipPath="url(#clVaporStripeClip)">
@@ -279,14 +341,16 @@ export default function VaporwaveHermitCard() {
           fill="none"
         />
 
-        {/* palm silhouette — left, by the horizon */}
+        {/* palm silhouette — left, fronds sway from the trunk top */}
         <g fill="#0e0218">
           <path d="M 30 196 C 29 184 30 172 34 160 L 37 161 C 34 172 33 184 34 196 Z" />
-          <path d="M 35 161 C 28 154 20 152 12 154 C 19 148 29 149 35 155 Z" />
-          <path d="M 35 160 C 30 150 22 145 14 145 C 22 140 32 145 36 154 Z" />
-          <path d="M 36 159 C 36 149 32 141 26 137 C 34 138 39 147 38 157 Z" />
-          <path d="M 37 159 C 42 150 50 146 58 147 C 51 142 41 147 37 156 Z" />
-          <path d="M 37 161 C 44 155 52 154 60 157 C 53 151 43 153 37 158 Z" />
+          <g className="cl-vapor-sway">
+            <path d="M 35 161 C 28 154 20 152 12 154 C 19 148 29 149 35 155 Z" />
+            <path d="M 35 160 C 30 150 22 145 14 145 C 22 140 32 145 36 154 Z" />
+            <path d="M 36 159 C 36 149 32 141 26 137 C 34 138 39 147 38 157 Z" />
+            <path d="M 37 159 C 42 150 50 146 58 147 C 51 142 41 147 37 156 Z" />
+            <path d="M 37 161 C 44 155 52 154 60 157 C 53 151 43 153 37 158 Z" />
+          </g>
         </g>
 
         {/* broken Greek column — right */}
@@ -318,25 +382,29 @@ export default function VaporwaveHermitCard() {
           />
         </g>
 
-        {/* floating wireframe shapes */}
+        {/* floating wireframe shapes — triangle spins, ring pulses */}
         <g className="cl-vapor-float" fill="none" strokeLinejoin="round">
-          <path
-            className="cl-vapor-glow-cyan"
-            d="M 30 52 L 46 82 L 14 82 Z"
-            stroke="#22e6ff"
-            strokeWidth="1"
-          />
-          <path d="M 30 52 L 30 82 M 30 52 L 22 82 M 30 52 L 38 82" stroke="#22e6ff" strokeWidth="0.4" opacity="0.6" />
+          <g className="cl-vapor-spin">
+            <path
+              className="cl-vapor-glow-cyan"
+              d="M 30 52 L 46 82 L 14 82 Z"
+              stroke="#22e6ff"
+              strokeWidth="1"
+            />
+            <path d="M 30 52 L 30 82 M 30 52 L 22 82 M 30 52 L 38 82" stroke="#22e6ff" strokeWidth="0.4" opacity="0.6" />
+          </g>
         </g>
-        <circle
-          className="cl-vapor-float-alt cl-vapor-glow-pink"
-          cx="166"
-          cy="74"
-          r="9"
-          fill="none"
-          stroke="#ff2e9a"
-          strokeWidth="1.1"
-        />
+        <g className="cl-vapor-float-alt cl-vapor-glow-pink">
+          <circle
+            className="cl-vapor-pulse"
+            cx="166"
+            cy="74"
+            r="9"
+            fill="none"
+            stroke="#ff2e9a"
+            strokeWidth="1.1"
+          />
+        </g>
         <path
           className="cl-vapor-float"
           d="M 152 108 h 8 M 156 104 v 8"

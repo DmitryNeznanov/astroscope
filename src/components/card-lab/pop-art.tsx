@@ -41,12 +41,12 @@ export default function PopArtHermitCard() {
           font-weight: 900;
         }
 
-        /* gentle pulse on the star inside the lantern */
+        /* lantern star: barely-there slow pulse, reads as texture not glow */
         @keyframes cl-popart-glow {
           0%, 100% { opacity: 1; }
-          50% { opacity: 0.35; }
+          50% { opacity: 0.82; }
         }
-        .cl-popart-star { animation: cl-popart-glow 2.4s ease-in-out infinite; }
+        .cl-popart-star { animation: cl-popart-glow 4.8s ease-in-out infinite; }
 
         /* starburst POP: scale pulse once every 4s, snappy overshoot */
         .cl-popart-burst {
@@ -70,30 +70,32 @@ export default function PopArtHermitCard() {
           9% { opacity: 1; }
           14%, 100% { opacity: 1; }
         }
+        /* hover: the pop goes rapid-fire */
+        .cl-popart-card:hover .cl-popart-burst,
+        .cl-popart-card:hover .cl-popart-rays { animation-duration: 1.5s; }
 
-        /* thought bubble: hidden until hover, dots appear one by one */
-        .cl-popart-bubble {
-          opacity: 0;
-          transition: opacity 0.15s ease-out;
-        }
-        .cl-popart-card:hover .cl-popart-bubble { opacity: 1; }
+        /* thought bubble: alive by default — dots cycle 1, 2, 3 on a 2s steps loop */
         .cl-popart-td {
           opacity: 0;
-          transition: opacity 0.05s steps(1, end);
+          animation: cl-popart-think 2s steps(1, end) infinite;
         }
-        .cl-popart-card:hover .cl-popart-td { opacity: 1; }
-        .cl-popart-card:hover .cl-popart-td-1 { transition-delay: 0.2s; }
-        .cl-popart-card:hover .cl-popart-td-2 { transition-delay: 0.45s; }
-        .cl-popart-card:hover .cl-popart-td-3 { transition-delay: 0.7s; }
+        @keyframes cl-popart-think {
+          0% { opacity: 0; }
+          10%, 70% { opacity: 1; }
+          80%, 100% { opacity: 0; }
+        }
+        .cl-popart-td-2 { animation-delay: 0.3s; }
+        .cl-popart-td-3 { animation-delay: 0.6s; }
 
         @media (prefers-reduced-motion: reduce) {
           .cl-popart-card { animation: none; }
           .cl-popart-card svg { transition: none; }
           .cl-popart-star,
           .cl-popart-burst,
-          .cl-popart-rays { animation: none; }
-          .cl-popart-bubble,
-          .cl-popart-td { transition: none; }
+          .cl-popart-rays,
+          .cl-popart-td { animation: none; }
+          /* static card still shows the full '...' */
+          .cl-popart-td { opacity: 1; }
         }
       `}</style>
 
@@ -269,7 +271,7 @@ export default function PopArtHermitCard() {
           <circle cx="124.5" cy="132" r="1" fill="#0a0a0a" />
         </g>
 
-        {/* ---- thought bubble with '...' (revealed on hover, dot by dot) ---- */}
+        {/* ---- thought bubble with '...' (dots cycle continuously) ---- */}
         <g className="cl-popart-bubble">
           <circle cx="152" cy="112" r="2" fill="#ffffff" stroke="#0a0a0a" strokeWidth="1.8" />
           <circle cx="160" cy="103" r="3" fill="#ffffff" stroke="#0a0a0a" strokeWidth="1.8" />
