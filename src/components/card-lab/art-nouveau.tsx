@@ -115,6 +115,8 @@ function HaloRays({ cx = 200, cy = 185, r = 60, long = 92, short = 79 }: {
         return (
           <line
             key={i}
+            className="cl-an-in-ray"
+            style={{ animationDelay: `${(0.75 + i * 0.018).toFixed(3)}s` }}
             x1={cx}
             y1={cy - r}
             x2={cx}
@@ -132,7 +134,7 @@ function HaloRays({ cx = 200, cy = 185, r = 60, long = 92, short = 79 }: {
 
 function HaloDots({ cx = 200, cy = 185, r = 106 }: { cx?: number; cy?: number; r?: number }) {
   return (
-    <g>
+    <g className="cl-an-in-dots">
       {Array.from({ length: 36 }).map((_, i) => {
         const a = (i * 10 * Math.PI) / 180;
         return <circle key={i} cx={cx + r * Math.cos(a)} cy={cy + r * Math.sin(a)} r={1.6} fill={GOLD} opacity={0.8} />;
@@ -145,10 +147,10 @@ function HaloDots({ cx = 200, cy = 185, r = 106 }: { cx?: number; cy?: number; r
 function HaloDisk({ cx = 200, cy = 185, r = 96 }: { cx?: number; cy?: number; r?: number }) {
   return (
     <g>
-      <circle cx={cx} cy={cy} r={r} fill={GOLD_PALE} stroke={INK} strokeWidth={1.6} />
+      <circle className="cl-an-in-bloom" cx={cx} cy={cy} r={r} fill={GOLD_PALE} stroke={INK} strokeWidth={1.6} />
       <HaloRays cx={cx} cy={cy} r={r * 0.625} long={r * 0.958} short={r * 0.823} />
-      <circle cx={cx} cy={cy} r={r * 0.604} fill="none" stroke={GOLD_DEEP} strokeWidth={1.4} />
-      <circle cx={cx} cy={cy} r={r} fill="none" stroke={INK} strokeWidth={1.6} />
+      <circle className="cl-an-in-ring" cx={cx} cy={cy} r={r * 0.604} fill="none" stroke={GOLD_DEEP} strokeWidth={1.4} />
+      <circle className="cl-an-in-ring" cx={cx} cy={cy} r={r} fill="none" stroke={INK} strokeWidth={1.6} />
       <HaloDots cx={cx} cy={cy} r={r + 10} />
       <circle className="cl-an-halo-glow" cx={cx} cy={cy} r={r} fill={GOLD_PALE} opacity={0} />
     </g>
@@ -161,20 +163,20 @@ function Vines({ pal }: SceneProps) {
     <g>
       <g className="cl-an-vine-l">
         <g fill="none" stroke={GOLD} strokeWidth={2.4} strokeLinecap="round">
-          <path d="M 70 502 C 40 420 88 380 58 300 C 38 240 78 200 60 140 C 52 112 60 92 76 84" />
-          <path d="M 58 300 C 82 290 94 270 90 250" strokeWidth={1.8} />
+          <path className="cl-an-in-vine" pathLength={100} d="M 70 502 C 40 420 88 380 58 300 C 38 240 78 200 60 140 C 52 112 60 92 76 84" />
+          <path className="cl-an-in-vine" pathLength={100} d="M 58 300 C 82 290 94 270 90 250" strokeWidth={1.8} />
         </g>
-        <g fill={pal.leaf} stroke={INK} strokeWidth={0.8}>
+        <g className="cl-an-in-dots" fill={pal.leaf} stroke={INK} strokeWidth={0.8}>
           <path d="M 66 396 C 56 388 52 376 54 366 C 62 374 66 384 66 396 Z" />
           <path d="M 64 210 C 54 202 50 190 52 180 C 60 188 64 198 64 210 Z" />
         </g>
       </g>
       <g className="cl-an-vine-r">
         <g fill="none" stroke={GOLD} strokeWidth={2.4} strokeLinecap="round">
-          <path d="M 330 502 C 360 420 312 380 342 300 C 362 240 322 200 340 140 C 348 112 340 92 324 84" />
-          <path d="M 342 300 C 318 290 306 270 310 250" strokeWidth={1.8} />
+          <path className="cl-an-in-vine" pathLength={100} d="M 330 502 C 360 420 312 380 342 300 C 362 240 322 200 340 140 C 348 112 340 92 324 84" />
+          <path className="cl-an-in-vine" pathLength={100} d="M 342 300 C 318 290 306 270 310 250" strokeWidth={1.8} />
         </g>
-        <g fill={pal.leaf} stroke={INK} strokeWidth={0.8}>
+        <g className="cl-an-in-dots" fill={pal.leaf} stroke={INK} strokeWidth={0.8}>
           <path d="M 334 396 C 344 388 348 376 346 366 C 338 374 334 384 334 396 Z" />
           <path d="M 336 210 C 346 202 350 190 348 180 C 340 188 336 198 336 210 Z" />
         </g>
@@ -218,7 +220,7 @@ function IrisDef({ pal }: SceneProps) {
 /** IX — The Hermit (canonical, unchanged). */
 function HermitScene({ pal }: SceneProps) {
   return (
-    <g>
+    <g className="cl-an-in-rise">
       <HaloDisk />
       <path
         d="M 24 478 C 80 430 122 418 160 436 C 192 398 232 392 262 414 C 302 392 350 420 376 462 L 376 492 L 24 492 Z"
@@ -308,7 +310,7 @@ function HermitScene({ pal }: SceneProps) {
 /** I — The Magician: raised wand, lemniscate, table with the four tools. */
 function MagicianScene({ pal }: SceneProps) {
   return (
-    <g strokeLinejoin="round">
+    <g strokeLinejoin="round" className="cl-an-in-rise">
       <HaloDisk cx={200} cy={185} r={80} />
       <Vines pal={pal} />
       {/* lemniscate above the head */}
@@ -375,7 +377,7 @@ function MagicianScene({ pal }: SceneProps) {
 /** III — The Empress: star crown, Venus heart shield, wheat, lush throne. */
 function EmpressScene({ pal }: SceneProps) {
   return (
-    <g strokeLinejoin="round">
+    <g strokeLinejoin="round" className="cl-an-in-rise">
       {/* arched throne back */}
       <path d="M 132 470 C 128 340 150 220 200 160 C 250 220 272 340 268 470 Z" fill={pal.robePale} stroke={INK} strokeWidth={1.4} />
       <path d="M 150 470 C 148 350 166 240 200 190 C 234 240 252 350 250 470" fill="none" stroke={pal.robeDark} strokeWidth={1.2} opacity={0.7} />
@@ -450,7 +452,7 @@ function ChariotSphinx({ fill, transform }: { fill: string; transform?: string }
 
 function ChariotScene({ pal }: SceneProps) {
   return (
-    <g strokeLinejoin="round">
+    <g strokeLinejoin="round" className="cl-an-in-rise">
       {/* city wall with battlements */}
       <rect x={24} y={306} width={352} height={30} fill={pal.robePale} stroke={INK} strokeWidth={1.4} />
       {Array.from({ length: 13 }).map((_, i) => (
@@ -495,16 +497,16 @@ function ChariotScene({ pal }: SceneProps) {
 /** X — Wheel of Fortune: spoked wheel, sphinx atop, snake and creature. */
 function WheelScene({ pal }: SceneProps) {
   return (
-    <g strokeLinejoin="round">
+    <g strokeLinejoin="round" className="cl-an-in-rise">
       <Vines pal={pal} />
       <g fill={GOLD_DEEP}>
         <Spark x={80} y={120} s={7} />
         <Spark x={330} y={140} s={6} />
       </g>
-      {/* static outer rim */}
-      <circle cx={200} cy={275} r={122} fill={GOLD_PALE} fillOpacity={0.25} stroke={INK} strokeWidth={3} />
-      {/* rotor: spokes, inner rim, alternating rim glyphs, hub */}
-      <g className="cl-an-wheel">
+      {/* wheel: static rim + slowly turning rotor, blooming in on load */}
+      <g className="cl-an-in-bloom">
+        <circle cx={200} cy={275} r={122} fill={GOLD_PALE} fillOpacity={0.25} stroke={INK} strokeWidth={3} />
+        <g className="cl-an-wheel">
         {Array.from({ length: 8 }).map((_, i) => (
           <line key={i} x1={200} y1={275 - 16} x2={200} y2={275 - 92} transform={`rotate(${i * 45} 200 275)`} stroke={GOLD_DEEP} strokeWidth={3} />
         ))}
@@ -518,8 +520,9 @@ function WheelScene({ pal }: SceneProps) {
             : <Spark key={i} x={x} y={y} s={7} />;
         })}
         <circle cx={200} cy={275} r={14} fill={GOLD} stroke={INK} strokeWidth={1.5} />
+        </g>
+        <circle className="cl-an-glow" cx={200} cy={275} r={22} fill={GOLD_PALE} />
       </g>
-      <circle className="cl-an-glow" cx={200} cy={275} r={22} fill={GOLD_PALE} />
       {/* sphinx atop the wheel, sword in paw */}
       <path
         d="M 178 156 C 176 140 188 130 202 130 C 200 122 206 114 216 114 C 226 114 232 122 230 132 C 240 136 244 148 240 156 Z"
@@ -543,7 +546,7 @@ function WheelScene({ pal }: SceneProps) {
 /** XIII — Death: skeletal rider, rose banner, sun between two towers. */
 function DeathScene({ pal }: SceneProps) {
   return (
-    <g strokeLinejoin="round">
+    <g strokeLinejoin="round" className="cl-an-in-rise">
       {/* sun rising between two towers */}
       <g fill={pal.robePale} stroke={INK} strokeWidth={1.4}>
         <rect x={268} y={252} width={26} height={80} />
@@ -618,11 +621,11 @@ function DeathScene({ pal }: SceneProps) {
 /** XVII — The Star: kneeling figure, two jugs, one great star + seven small. */
 function StarScene({ pal }: SceneProps) {
   return (
-    <g strokeLinejoin="round">
+    <g strokeLinejoin="round" className="cl-an-in-rise">
       {/* the great eight-pointed star with spinning rays + glow */}
       <HaloRays cx={200} cy={112} r={46} long={78} short={65} />
       <circle className="cl-an-glow" cx={200} cy={112} r={50} fill={GOLD_PALE} />
-      <path d={starPath(200, 112, 44, 20, 8)} fill={GOLD} stroke={INK} strokeWidth={1.5} />
+      <path className="cl-an-in-bloom" d={starPath(200, 112, 44, 20, 8)} fill={GOLD} stroke={INK} strokeWidth={1.5} />
       {/* seven small stars */}
       <g fill={GOLD_DEEP}>
         <Spark x={96} y={90} s={6.5} />
@@ -687,10 +690,10 @@ function StarScene({ pal }: SceneProps) {
 /** XXII — The Fool: stepping toward the cliff edge, dog at heels, sun behind. */
 function FoolScene({ pal }: SceneProps) {
   return (
-    <g strokeLinejoin="round">
+    <g strokeLinejoin="round" className="cl-an-in-rise">
       {/* sun with spinning rays + glow */}
       <circle className="cl-an-glow" cx={280} cy={120} r={54} fill={GOLD_PALE} />
-      <circle cx={280} cy={120} r={46} fill={GOLD_PALE} stroke={INK} strokeWidth={1.6} />
+      <circle className="cl-an-in-bloom" cx={280} cy={120} r={46} fill={GOLD_PALE} stroke={INK} strokeWidth={1.6} />
       <HaloRays cx={280} cy={120} r={50} long={74} short={63} />
       <circle cx={280} cy={120} r={46} fill="none" stroke={INK} strokeWidth={1.6} />
       {/* distant birds */}
@@ -813,8 +816,26 @@ export default function ArtNouveauHermitCard({
           animation: cl-an-sweep 7s ease-in-out infinite;
         }
         @keyframes cl-an-sweep { 0% { transform: translateX(-160%) skewX(-12deg); } 28%, 100% { transform: translateX(320%) skewX(-12deg); } }
+        /* ——— one-shot load sequence (~1.75s staggered) ——— */
+        .cl-an-in-frame { stroke-dasharray: 100; animation: cl-an-in-draw .6s ease-out both; }
+        .cl-an-in-vine { stroke-dasharray: 100; animation: cl-an-in-draw .9s ease-in-out .6s both; }
+        @keyframes cl-an-in-draw { from { stroke-dashoffset: 100; } to { stroke-dashoffset: 0; } }
+        .cl-an-in-rise { animation: cl-an-in-rise .75s ease-out .15s both; }
+        @keyframes cl-an-in-rise { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: translateY(0); } }
+        .cl-an-in-bloom, .cl-an-in-pop { transform-box: fill-box; transform-origin: center; }
+        .cl-an-in-bloom { animation: cl-an-in-bloom .55s cubic-bezier(.34,1.4,.64,1) .55s both; }
+        .cl-an-in-pop { animation: cl-an-in-bloom .5s cubic-bezier(.34,1.56,.64,1) 1s both; }
+        @keyframes cl-an-in-bloom { from { transform: scale(0); } to { transform: scale(1); } }
+        .cl-an-in-ray { animation: cl-an-in-fadein .45s ease-out both; }
+        .cl-an-in-ring { animation: cl-an-in-fadein .5s ease-out .5s both; }
+        .cl-an-in-dots { animation: cl-an-in-fadein .5s ease-out .95s both; }
+        .cl-an-in-fade { animation: cl-an-in-fadein .55s ease-out 1.1s both; }
+        .cl-an-in-up { animation: cl-an-in-rise .55s ease-out 1.2s both; }
+        @keyframes cl-an-in-fadein { from { opacity: 0; } to { opacity: 1; } }
         @media (prefers-reduced-motion: reduce) {
-          .cl-an-glow, .cl-an-halo-glow, .cl-an-rays, .cl-an-wheel, .cl-an-vine-l, .cl-an-vine-r, .cl-an-ribbon, .cl-an-shine { animation: none; }
+          .cl-an-glow, .cl-an-halo-glow, .cl-an-rays, .cl-an-wheel, .cl-an-vine-l, .cl-an-vine-r, .cl-an-ribbon, .cl-an-shine,
+          .cl-an-in-frame, .cl-an-in-vine, .cl-an-in-rise, .cl-an-in-bloom, .cl-an-in-pop,
+          .cl-an-in-ray, .cl-an-in-ring, .cl-an-in-dots, .cl-an-in-fade, .cl-an-in-up { animation: none; }
           .cl-an-shine { display: none; }
           .cl-an-card { transition: none; }
         }
@@ -838,32 +859,37 @@ export default function ArtNouveauHermitCard({
         </g>
 
         {/* ————— Ornate border with corner irises ————— */}
-        <rect x={10} y={10} width={380} height={580} fill="none" stroke={INK} strokeWidth={2.5} />
-        <rect x={22} y={22} width={356} height={556} fill="none" stroke={INK} strokeWidth={1} />
-        <use href="#cl-an-iris" transform="translate(52 82)" />
-        <use href="#cl-an-iris" transform="translate(348 82) scale(-1 1)" />
-        <use href="#cl-an-iris" transform="translate(52 520) scale(1 -1)" />
-        <use href="#cl-an-iris" transform="translate(348 520) scale(-1 -1)" />
+        <rect className="cl-an-in-frame" pathLength={100} x={10} y={10} width={380} height={580} fill="none" stroke={INK} strokeWidth={2.5} />
+        <rect className="cl-an-in-frame" pathLength={100} x={22} y={22} width={356} height={556} fill="none" stroke={INK} strokeWidth={1} />
+        <g className="cl-an-in-fade">
+          <use href="#cl-an-iris" transform="translate(52 82)" />
+          <use href="#cl-an-iris" transform="translate(348 82) scale(-1 1)" />
+          <use href="#cl-an-iris" transform="translate(52 520) scale(1 -1)" />
+          <use href="#cl-an-iris" transform="translate(348 520) scale(-1 -1)" />
+        </g>
 
         {/* ————— Numeral medallion, top center ————— */}
-        <circle cx={200} cy={32} r={21} fill={CREAM} stroke={INK} strokeWidth={2} />
-        <circle cx={200} cy={32} r={15.5} fill="none" stroke={GOLD} strokeWidth={1.2} />
-        <text
-          x={200}
-          y={32 + numeralSize * 0.38}
-          textAnchor="middle"
-          fontFamily="Georgia, 'Iowan Old Style', 'Times New Roman', serif"
-          fontSize={numeralSize}
-          fontWeight={700}
-          fill={INK}
-        >
-          {numeral}
-        </text>
-        <path d="M 168 32 C 160 28 154 22 152 14 C 160 18 166 24 168 32 Z" fill={pal.leaf} stroke={INK} strokeWidth={0.8} />
-        <path d="M 232 32 C 240 28 246 22 248 14 C 240 18 234 24 232 32 Z" fill={pal.leaf} stroke={INK} strokeWidth={0.8} />
+        <g className="cl-an-in-pop">
+          <circle cx={200} cy={32} r={21} fill={CREAM} stroke={INK} strokeWidth={2} />
+          <circle cx={200} cy={32} r={15.5} fill="none" stroke={GOLD} strokeWidth={1.2} />
+          <text
+            x={200}
+            y={32 + numeralSize * 0.38}
+            textAnchor="middle"
+            fontFamily="Georgia, 'Iowan Old Style', 'Times New Roman', serif"
+            fontSize={numeralSize}
+            fontWeight={700}
+            fill={INK}
+          >
+            {numeral}
+          </text>
+          <path d="M 168 32 C 160 28 154 22 152 14 C 160 18 166 24 168 32 Z" fill={pal.leaf} stroke={INK} strokeWidth={0.8} />
+          <path d="M 232 32 C 240 28 246 22 248 14 C 240 18 234 24 232 32 Z" fill={pal.leaf} stroke={INK} strokeWidth={0.8} />
+        </g>
 
-        {/* ————— Ribbon banner with title (undulating) ————— */}
+        {/* ————— Ribbon banner with title (undulating; slides up on load) ————— */}
         <g className="cl-an-ribbon">
+          <g className="cl-an-in-up">
           <path d="M 56 514 L 36 505 L 45 531 L 36 557 L 56 548 Z" fill={pal.ribbonDark} stroke={INK} strokeWidth={1.4} />
           <path d="M 344 514 L 364 505 L 355 531 L 364 557 L 344 548 Z" fill={pal.ribbonDark} stroke={INK} strokeWidth={1.4} />
           <path
@@ -885,6 +911,7 @@ export default function ArtNouveauHermitCard({
           >
             {title}
           </text>
+          </g>
         </g>
       </svg>
       <div className="cl-an-shine" aria-hidden="true" />

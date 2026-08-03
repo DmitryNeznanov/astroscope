@@ -2,6 +2,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import type { JSX } from "react";
 import { toRoman } from "@/lib/roman";
+import Replayable from "@/components/card-lab/replayable";
 import PixelCard from "@/components/card-lab/pixel";
 import ArtNouveauCard from "@/components/card-lab/art-nouveau";
 import BauhausCard from "@/components/card-lab/bauhaus";
@@ -97,7 +98,9 @@ export default async function StyleGallery({
           {GALLERY_CARDS.map((c) => (
             <div key={c.number}>
               <div className="overflow-hidden rounded-lg shadow-2xl shadow-black/60">
-                <Card number={c.number} name={c.name} variant={c.variant} />
+                <Replayable>
+                  <Card number={c.number} name={c.name} variant={c.variant} />
+                </Replayable>
               </div>
               <p className="mt-3 text-sm text-neutral-400">
                 <span className="text-neutral-500">{toRoman(c.number)}</span>

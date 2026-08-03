@@ -156,20 +156,22 @@ function DecoRays({
     };
   });
   return (
-    <g className="cl-artdeco-rays" style={{ transformOrigin: o }}>
-      <g className="cl-artdeco-rays-pulse" style={{ transformOrigin: o }}>
-        <g className="cl-artdeco-rays-inner" style={{ transformOrigin: o }} opacity="0.85">
-          <g stroke={p.gold} strokeWidth="1.1">
-            {lines.map((l, i) => (
-              <line
-                key={i}
-                x1={l.x1.toFixed(1)}
-                y1={l.y1.toFixed(1)}
-                x2={l.x2.toFixed(1)}
-                y2={l.y2.toFixed(1)}
-                strokeWidth={l.long ? 1.3 : 0.8}
-              />
-            ))}
+    <g className="cl-artdeco-load-rays" style={{ transformOrigin: o }}>
+      <g className="cl-artdeco-rays" style={{ transformOrigin: o }}>
+        <g className="cl-artdeco-rays-pulse" style={{ transformOrigin: o }}>
+          <g className="cl-artdeco-rays-inner" style={{ transformOrigin: o }} opacity="0.85">
+            <g stroke={p.gold} strokeWidth="1.1">
+              {lines.map((l, i) => (
+                <line
+                  key={i}
+                  x1={l.x1.toFixed(1)}
+                  y1={l.y1.toFixed(1)}
+                  x2={l.x2.toFixed(1)}
+                  y2={l.y2.toFixed(1)}
+                  strokeWidth={l.long ? 1.3 : 0.8}
+                />
+              ))}
+            </g>
           </g>
         </g>
       </g>
@@ -213,8 +215,9 @@ function HermitScene({ p, rays }: { p: Palette; rays: Ray[] }) {
   return (
     <>
       {/* Sunburst — precise straight gold rays from the lantern.
-          Outer group rotates slowly; middle pulses; inner handles hover. */}
-      <g className="cl-artdeco-rays">
+          Load wrapper scales them open; inner groups rotate/pulse/hover. */}
+      <g className="cl-artdeco-load-rays">
+        <g className="cl-artdeco-rays">
         <g className="cl-artdeco-rays-pulse">
           <g className="cl-artdeco-rays-inner" opacity="0.85">
             <g stroke={p.gold} strokeWidth="1.1">
@@ -240,18 +243,20 @@ function HermitScene({ p, rays }: { p: Palette; rays: Ray[] }) {
           </g>
         </g>
       </g>
+      </g>
 
-      {/* Stepped ziggurat mountain */}
+      {/* Stepped ziggurat mountain — steps rise one by one on load */}
       <g fill={p.band} stroke={p.gold} strokeWidth="1">
-        <rect x="30" y="222" width="140" height="10" />
-        <rect x="44" y="212" width="112" height="10" />
-        <rect x="58" y="202" width="84" height="10" />
-        <rect x="72" y="192" width="56" height="10" />
+        <rect className="cl-artdeco-load-step cl-artdeco-load-step--1" x="30" y="222" width="140" height="10" />
+        <rect className="cl-artdeco-load-step cl-artdeco-load-step--2" x="44" y="212" width="112" height="10" />
+        <rect className="cl-artdeco-load-step cl-artdeco-load-step--3" x="58" y="202" width="84" height="10" />
+        <rect className="cl-artdeco-load-step cl-artdeco-load-step--4" x="72" y="192" width="56" height="10" />
       </g>
       {/* Ziggurat summit cap */}
-      <polygon points="86,192 114,192 100,182" fill={p.accent} stroke={p.gold} strokeWidth="1" />
+      <polygon className="cl-artdeco-load-step cl-artdeco-load-step--5" points="86,192 114,192 100,182" fill={p.accent} stroke={p.gold} strokeWidth="1" />
 
       {/* THE HERMIT — sleek elongated figure, strictly symmetric */}
+      <g className="cl-artdeco-load-scene">
       <g stroke={p.gold} strokeWidth="1">
         <polygon
           points="100,132 88,140 88,152 82,152 82,166 76,166 76,192 124,192 124,166 118,166 118,152 112,152 112,140"
@@ -302,7 +307,7 @@ function HermitScene({ p, rays }: { p: Palette; rays: Ray[] }) {
       </g>
       <circle cx="76" cy="124" r="2.6" fill={p.goldLight} stroke={p.gold} strokeWidth="0.8" />
       <polygon points="88,146 96,150 94,154 86,150" fill={p.goldDark} />
-
+      </g>
     </>
   );
 }
@@ -312,6 +317,7 @@ function MagicianScene({ p }: { p: Palette }) {
     <>
       {/* Sunburst from the raised wand tip */}
       <DecoRays p={p} cx={130} cy={56} count={9} start={-170} end={-40} rLong={30} rShort={22} />
+      <g className="cl-artdeco-load-scene">
       {/* Wand + glowing tip star */}
       <line x1="112" y1="94" x2="130" y2="58" stroke={p.gold} strokeWidth="1.5" />
       <polygon className="cl-artdeco-star" points={starPoints(130, 54, 6, 2.4, 4)} fill={p.ink} />
@@ -347,6 +353,7 @@ function MagicianScene({ p }: { p: Palette }) {
         </g>
         <line x1="140" y1="194" x2="156" y2="172" />
       </g>
+      </g>
     </>
   );
 }
@@ -356,6 +363,7 @@ function EmpressScene({ p }: { p: Palette }) {
     <>
       {/* Sunburst from the crown's center star */}
       <DecoRays p={p} cx={100} cy={60} count={11} start={-165} end={-15} rLong={40} rShort={30} />
+      <g className="cl-artdeco-load-scene">
       {/* Star crown — zigzag band with three star points */}
       <polygon points="84,70 90,54 97,66 103,52 109,66 116,54 116,70" fill={p.band} stroke={p.gold} strokeWidth="1" />
       <polygon points={starPoints(88, 50, 4, 1.6, 4)} fill={p.gold} />
@@ -396,6 +404,7 @@ function EmpressScene({ p }: { p: Palette }) {
           </g>
         ))}
       </g>
+      </g>
     </>
   );
 }
@@ -405,6 +414,7 @@ function ChariotScene({ p }: { p: Palette }) {
     <>
       {/* Sunburst from the canopy's center star */}
       <DecoRays p={p} cx={100} cy={64} count={11} start={-165} end={-15} rLong={38} rShort={28} />
+      <g className="cl-artdeco-load-scene">
       {/* Starred canopy arch */}
       <path d="M 56 84 Q 100 54 144 84 L 144 92 L 56 92 Z" fill={p.band} stroke={p.gold} strokeWidth="1" />
       <polygon className="cl-artdeco-chevron cl-artdeco-chevron--1" points={starPoints(76, 76, 4.5, 1.8, 4)} fill={p.gold} stroke={p.gold} strokeWidth="0.6" />
@@ -438,6 +448,7 @@ function ChariotScene({ p }: { p: Palette }) {
       </g>
       <line x1="40" y1="224" x2="76" y2="224" stroke={p.gold} strokeWidth="0.6" />
       <line x1="124" y1="224" x2="160" y2="224" stroke={p.gold} strokeWidth="0.6" />
+      </g>
     </>
   );
 }
@@ -455,6 +466,7 @@ function WheelScene({ p }: { p: Palette }) {
     <>
       {/* Sunburst radiating full-circle from the wheel hub */}
       <DecoRays p={p} cx={100} cy={140} count={16} start={0} end={360} rLong={82} rShort={74} rIn={66} />
+      <g className="cl-artdeco-load-scene">
       {/* Spoked wheel */}
       <circle cx="100" cy="140" r="62" fill="none" stroke={p.gold} strokeWidth="1.5" />
       <circle cx="100" cy="140" r="44" fill="none" stroke={p.gold} strokeWidth="1" />
@@ -496,6 +508,7 @@ function WheelScene({ p }: { p: Palette }) {
         <line x1="172" y1="150" x2="170" y2="142" />
         <line x1="180" y1="150" x2="182" y2="142" />
       </g>
+      </g>
     </>
   );
 }
@@ -505,6 +518,7 @@ function DeathScene({ p }: { p: Palette }) {
     <>
       {/* Sunburst from the white rose on the dark banner */}
       <DecoRays p={p} cx={66} cy={74} count={7} start={-150} end={-30} rLong={26} rShort={19} />
+      <g className="cl-artdeco-load-scene">
       {/* Banner pole + dark flag */}
       <line x1="44" y1="52" x2="44" y2="214" stroke={p.gold} strokeWidth="1.5" />
       <rect x="44" y="56" width="44" height="36" fill={p.hood} stroke={p.gold} strokeWidth="1" />
@@ -556,6 +570,7 @@ function DeathScene({ p }: { p: Palette }) {
         <line className="cl-artdeco-chevron cl-artdeco-chevron--3" x1="164" y1="218" x2="170" y2="212" />
       </g>
       <line x1="20" y1="234" x2="196" y2="234" stroke={p.gold} strokeWidth="1" />
+      </g>
     </>
   );
 }
@@ -574,6 +589,7 @@ function StarScene({ p }: { p: Palette }) {
     <>
       {/* Sunburst from the great eight-pointed star */}
       <DecoRays p={p} cx={100} cy={72} count={11} start={-165} end={-15} rLong={44} rShort={34} />
+      <g className="cl-artdeco-load-scene">
       <polygon points={starPoints(100, 72, 18, 7, 8)} fill={p.goldLight} stroke={p.gold} strokeWidth="1" />
       <polygon className="cl-artdeco-star" points={starPoints(100, 72, 6, 2.4, 4)} fill={p.ink} />
       {/* Seven small stars */}
@@ -610,6 +626,7 @@ function StarScene({ p }: { p: Palette }) {
         <path d="M 118 226 q 6 -6 12 0 q 6 6 12 0 q 6 -6 12 0 q 6 6 12 0 q 6 -6 12 0" />
         <path d="M 126 236 q 6 -6 12 0 q 6 6 12 0 q 6 -6 12 0 q 6 6 12 0" />
       </g>
+      </g>
     </>
   );
 }
@@ -619,6 +636,7 @@ function FoolScene({ p }: { p: Palette }) {
     <>
       {/* Sunburst radiating from the sun behind the Fool */}
       <DecoRays p={p} cx={148} cy={66} count={12} start={0} end={360} rLong={30} rShort={24} rIn={18} />
+      <g className="cl-artdeco-load-scene">
       <circle cx="148" cy="66" r="15" fill={p.band} stroke={p.gold} strokeWidth="1.2" />
       <polygon className="cl-artdeco-star" points={starPoints(148, 66, 5, 2, 4)} fill={p.ink} />
       {/* Figure in profile, head tilted up, mid-step toward the edge */}
@@ -651,6 +669,7 @@ function FoolScene({ p }: { p: Palette }) {
         stroke={p.gold}
         strokeWidth="1.4"
       />
+      </g>
     </>
   );
 }
@@ -792,12 +811,82 @@ export default function ArtDecoHermitCard({
           background: linear-gradient(90deg, transparent 0%, ${p.goldLight} 45%, #ffffff 55%, transparent 100%);
         }
 
+        /* One-shot load choreography (~1.35s, crisp deco ease-out).
+           Load transforms live on their own wrapper groups so they never
+           fight the continuous ray rotation/pulse loops. */
+        @keyframes cl-artdeco-in-rays {
+          from { transform: scale(0); }
+          to { transform: scale(1); }
+        }
+        @keyframes cl-artdeco-in-fade {
+          from { opacity: 0; transform: translateY(8px); }
+          to { opacity: 1; transform: translateY(0); }
+        }
+        @keyframes cl-artdeco-in-rise {
+          from { opacity: 0; transform: translateY(14px); }
+          to { opacity: 1; transform: translateY(0); }
+        }
+        @keyframes cl-artdeco-in-pop {
+          0% { opacity: 0; transform: scale(0.2) rotate(-30deg); }
+          60% { opacity: 1; transform: scale(1.08) rotate(4deg); }
+          100% { opacity: 1; transform: scale(1) rotate(0); }
+        }
+        @keyframes cl-artdeco-in-band {
+          from { opacity: 0; transform: translateY(22px); }
+          to { opacity: 1; transform: translateY(0); }
+        }
+        @keyframes cl-artdeco-in-opacity {
+          from { opacity: 0; }
+          to { opacity: 1; }
+        }
+        .cl-artdeco-load-rays {
+          transform-box: view-box;
+          transform-origin: 100px 108px;
+          animation: cl-artdeco-in-rays 0.9s cubic-bezier(0.2, 0.7, 0.2, 1) both;
+        }
+        .cl-artdeco-load-scene {
+          transform-box: view-box;
+          animation: cl-artdeco-in-fade 0.7s ease-out 0.25s both;
+        }
+        .cl-artdeco-load-step {
+          transform-box: view-box;
+          animation: cl-artdeco-in-rise 0.5s ease-out both;
+        }
+        .cl-artdeco-load-step--1 { animation-delay: 0.15s; }
+        .cl-artdeco-load-step--2 { animation-delay: 0.25s; }
+        .cl-artdeco-load-step--3 { animation-delay: 0.35s; }
+        .cl-artdeco-load-step--4 { animation-delay: 0.45s; }
+        .cl-artdeco-load-step--5 { animation-delay: 0.55s; }
+        .cl-artdeco-load-fans {
+          transform-box: view-box;
+          animation: cl-artdeco-in-fade 0.6s ease-out 0.55s both;
+        }
+        .cl-artdeco-load-numeral {
+          transform-box: view-box;
+          transform-origin: 100px 28px;
+          animation: cl-artdeco-in-pop 0.7s cubic-bezier(0.3, 0.8, 0.3, 1) 0.65s both;
+        }
+        .cl-artdeco-load-title {
+          transform-box: view-box;
+          animation: cl-artdeco-in-band 0.55s ease-out 0.95s both;
+        }
+        .cl-artdeco-load-frame {
+          animation: cl-artdeco-in-opacity 0.8s ease-out 0.4s both;
+        }
+
         @media (prefers-reduced-motion: reduce) {
           .cl-artdeco-star,
           .cl-artdeco-rays,
           .cl-artdeco-rays-pulse,
           .cl-artdeco-chevron,
           .cl-artdeco-fan,
+          .cl-artdeco-load-rays,
+          .cl-artdeco-load-scene,
+          .cl-artdeco-load-step,
+          .cl-artdeco-load-fans,
+          .cl-artdeco-load-numeral,
+          .cl-artdeco-load-title,
+          .cl-artdeco-load-frame,
           .cl-artdeco-shine { animation: none; }
           .cl-artdeco-shine { display: none; }
           .cl-artdeco-rays-inner,
@@ -824,12 +913,14 @@ export default function ArtDecoHermitCard({
             <HermitScene p={p} rays={buildRays([15, 13, 17, 19][v % 4] + (mirrored ? 2 : 0))} />
           )}
           {/* Upper corner fan/scallop ornaments */}
-          <CornerFan flip={false} gold={p.gold} />
-          <CornerFan flip={true} gold={p.gold} />
+          <g className="cl-artdeco-load-fans">
+            <CornerFan flip={false} gold={p.gold} />
+            <CornerFan flip={true} gold={p.gold} />
+          </g>
         </g>
 
-        {/* Numeral in a gold diamond at top center */}
-        <g>
+        {/* Numeral in a gold diamond at top center — pops in on load */}
+        <g className="cl-artdeco-load-numeral">
           <polygon
             points="100,12 116,28 100,44 84,28"
             fill={p.bg}
@@ -856,7 +947,9 @@ export default function ArtDecoHermitCard({
           </text>
         </g>
 
-        {/* Title band — dark band with gold rules and fan ornaments */}
+        {/* Title band — dark band with gold rules and fan ornaments;
+            slides in last on load */}
+        <g className="cl-artdeco-load-title">
         <rect x="12" y="242" width="176" height="30" fill={p.band} />
         <line x1="12" y1="244" x2="188" y2="244" stroke={p.gold} strokeWidth="1.2" />
         <line x1="12" y1="270" x2="188" y2="270" stroke={p.gold} strokeWidth="1.2" />
@@ -895,9 +988,10 @@ export default function ArtDecoHermitCard({
         >
           {title}
         </text>
+        </g>
 
         {/* Thin gold double frame with stepped corner motifs */}
-        <g className="cl-artdeco-frame">
+        <g className="cl-artdeco-frame cl-artdeco-load-frame">
           <rect x="5" y="5" width="190" height="290" fill="none" stroke={p.gold} strokeWidth="1" />
           <rect x="9" y="9" width="182" height="282" fill="none" stroke={p.gold} strokeWidth="0.5" />
           <g stroke={p.gold} strokeWidth="1" fill="none">

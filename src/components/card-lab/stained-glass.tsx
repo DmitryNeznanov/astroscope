@@ -493,8 +493,33 @@ export default function StainedGlassHermit({
         .cl-sg-card { display: block; line-height: 0; }
         .cl-sg-card svg { display: block; width: 100%; height: 100%; }
 
-        /* light-source glow pulse */
-        .cl-sg-glow { animation: cl-sg-pulse 5s ease-in-out infinite; }
+        /* (0) one-shot "window installation": groups fade in as black
+           silhouettes (lead first), then the glass lights up; staggered
+           outward from the light source, rose window pops last (~1.5s) */
+        @keyframes cl-sg-install {
+          0% { opacity: 0; filter: brightness(0); }
+          35% { opacity: 1; filter: brightness(0); }
+          75% { filter: brightness(1.35); }
+          100% { opacity: 1; filter: brightness(1); }
+        }
+        @keyframes cl-sg-pop {
+          0% { opacity: 0; transform: scale(0.55); }
+          60% { opacity: 1; transform: scale(1.08); }
+          100% { opacity: 1; transform: scale(1); }
+        }
+        .cl-sg-inframe { animation: cl-sg-install 0.35s ease-out backwards; }
+        .cl-sg-inpanel { animation: cl-sg-install 0.35s ease-out 0.1s backwards; }
+        .cl-sg-rosewrap {
+          transform-box: view-box;
+          transform-origin: 100px 54px;
+          animation: cl-sg-pop 0.45s ease-out 1.05s backwards;
+        }
+
+        /* light-source glow pulse (installs with the light source) */
+        .cl-sg-glow {
+          animation: cl-sg-pulse 5s ease-in-out infinite, cl-sg-install 0.45s ease-out backwards;
+          animation-delay: 0.7s, 0.25s;
+        }
         @keyframes cl-sg-pulse {
           0%, 100% { opacity: 0.35; }
           50% { opacity: 0.7; }
@@ -514,38 +539,41 @@ export default function StainedGlassHermit({
         .cl-sg-beam {
           opacity: 0.65;
           mix-blend-mode: screen;
-          animation: cl-sg-sweep 5s linear infinite;
+          animation: cl-sg-sweep 5s linear infinite, cl-sg-install 0.4s ease-out backwards;
+          animation-delay: 0s, 1.15s;
           transition: opacity 0.6s ease;
         }
         .cl-sg-beam2 {
           opacity: 0.35;
-          animation-duration: 11s;
-          animation-direction: reverse;
+          animation-duration: 11s, 0.4s;
+          animation-direction: reverse, normal;
         }
         @keyframes cl-sg-sweep {
           from { transform: translateX(0); }
           to { transform: translateX(340px); }
         }
 
-        /* (3) traveling light: brightness waves roll down through the window */
-        .cl-sg-br1, .cl-sg-br2, .cl-sg-br3, .cl-sg-br4 {
-          animation: cl-sg-breathe 6s ease-in-out infinite;
-        }
-        .cl-sg-br2 { animation-delay: -1.5s; }
-        .cl-sg-br3 { animation-delay: -3s; }
-        .cl-sg-br4 { animation-delay: -4.5s; }
+        /* (3) traveling light: brightness waves roll down through the window
+           (install listed last so it wins while it runs, then hands off) */
+        .cl-sg-br1 { animation: cl-sg-breathe 6s ease-in-out infinite, cl-sg-install 0.45s ease-out backwards; animation-delay: 0s, 0.75s; }
+        .cl-sg-br2 { animation: cl-sg-breathe 6s ease-in-out infinite, cl-sg-install 0.45s ease-out backwards; animation-delay: -1.5s, 0.6s; }
+        .cl-sg-br3 { animation: cl-sg-breathe 6s ease-in-out infinite, cl-sg-install 0.45s ease-out backwards; animation-delay: -3s, 0.45s; }
+        .cl-sg-br4 { animation: cl-sg-breathe 6s ease-in-out infinite, cl-sg-install 0.45s ease-out backwards; animation-delay: -4.5s, 0.9s; }
         @keyframes cl-sg-breathe {
           0%, 100% { filter: brightness(1); }
           50% { filter: brightness(1.18); }
         }
 
         /* (4) hover: light source flares, beams intensify */
-        .cl-sg-lantern, .cl-sg-rays { transition: filter 0.4s ease; }
+        .cl-sg-lantern, .cl-sg-rays {
+          transition: filter 0.4s ease;
+          animation: cl-sg-install 0.45s ease-out 0.25s backwards;
+        }
         .cl-sg-card:hover .cl-sg-lantern,
         .cl-sg-card:hover .cl-sg-rays {
           filter: brightness(1.45) saturate(1.25);
         }
-        .cl-sg-card:hover .cl-sg-beam { opacity: 0.95; animation-duration: 2.5s; }
+        .cl-sg-card:hover .cl-sg-beam { opacity: 0.95; animation-duration: 2.5s, 0.4s; }
         .cl-sg-card:hover .cl-sg-beam2 { opacity: 0.7; }
 
         @media (prefers-reduced-motion: reduce) {
@@ -554,6 +582,7 @@ export default function StainedGlassHermit({
           .cl-sg-beam, .cl-sg-beam2 { animation: none; opacity: 0; }
           .cl-sg-br1, .cl-sg-br2, .cl-sg-br3, .cl-sg-br4 { animation: none; }
           .cl-sg-lantern, .cl-sg-rays, .cl-sg-beam { transition: none; }
+          .cl-sg-lantern, .cl-sg-rays, .cl-sg-inframe, .cl-sg-inpanel, .cl-sg-rosewrap { animation: none; }
         }
       `}</style>
 
@@ -601,6 +630,7 @@ export default function StainedGlassHermit({
 
         {/* window silhouette background so the arch reads on any page bg */}
         <path
+          className="cl-sg-inframe"
           d="M 22 298 L 22 132 C 22 72 56 34 100 10 C 144 34 178 72 178 132 L 178 298 Z"
           fill="#17122b"
         />
@@ -609,8 +639,9 @@ export default function StainedGlassHermit({
           <g transform={flip}>
             {scene}
 
-            {/* ---- rose window with the card number ---- */}
-            <circle cx="100" cy="54" r="27" fill="#141026" stroke={LEAD} strokeWidth="4" />
+            {/* ---- rose window with the card number (installs last, pop) ---- */}
+            <g className="cl-sg-rosewrap">
+              <circle cx="100" cy="54" r="27" fill="#141026" stroke={LEAD} strokeWidth="4" />
             <g className="cl-sg-rose cl-sg-br2" stroke={LEAD} strokeWidth="2.5" strokeLinejoin="round">
               <path d="M 100 54 L 100 32 A 22 22 0 0 1 115.6 38.4 Z" fill="url(#cl-sg-rosea)" />
               <path d="M 100 54 L 115.6 38.4 A 22 22 0 0 1 122 54 Z" fill="url(#cl-sg-roseb)" />
@@ -636,10 +667,12 @@ export default function StainedGlassHermit({
               lengthAdjust="spacingAndGlyphs"
             >
               {numeral}
-            </text>
+              </text>
+            </g>
 
             {/* ---- leaded name panel ---- */}
-            <rect x="22" y="256" width="156" height="42" fill="#131024" stroke={LEAD} strokeWidth="4" />
+            <g className="cl-sg-inpanel">
+              <rect x="22" y="256" width="156" height="42" fill="#131024" stroke={LEAD} strokeWidth="4" />
             <line x1="58" y1="256" x2="58" y2="298" stroke={LEAD} strokeWidth="3" />
             <line x1="142" y1="256" x2="142" y2="298" stroke={LEAD} strokeWidth="3" />
             <polygon points="40,270 46,277 40,284 34,277" fill={p.accent} stroke={LEAD} strokeWidth="2.5" />
@@ -661,6 +694,7 @@ export default function StainedGlassHermit({
                 {line}
               </text>
             ))}
+            </g>
 
             {/* ---- sun beams sweeping across the window (screen blend) ---- */}
             <g transform="rotate(18 100 150)">
@@ -674,6 +708,7 @@ export default function StainedGlassHermit({
 
         {/* outer lead frame of the lancet window */}
         <path
+          className="cl-sg-inframe"
           d="M 22 298 L 22 132 C 22 72 56 34 100 10 C 144 34 178 72 178 132 L 178 298 Z"
           fill="none"
           stroke={LEAD}

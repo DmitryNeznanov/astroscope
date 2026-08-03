@@ -98,6 +98,8 @@ function ContourBands({ pal, variant, cx, cy }: { pal: string[]; variant: number
     discs.push(
       <path
         key={i}
+        className="cl-psy-disc"
+        style={{ animationDelay: `${(i * 0.04).toFixed(2)}s` }}
         d={wavyRing(cx, cy, r, 7, 6 + ((i + variant) % 4), i * 1.3 + variant * 0.7)}
         fill={pal[i % pal.length]}
         stroke={INK}
@@ -184,6 +186,7 @@ function Paisley({
   flip,
   outer,
   inner,
+  popDelay = 0.45,
 }: {
   x: number;
   y: number;
@@ -192,25 +195,28 @@ function Paisley({
   flip?: boolean;
   outer: string;
   inner: string;
+  popDelay?: number;
 }) {
   return (
     <g transform={`translate(${x} ${y}) rotate(${rot}) scale(${flip ? -s : s} ${s})`}>
-      <path
-        d="M0 -42 C24 -42 40 -22 36 2 C32 26 12 42 -6 38 C-26 33 -36 14 -30 -6 C-26 -20 -16 -27 -7 -23 C1 -20 3 -12 -3 -8 C-8 -5 -13 -8 -12 -14"
-        fill={outer}
-        stroke={INK}
-        strokeWidth={2.4}
-        strokeLinecap="round"
-      />
-      <circle cx={-4} cy={10} r={6.5} fill={inner} stroke={INK} strokeWidth={2} />
-      <circle cx={-4} cy={10} r={2.2} fill={INK} />
-      <path
-        d="M14 30 C22 26 27 18 26 8"
-        fill="none"
-        stroke={CREAM}
-        strokeWidth={2.4}
-        strokeLinecap="round"
-      />
+      <g className="cl-psy-pop" style={{ animationDelay: `${popDelay}s` }}>
+        <path
+          d="M0 -42 C24 -42 40 -22 36 2 C32 26 12 42 -6 38 C-26 33 -36 14 -30 -6 C-26 -20 -16 -27 -7 -23 C1 -20 3 -12 -3 -8 C-8 -5 -13 -8 -12 -14"
+          fill={outer}
+          stroke={INK}
+          strokeWidth={2.4}
+          strokeLinecap="round"
+        />
+        <circle cx={-4} cy={10} r={6.5} fill={inner} stroke={INK} strokeWidth={2} />
+        <circle cx={-4} cy={10} r={2.2} fill={INK} />
+        <path
+          d="M14 30 C22 26 27 18 26 8"
+          fill="none"
+          stroke={CREAM}
+          strokeWidth={2.4}
+          strokeLinecap="round"
+        />
+      </g>
     </g>
   );
 }
@@ -677,7 +683,8 @@ function TitleBanner({ name, pal }: { name: string; pal: string[] }) {
     lengthAdjust: "spacingAndGlyphs" as const,
   };
   return (
-    <g className="cl-psy-title">
+    <g className="cl-psy-slam">
+      <g className="cl-psy-title">
       <defs>
         <path id="cl-psy-titlePath" d="M52 544 Q126 528 200 540 T348 538" fill="none" />
       </defs>
@@ -697,6 +704,7 @@ function TitleBanner({ name, pal }: { name: string; pal: string[] }) {
           {name}
         </textPath>
       </text>
+      </g>
     </g>
   );
 }
@@ -740,6 +748,41 @@ export default function PsychedelicCard({
           0%, 100% { transform: translateY(0) rotate(0deg) }
           50% { transform: translateY(-3px) rotate(2.5deg) }
         }
+        /* One-shot load choreography (re-runs on remount). */
+        @keyframes cl-psy-ripple { from { transform: scale(0) } to { transform: scale(1) } }
+        @keyframes cl-psy-drop {
+          from { transform: translateY(-26px); opacity: 0 }
+          to { transform: translateY(0); opacity: 1 }
+        }
+        @keyframes cl-psy-pop {
+          0% { transform: scale(0) }
+          70% { transform: scale(1.18) }
+          100% { transform: scale(1) }
+        }
+        @keyframes cl-psy-slam {
+          0% { transform: scale(1.7); opacity: 0 }
+          60% { transform: scale(.96); opacity: 1 }
+          100% { transform: scale(1) }
+        }
+        .cl-psy-disc {
+          transform-box: view-box;
+          transform-origin: ${lx}px ${ly}px;
+          animation: cl-psy-ripple .5s cubic-bezier(.25,.9,.3,1.15) both;
+        }
+        .cl-psy-scene {
+          transform-box: fill-box;
+          animation: cl-psy-drop .7s ease-out .3s both;
+        }
+        .cl-psy-pop {
+          transform-box: fill-box;
+          transform-origin: center;
+          animation: cl-psy-pop .45s ease-out both;
+        }
+        .cl-psy-slam {
+          transform-box: fill-box;
+          transform-origin: center;
+          animation: cl-psy-slam .5s cubic-bezier(.2,.8,.3,1.1) .6s both;
+        }
         .cl-psy-glow { animation: cl-psy-pulse 3.2s ease-in-out infinite }
         .cl-psy-rings {
           transform-box: view-box;
@@ -766,7 +809,8 @@ export default function PsychedelicCard({
           filter: saturate(1.6);
         }
         @media (prefers-reduced-motion: reduce) {
-          .cl-psy-glow, .cl-psy-rings, .cl-psy-title, .cl-psy-paisley { animation: none }
+          .cl-psy-glow, .cl-psy-rings, .cl-psy-title, .cl-psy-paisley,
+          .cl-psy-disc, .cl-psy-scene, .cl-psy-pop, .cl-psy-slam { animation: none }
         }
       `}</style>
       <svg
@@ -786,13 +830,15 @@ export default function PsychedelicCard({
           <ContourBands pal={pal} variant={v} cx={lx} cy={ly} />
 
           {/* Paisley flourishes (wrapped so CSS bobbing composes with placement). */}
-          <g className="cl-psy-paisley cl-psy-paisley-1"><Paisley x={66} y={452} s={1} rot={-14 + pr} outer={pal[1]} inner={pal[2]} /></g>
-          <g className="cl-psy-paisley cl-psy-paisley-2"><Paisley x={334} y={452} s={1} rot={14 + pr} outer={pal[1]} inner={pal[2]} flip /></g>
-          <g className="cl-psy-paisley cl-psy-paisley-3"><Paisley x={72} y={84} s={0.55} rot={-24 + pr} outer={pal[1]} inner={pal[2]} /></g>
-          <g className="cl-psy-paisley cl-psy-paisley-4"><Paisley x={328} y={84} s={0.55} rot={24 + pr} outer={pal[1]} inner={pal[2]} flip /></g>
+          <g className="cl-psy-paisley cl-psy-paisley-1"><Paisley x={66} y={452} s={1} rot={-14 + pr} outer={pal[1]} inner={pal[2]} popDelay={0.45} /></g>
+          <g className="cl-psy-paisley cl-psy-paisley-2"><Paisley x={334} y={452} s={1} rot={14 + pr} outer={pal[1]} inner={pal[2]} popDelay={0.55} flip /></g>
+          <g className="cl-psy-paisley cl-psy-paisley-3"><Paisley x={72} y={84} s={0.55} rot={-24 + pr} outer={pal[1]} inner={pal[2]} popDelay={0.65} /></g>
+          <g className="cl-psy-paisley cl-psy-paisley-4"><Paisley x={328} y={84} s={0.55} rot={24 + pr} outer={pal[1]} inner={pal[2]} popDelay={0.75} flip /></g>
 
-          {/* The scene itself. */}
-          <Art pal={pal} />
+          {/* The scene itself (drops/fades in on load). */}
+          <g className="cl-psy-scene">
+            <Art pal={pal} />
+          </g>
         </g>
 
         {/* Ornamental sun with the hidden numeral (never mirrored). */}

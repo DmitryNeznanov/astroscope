@@ -23,7 +23,12 @@ import { toRoman } from "@/lib/roman";
  * chrome sheen + rim intensify. Each scene's light source twinkles
  * (Hermit's lantern star, Magician's wand tip, Empress's crown star,
  * Chariot's canopy star, Wheel's hub, Death's banner rose, Star's big star).
- * All motion is disabled under prefers-reduced-motion.
+ *
+ * Initial load ("system boot", one-shot ~1.5s, re-runs on remount):
+ * CRT power-on flicker -> sun rises from below the horizon -> grid scans in
+ * -> side decor slides in from the edges + subject materializes -> typography
+ * glitches in last. Load transforms live on wrapper groups so they never
+ * fight the ambient loops. All motion is disabled under reduced-motion.
  */
 export interface VaporwaveCardProps {
   number?: number;
@@ -76,28 +81,32 @@ function HermitScene({ altShapes }: { altShapes: boolean }) {
   return (
     <>
       {/* palm silhouette — left, fronds sway from the trunk top */}
-      <g fill="#0e0218">
-        <path d="M 30 196 C 29 184 30 172 34 160 L 37 161 C 34 172 33 184 34 196 Z" />
-        <path
-          className="cl-vapor-sway"
-          d="M 35 161 C 28 154 20 152 12 154 C 19 148 29 149 35 155 Z
-             M 35 160 C 30 150 22 145 14 145 C 22 140 32 145 36 154 Z
-             M 36 159 C 36 149 32 141 26 137 C 34 138 39 147 38 157 Z
-             M 37 159 C 42 150 50 146 58 147 C 51 142 41 147 37 156 Z
-             M 37 161 C 44 155 52 154 60 157 C 53 151 43 153 37 158 Z"
-        />
+      <g className="cl-vapor-load-left">
+        <g fill="#0e0218">
+          <path d="M 30 196 C 29 184 30 172 34 160 L 37 161 C 34 172 33 184 34 196 Z" />
+          <path
+            className="cl-vapor-sway"
+            d="M 35 161 C 28 154 20 152 12 154 C 19 148 29 149 35 155 Z
+               M 35 160 C 30 150 22 145 14 145 C 22 140 32 145 36 154 Z
+               M 36 159 C 36 149 32 141 26 137 C 34 138 39 147 38 157 Z
+               M 37 159 C 42 150 50 146 58 147 C 51 142 41 147 37 156 Z
+               M 37 161 C 44 155 52 154 60 157 C 53 151 43 153 37 158 Z"
+          />
+        </g>
       </g>
 
       {/* broken Greek column — right */}
-      <path
-        d="M 168 206 L 170 148 L 172 142 L 174 147 L 177 140 L 180 146 L 182 143 L 184 206 Z"
-        fill="#b9c0ce"
-        stroke="#ff9ad2"
-        strokeWidth="0.7"
-        strokeOpacity="0.7"
-      />
-      <path d="M 172 152 L 171 204 M 176 152 L 175.6 204 M 180 152 L 180.4 204" stroke="#7b8296" strokeWidth="0.6" opacity="0.8" fill="none" />
-      <path className="cl-vapor-float-alt" d="M 172 128 L 184 126 L 186 132 L 174 135 Z" fill="#cdd3de" stroke="#22e6ff" strokeWidth="0.6" />
+      <g className="cl-vapor-load-right">
+        <path
+          d="M 168 206 L 170 148 L 172 142 L 174 147 L 177 140 L 180 146 L 182 143 L 184 206 Z"
+          fill="#b9c0ce"
+          stroke="#ff9ad2"
+          strokeWidth="0.7"
+          strokeOpacity="0.7"
+        />
+        <path d="M 172 152 L 171 204 M 176 152 L 175.6 204 M 180 152 L 180.4 204" stroke="#7b8296" strokeWidth="0.6" opacity="0.8" fill="none" />
+        <path className="cl-vapor-float-alt" d="M 172 128 L 184 126 L 186 132 L 174 135 Z" fill="#cdd3de" stroke="#22e6ff" strokeWidth="0.6" />
+      </g>
 
       {/* floating wireframe shapes — spin/pulse; swapped in palettes 2-3 */}
       <g className="cl-vapor-float" fill="none" strokeLinejoin="round">
@@ -230,12 +239,16 @@ function EmpressScene() {
       {/* heart shield with Venus symbol */}
       <path className="cl-vapor-glow-pink" d="M 150 166 C 150 160 159 160 159 167 C 159 173 150 180 150 184 C 150 180 141 173 141 167 C 141 160 150 160 150 166 Z" fill="#ff5cb4" opacity="0.9" />
       <path d="M 150 169 m -3 0 a 3 3 0 1 0 6 0 a 3 3 0 1 0 -6 0 M 150 172 L 150 179 M 147 176 L 153 176" fill="none" stroke="#fff" strokeWidth="1" />
-      {/* wheat — swaying */}
-      <g className="cl-vapor-sway" style={{ transformOrigin: "46px 240px" }} stroke="#ffcf8a" strokeWidth="1.2" fill="none" strokeLinecap="round">
-        <path d="M 40 242 L 40 208 M 34 216 L 40 210 M 46 216 L 40 210 M 34 226 L 40 220 M 46 226 L 40 220 M 54 242 L 54 204 M 48 212 L 54 206 M 60 212 L 54 206 M 48 222 L 54 216 M 60 222 L 54 216" />
+      {/* wheat — swaying, slides in from the sides on load */}
+      <g className="cl-vapor-load-left">
+        <g className="cl-vapor-sway" style={{ transformOrigin: "46px 240px" }} stroke="#ffcf8a" strokeWidth="1.2" fill="none" strokeLinecap="round">
+          <path d="M 40 242 L 40 208 M 34 216 L 40 210 M 46 216 L 40 210 M 34 226 L 40 220 M 46 226 L 40 220 M 54 242 L 54 204 M 48 212 L 54 206 M 60 212 L 54 206 M 48 222 L 54 216 M 60 222 L 54 216" />
+        </g>
       </g>
-      <g className="cl-vapor-sway" style={{ transformOrigin: "154px 240px" }} stroke="#ffcf8a" strokeWidth="1.2" fill="none" strokeLinecap="round">
-        <path d="M 148 242 L 148 208 M 142 216 L 148 210 M 154 216 L 148 210 M 142 226 L 148 220 M 154 226 L 148 220 M 162 242 L 162 204 M 156 212 L 162 206 M 168 212 L 162 206 M 156 222 L 162 216 M 168 222 L 162 216" />
+      <g className="cl-vapor-load-right">
+        <g className="cl-vapor-sway" style={{ transformOrigin: "154px 240px" }} stroke="#ffcf8a" strokeWidth="1.2" fill="none" strokeLinecap="round">
+          <path d="M 148 242 L 148 208 M 142 216 L 148 210 M 154 216 L 148 210 M 142 226 L 148 220 M 154 226 L 148 220 M 162 242 L 162 204 M 156 212 L 162 206 M 168 212 L 162 206 M 156 222 L 162 216 M 168 222 L 162 216" />
+        </g>
       </g>
       {/* lush floating accents */}
       <circle className="cl-vapor-float-alt cl-vapor-glow-pink" cx="34" cy="70" r="7" fill="none" stroke="#ff2e9a" strokeWidth="1" />
@@ -271,9 +284,11 @@ function ChariotScene() {
         <path className="cl-vapor-rim cl-vapor-glow-cyan" d="M 142 168 V 210" stroke="#5cecff" strokeWidth="1.3" />
       </g>
       {/* two sphinxes — pink left, cyan right */}
-      <g fill="#140a26" strokeWidth="1">
+      <g className="cl-vapor-load-left" fill="#140a26" strokeWidth="1">
         <path className="cl-vapor-glow-pink" d="M 30 240 C 30 228 40 222 48 222 C 54 222 56 228 58 232 L 68 232 C 72 232 74 236 74 240 Z" stroke="#ff5cb4" />
         <circle className="cl-vapor-glow-pink" cx="44" cy="218" r="5" stroke="#ff5cb4" />
+      </g>
+      <g className="cl-vapor-load-right" fill="#140a26" strokeWidth="1">
         <path className="cl-vapor-glow-cyan" d="M 170 240 C 170 228 160 222 152 222 C 146 222 144 228 142 232 L 132 232 C 128 232 126 236 126 240 Z" stroke="#5cecff" />
         <circle className="cl-vapor-glow-cyan" cx="156" cy="218" r="5" stroke="#5cecff" />
       </g>
@@ -304,11 +319,15 @@ function WheelScene() {
         <Star4 x={100} y={150} r={3.5} className="cl-vapor-glow-star cl-vapor-twinkle" />
       </g>
       {/* snake descending the left */}
-      <path className="cl-vapor-glow-pink" d="M 30 214 C 24 200 36 194 30 180 C 24 166 36 160 30 146" fill="none" stroke="#ff5cb4" strokeWidth="2" strokeLinecap="round" />
-      <path d="M 30 146 L 26 138 L 34 138 Z" fill="#ff5cb4" />
+      <g className="cl-vapor-load-left">
+        <path className="cl-vapor-glow-pink" d="M 30 214 C 24 200 36 194 30 180 C 24 166 36 160 30 146" fill="none" stroke="#ff5cb4" strokeWidth="2" strokeLinecap="round" />
+        <path d="M 30 146 L 26 138 L 34 138 Z" fill="#ff5cb4" />
+      </g>
       {/* jackal creature rising on the right */}
-      <path className="cl-vapor-glow-cyan" d="M 170 214 C 176 200 164 194 170 180 L 172 172" fill="none" stroke="#5cecff" strokeWidth="2" strokeLinecap="round" />
-      <path d="M 172 172 L 164 162 L 168 160 L 172 166 L 176 158 L 180 160 L 176 172 Z" fill="#140a26" stroke="#5cecff" strokeWidth="0.8" />
+      <g className="cl-vapor-load-right">
+        <path className="cl-vapor-glow-cyan" d="M 170 214 C 176 200 164 194 170 180 L 172 172" fill="none" stroke="#5cecff" strokeWidth="2" strokeLinecap="round" />
+        <path d="M 172 172 L 164 162 L 168 160 L 172 166 L 176 158 L 180 160 L 176 172 Z" fill="#140a26" stroke="#5cecff" strokeWidth="0.8" />
+      </g>
       <Sheen id="clVaporShWhe"><circle cx="100" cy="150" r="48" /></Sheen>
     </>
   );
@@ -321,8 +340,8 @@ function DeathScene() {
   return (
     <>
       {/* two towers framing the rising sun */}
-      <rect x="52" y="154" width="13" height="36" fill="#0e0218" stroke="#5cecff" strokeWidth="0.5" />
-      <rect x="135" y="154" width="13" height="36" fill="#0e0218" stroke="#5cecff" strokeWidth="0.5" />
+      <rect className="cl-vapor-load-left" x="52" y="154" width="13" height="36" fill="#0e0218" stroke="#5cecff" strokeWidth="0.5" />
+      <rect className="cl-vapor-load-right" x="135" y="154" width="13" height="36" fill="#0e0218" stroke="#5cecff" strokeWidth="0.5" />
       {/* horse */}
       <path d={horse} fill="#140a26" stroke="#ff5cb4" strokeWidth="0.8" />
       <path d="M 78 216 L 74 246 M 94 218 L 92 246 M 122 218 L 124 246 M 136 214 L 140 246" stroke="#140a26" strokeWidth="3.4" strokeLinecap="round" fill="none" />
@@ -334,11 +353,13 @@ function DeathScene() {
       <path d="M 98 166 Q 105 170 112 166 M 98 173 Q 105 177 113 173 M 99 180 Q 106 184 112 180 M 102 162 C 94 158 86 152 80 146" fill="none" stroke="#e8ecf4" strokeWidth="1.1" />
       {/* banner pole + fluttering dark banner with the white rose */}
       <path d="M 76 118 L 78 208" stroke="#dfe6ee" strokeWidth="1.8" fill="none" />
-      <g className="cl-vapor-sway" style={{ transformOrigin: "76px 120px" }}>
-        <path d="M 76 96 L 44 92 L 44 120 L 76 124 Z" fill="#140a26" stroke="#ff5cb4" strokeWidth="0.8" />
-        <g className="cl-vapor-glow-star cl-vapor-twinkle">
-          <circle cx="60" cy="108" r="6" fill="#fff" />
-          <path d="M 60 103 V 113 M 55 106 L 65 110 M 65 106 L 55 110" stroke="#ffd7f0" strokeWidth="0.8" fill="none" />
+      <g className="cl-vapor-load-left">
+        <g className="cl-vapor-sway" style={{ transformOrigin: "76px 120px" }}>
+          <path d="M 76 96 L 44 92 L 44 120 L 76 124 Z" fill="#140a26" stroke="#ff5cb4" strokeWidth="0.8" />
+          <g className="cl-vapor-glow-star cl-vapor-twinkle">
+            <circle cx="60" cy="108" r="6" fill="#fff" />
+            <path d="M 60 103 V 113 M 55 106 L 65 110 M 65 106 L 55 110" stroke="#ffd7f0" strokeWidth="0.8" fill="none" />
+          </g>
         </g>
       </g>
       <Sheen id="clVaporShDea"><path d={horse} /></Sheen>
@@ -373,8 +394,10 @@ function StarScene() {
       <path d="M 118 166 A 7 7 0 0 1 130 172 L 124 160 Z" fill="url(#clVaporChrome)" stroke="#8f97a8" strokeWidth="0.5" />
       <path className="cl-vapor-glow-cyan" d="M 124 176 C 132 192 140 208 146 222" fill="none" stroke="#5cecff" strokeWidth="1.5" strokeLinecap="round" />
       {/* pool */}
-      <ellipse className="cl-vapor-glow-cyan" cx="152" cy="234" rx="26" ry="7" fill="#0a2a3a" stroke="#5cecff" strokeWidth="0.9" />
-      <path d="M 134 234 Q 143 230 152 234 Q 161 238 170 234" fill="none" stroke="#5cecff" strokeWidth="0.7" opacity="0.8" />
+      <g className="cl-vapor-load-right">
+        <ellipse className="cl-vapor-glow-cyan" cx="152" cy="234" rx="26" ry="7" fill="#0a2a3a" stroke="#5cecff" strokeWidth="0.9" />
+        <path d="M 134 234 Q 143 230 152 234 Q 161 238 170 234" fill="none" stroke="#5cecff" strokeWidth="0.7" opacity="0.8" />
+      </g>
       <Sheen id="clVaporShSta"><path d={figure} /></Sheen>
     </>
   );
@@ -387,7 +410,7 @@ function FoolScene() {
   return (
     <>
       {/* cliff edge at the right */}
-      <path d="M 130 252 L 130 210 L 148 202 L 158 210 L 160 252 Z" fill="#0e0218" stroke="#ff9ad2" strokeWidth="0.5" />
+      <path className="cl-vapor-load-right" d="M 130 252 L 130 210 L 148 202 L 158 210 L 160 252 Z" fill="#0e0218" stroke="#ff9ad2" strokeWidth="0.5" />
       {/* figure in profile, head tilted up */}
       <circle cx="122" cy="114" r="7" fill="url(#clVaporChrome)" />
       <path d="M 124 108 Q 128 106 130 109" fill="none" stroke="#8f97a8" strokeWidth="0.8" />
@@ -401,8 +424,10 @@ function FoolScene() {
       <circle cx="89" cy="94" r="6.5" fill="url(#clVaporChrome)" stroke="#8f97a8" strokeWidth="0.6" />
       <path d="M 84 90 L 94 98 M 94 90 L 84 98" stroke="#8f97a8" strokeWidth="0.7" fill="none" />
       {/* small dog at his heels */}
-      <path className="cl-vapor-glow-cyan" d="M 78 218 C 78 211 86 208 91 211 L 95 215 L 95 219 L 78 219 Z" fill="#140a26" stroke="#5cecff" strokeWidth="0.8" />
-      <path d="M 79 212 Q 74 206 77 202" fill="none" stroke="#5cecff" strokeWidth="1" />
+      <g className="cl-vapor-load-left">
+        <path className="cl-vapor-glow-cyan" d="M 78 218 C 78 211 86 208 91 211 L 95 215 L 95 219 L 78 219 Z" fill="#140a26" stroke="#5cecff" strokeWidth="0.8" />
+        <path d="M 79 212 Q 74 206 77 202" fill="none" stroke="#5cecff" strokeWidth="1" />
+      </g>
       <Sheen id="clVaporShFoo"><path d={body} /></Sheen>
     </>
   );
@@ -437,7 +462,7 @@ export default function VaporwaveHermitCard({
 
   return (
     <figure
-      className="cl-vapor-card"
+      className="cl-vapor-card cl-vapor-boot"
       style={{ aspectRatio: "2/3", width: "100%", margin: 0 }}
       aria-label={`${name} tarot card in vaporwave retro-futurism style`}
     >
@@ -480,6 +505,65 @@ export default function VaporwaveHermitCard({
             drop-shadow(0 0 3px rgba(255, 140, 210, 0.6))
             drop-shadow(0 0 10px rgba(123, 47, 247, 0.5));
         }
+
+        /* ---- initial load: CRT power-on flicker on the whole card ---- */
+        @keyframes cl-vapor-boot {
+          0% { opacity: 0; filter: brightness(3) saturate(0.2); }
+          7% { opacity: 0.9; filter: brightness(2.2); }
+          14% { opacity: 0.25; filter: brightness(0.6); }
+          24% { opacity: 1; filter: brightness(1.5); }
+          33% { opacity: 0.55; }
+          45%, 100% { opacity: 1; filter: none; }
+        }
+        .cl-vapor-boot { animation: cl-vapor-boot 0.45s linear both; }
+
+        /* ---- initial load: sun rises from below the horizon ---- */
+        @keyframes cl-vapor-loadsun {
+          from { transform: translateY(74px); }
+          to { transform: translateY(0); }
+        }
+        .cl-vapor-load-sun { animation: cl-vapor-loadsun 0.8s cubic-bezier(0.2, 0.8, 0.25, 1) 0.15s both; }
+
+        /* ---- initial load: grid scans in ---- */
+        @keyframes cl-vapor-loadfade {
+          from { opacity: 0; transform: translateY(8px); }
+          to { opacity: 1; transform: translateY(0); }
+        }
+        .cl-vapor-load-grid { animation: cl-vapor-loadfade 0.6s ease-out 0.3s both; }
+
+        /* ---- initial load: subject materializes ---- */
+        @keyframes cl-vapor-loadpop {
+          from { opacity: 0; transform: scale(0.94); }
+          to { opacity: 1; transform: scale(1); }
+        }
+        .cl-vapor-load-scene {
+          animation: cl-vapor-loadpop 0.7s ease-out 0.45s both;
+          transform-box: view-box;
+          transform-origin: 100px 200px;
+        }
+
+        /* ---- initial load: side decor slides in from the edges ---- */
+        @keyframes cl-vapor-loadleft {
+          from { opacity: 0; transform: translateX(-26px); }
+          to { opacity: 1; transform: translateX(0); }
+        }
+        @keyframes cl-vapor-loadright {
+          from { opacity: 0; transform: translateX(26px); }
+          to { opacity: 1; transform: translateX(0); }
+        }
+        .cl-vapor-load-left { animation: cl-vapor-loadleft 0.6s ease-out 0.55s both; }
+        .cl-vapor-load-right { animation: cl-vapor-loadright 0.6s ease-out 0.55s both; }
+
+        /* ---- initial load: typography glitches in last ---- */
+        @keyframes cl-vapor-loadtext {
+          0% { opacity: 0; transform: translateX(0); }
+          30% { opacity: 1; transform: translateX(-2px); }
+          45% { opacity: 0.2; transform: translateX(2px); }
+          60% { opacity: 1; transform: translateX(-1px); }
+          75% { opacity: 0.5; }
+          100% { opacity: 1; transform: translateX(0); }
+        }
+        .cl-vapor-load-text { animation: cl-vapor-loadtext 0.5s steps(1, end) 1s both; }
 
         /* ---- signature: sun hue-shift, magenta-orange -> cyan-purple ---- */
         @keyframes cl-vapor-hueshift {
@@ -595,6 +679,13 @@ export default function VaporwaveHermitCard({
         .cl-vapor-twinkle { animation: cl-vapor-twinkle 3.2s ease-in-out infinite; }
 
         @media (prefers-reduced-motion: reduce) {
+          .cl-vapor-boot,
+          .cl-vapor-load-sun,
+          .cl-vapor-load-grid,
+          .cl-vapor-load-scene,
+          .cl-vapor-load-left,
+          .cl-vapor-load-right,
+          .cl-vapor-load-text,
           .cl-vapor-hueshift,
           .cl-vapor-sunscroll,
           .cl-vapor-gridscroll,
@@ -685,73 +776,77 @@ export default function VaporwaveHermitCard({
             fill="#e8dcff" opacity="0.8"
           />
 
-          {/* striped retro sun — hue-shifts slowly, stripes scroll down seamlessly */}
-          <g className="cl-vapor-hueshift">
-            <g clipPath="url(#clVaporSunClip)">
-              <circle cx="100" cy="168" r="56" fill="url(#clVaporSun)" />
-              <g clipPath="url(#clVaporStripeClip)">
-                <path
-                  className="cl-vapor-sunscroll"
-                  d="M 30 137 h 140 v 5 h -140 Z M 30 150 h 140 v 5 h -140 Z M 30 163 h 140 v 5 h -140 Z M 30 176 h 140 v 5 h -140 Z M 30 189 h 140 v 5 h -140 Z M 30 202 h 140 v 5 h -140 Z M 30 215 h 140 v 5 h -140 Z"
-                  fill="#160328" opacity="0.88"
-                />
+          {/* striped retro sun — rises on load, hue-shifts, stripes scroll */}
+          <g className="cl-vapor-load-sun">
+            <g className="cl-vapor-hueshift">
+              <g clipPath="url(#clVaporSunClip)">
+                <circle cx="100" cy="168" r="56" fill="url(#clVaporSun)" />
+                <g clipPath="url(#clVaporStripeClip)">
+                  <path
+                    className="cl-vapor-sunscroll"
+                    d="M 30 137 h 140 v 5 h -140 Z M 30 150 h 140 v 5 h -140 Z M 30 163 h 140 v 5 h -140 Z M 30 176 h 140 v 5 h -140 Z M 30 189 h 140 v 5 h -140 Z M 30 202 h 140 v 5 h -140 Z M 30 215 h 140 v 5 h -140 Z"
+                    fill="#160328" opacity="0.88"
+                  />
+                </g>
               </g>
             </g>
           </g>
 
-          {/* grid floor */}
-          <rect x="0" y="190" width="200" height="110" fill="url(#clVaporFloor)" />
-          <g className="cl-vapor-glow-pink" stroke="#ff2e9a" strokeWidth="0.8" opacity="0.9" fill="none">
-            {/* converging verticals — static */}
-            <path d="M 100 190 L -45 300 M 100 190 L -12 300 M 100 190 L 22 300 M 100 190 L 56 300 M 100 190 L 144 300 M 100 190 L 178 300 M 100 190 L 212 300 M 100 190 L 245 300" />
-            <path d="M 100 190 L 100 300" stroke="#22e6ff" />
+          {/* grid floor — scans in on load */}
+          <g className="cl-vapor-load-grid">
+            <rect x="0" y="190" width="200" height="110" fill="url(#clVaporFloor)" />
+            <g className="cl-vapor-glow-pink" stroke="#ff2e9a" strokeWidth="0.8" opacity="0.9" fill="none">
+              {/* converging verticals — static */}
+              <path d="M 100 190 L -45 300 M 100 190 L -12 300 M 100 190 L 22 300 M 100 190 L 56 300 M 100 190 L 144 300 M 100 190 L 178 300 M 100 190 L 212 300 M 100 190 L 245 300" />
+              <path d="M 100 190 L 100 300" stroke="#22e6ff" />
+            </g>
+            {/* scrolling horizontals — period 22px, faded in from the horizon */}
+            <g mask="url(#clVaporGridMask)">
+              <path
+                className="cl-vapor-gridscroll cl-vapor-glow-pink"
+                d="M 0 168 H 200 M 0 190 H 200 M 0 212 H 200 M 0 234 H 200 M 0 256 H 200 M 0 278 H 200 M 0 300 H 200"
+                stroke="#ff2e9a" strokeWidth="0.9" opacity="0.9" fill="none"
+              />
+            </g>
+            {/* horizon line */}
+            <path className="cl-vapor-glow-cyan" d="M 0 190 H 200" stroke="#7df3ff" strokeWidth="1" fill="none" />
           </g>
-          {/* scrolling horizontals — period 22px, faded in from the horizon */}
-          <g mask="url(#clVaporGridMask)">
-            <path
-              className="cl-vapor-gridscroll cl-vapor-glow-pink"
-              d="M 0 168 H 200 M 0 190 H 200 M 0 212 H 200 M 0 234 H 200 M 0 256 H 200 M 0 278 H 200 M 0 300 H 200"
-              stroke="#ff2e9a" strokeWidth="0.9" opacity="0.9" fill="none"
-            />
-          </g>
-          {/* horizon line */}
-          <path className="cl-vapor-glow-cyan" d="M 0 190 H 200" stroke="#7df3ff" strokeWidth="1" fill="none" />
 
-          {scene}
+          {/* arcana subject — materializes on load */}
+          <g className="cl-vapor-load-scene">{scene}</g>
         </g>
 
-        {/* numeral — chrome gradient, top center (unmirrored) */}
-        <text
-          className="cl-vapor-glow-ix"
-          x="100" y="40" textAnchor="middle"
-          fontFamily="'Arial Black', Arial, Helvetica, sans-serif"
-          fontWeight="900" fontSize="21" letterSpacing="7"
-          fill="url(#clVaporChromeTx)" stroke="#2a0a44" strokeWidth="0.5"
-        >
-          {toRoman(number)}
-        </text>
-
-        {/* card name — italic serif with vertical latin accent (unmirrored) */}
-        <text
-          className="cl-vapor-glow-pink"
-          x="98" y="272" textAnchor="middle"
-          fontFamily="Georgia, 'Times New Roman', serif"
-          fontStyle="italic" fontSize={nameSize} letterSpacing={nameTracking}
-          fill="#ffd7f0"
-        >
-          {name}
-        </text>
-        <text
-          x="182" y="252" textAnchor="middle"
-          fontFamily="Georgia, 'Times New Roman', serif"
-          fontSize="6.5" letterSpacing="2"
-          fill="#5cecff" opacity="0.9"
-          transform="rotate(-90 182 252)"
-        >
-          {LATIN[number] ?? "EREMITA · MONTIS"}
-        </text>
-        {/* chrome underline */}
-        <path className="cl-vapor-glow-cyan" d="M 46 282 H 150" stroke="url(#clVaporChromeTx)" strokeWidth="1.2" fill="none" />
+        {/* typography — glitches in last (unmirrored) */}
+        <g className="cl-vapor-load-text">
+          <text
+            className="cl-vapor-glow-ix"
+            x="100" y="40" textAnchor="middle"
+            fontFamily="'Arial Black', Arial, Helvetica, sans-serif"
+            fontWeight="900" fontSize="21" letterSpacing="7"
+            fill="url(#clVaporChromeTx)" stroke="#2a0a44" strokeWidth="0.5"
+          >
+            {toRoman(number)}
+          </text>
+          <text
+            className="cl-vapor-glow-pink"
+            x="98" y="272" textAnchor="middle"
+            fontFamily="Georgia, 'Times New Roman', serif"
+            fontStyle="italic" fontSize={nameSize} letterSpacing={nameTracking}
+            fill="#ffd7f0"
+          >
+            {name}
+          </text>
+          <text
+            x="182" y="252" textAnchor="middle"
+            fontFamily="Georgia, 'Times New Roman', serif"
+            fontSize="6.5" letterSpacing="2"
+            fill="#5cecff" opacity="0.9"
+            transform="rotate(-90 182 252)"
+          >
+            {LATIN[number] ?? "EREMITA · MONTIS"}
+          </text>
+          <path className="cl-vapor-glow-cyan" d="M 46 282 H 150" stroke="url(#clVaporChromeTx)" strokeWidth="1.2" fill="none" />
+        </g>
 
         {/* scanlines — drifting slowly (period 4px) */}
         <rect className="cl-vapor-scandrift" x="0" y="-4" width="200" height="308" fill="url(#clVaporScan)" />

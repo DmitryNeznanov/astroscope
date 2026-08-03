@@ -1,4 +1,5 @@
 import Link from "next/link";
+import Replayable from "@/components/card-lab/replayable";
 import PixelCard from "@/components/card-lab/pixel";
 import ArtNouveauCard from "@/components/card-lab/art-nouveau";
 import BauhausCard from "@/components/card-lab/bauhaus";
@@ -160,7 +161,9 @@ export default function CardLab() {
             return (
               <div key={s.name}>
                 <div className="overflow-hidden rounded-lg shadow-2xl shadow-black/60">
-                  <Card />
+                  <Replayable>
+                    <Card />
+                  </Replayable>
                 </div>
                 <div className="mt-4 flex items-baseline justify-between gap-2">
                   <h2 className="text-lg font-semibold text-neutral-100">
