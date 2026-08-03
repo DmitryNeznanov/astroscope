@@ -62,7 +62,7 @@ export default function ArtDecoHermitCard() {
       style={{ aspectRatio: "2/3", width: "100%", margin: 0 }}
     >
       <style>{`
-        .cl-artdeco-card { display: block; line-height: 0; }
+        .cl-artdeco-card { display: block; line-height: 0; position: relative; overflow: hidden; }
         .cl-artdeco-card svg { display: block; width: 100%; height: 100%; }
         .cl-artdeco-type {
           font-family: "Futura", "Century Gothic", "Avenir Next", "Trebuchet MS", Arial, sans-serif;
@@ -73,10 +73,68 @@ export default function ArtDecoHermitCard() {
           50% { opacity: 1; }
         }
         .cl-artdeco-star { animation: cl-artdeco-glow 3.6s ease-in-out infinite; }
+
+        /* (1) Sunburst rays rotate very slowly around the lantern hub. */
+        @keyframes cl-artdeco-spin {
+          from { transform: rotate(0deg); }
+          to { transform: rotate(360deg); }
+        }
+        .cl-artdeco-rays {
+          transform-box: view-box;
+          transform-origin: 100px 108px;
+          animation: cl-artdeco-spin 75s linear infinite;
+        }
+
+        /* (3a) Hover: rays subtly lengthen/brighten from the hub. */
+        .cl-artdeco-rays-inner {
+          transform-box: view-box;
+          transform-origin: 100px 108px;
+          transition: transform 0.6s ease, opacity 0.6s ease;
+        }
+        .cl-artdeco-card:hover .cl-artdeco-rays-inner {
+          transform: scale(1.08);
+          opacity: 1;
+        }
+
+        /* (3b) Hover: gold frame catches light. */
+        .cl-artdeco-frame {
+          transition: stroke 0.6s ease, filter 0.6s ease;
+        }
+        .cl-artdeco-card:hover .cl-artdeco-frame {
+          stroke: ${C.goldLight};
+          filter: drop-shadow(0 0 3px rgba(201, 162, 39, 0.9));
+        }
+
+        /* (2) Luxe shine sweep: diagonal gold-white band crosses the card. */
+        @keyframes cl-artdeco-sweep {
+          0% { transform: translateX(-160%) skewX(-18deg); }
+          55% { transform: translateX(160%) skewX(-18deg); }
+          100% { transform: translateX(160%) skewX(-18deg); }
+        }
+        .cl-artdeco-shine {
+          position: absolute;
+          top: -20%;
+          bottom: -20%;
+          left: 0;
+          width: 45%;
+          pointer-events: none;
+          mix-blend-mode: screen;
+          opacity: 0.14;
+          background: linear-gradient(90deg, transparent 0%, ${C.goldLight} 45%, #ffffff 55%, transparent 100%);
+          animation: cl-artdeco-sweep 8s ease-in-out infinite;
+        }
+
         @media (prefers-reduced-motion: reduce) {
-          .cl-artdeco-star { animation: none; }
+          .cl-artdeco-star,
+          .cl-artdeco-rays,
+          .cl-artdeco-shine { animation: none; }
+          .cl-artdeco-shine { display: none; }
+          .cl-artdeco-rays-inner,
+          .cl-artdeco-frame { transition: none; }
         }
       `}</style>
+
+      <div className="cl-artdeco-shine" aria-hidden="true" />
 
       <svg
         viewBox="0 0 200 300"
@@ -87,27 +145,32 @@ export default function ArtDecoHermitCard() {
         {/* Black lacquer ground */}
         <rect x="0" y="0" width="200" height="300" fill={C.black} />
 
-        {/* Sunburst — precise straight gold rays from the lantern */}
-        <g stroke={C.gold} strokeWidth="1.1" opacity="0.85">
-          {RAYS.map((r, i) => (
-            <line
-              key={i}
-              x1="100"
-              y1="108"
-              x2={r.x2.toFixed(1)}
-              y2={r.y2.toFixed(1)}
-              strokeWidth={r.long ? 1.3 : 0.8}
+        {/* Sunburst — precise straight gold rays from the lantern.
+            Outer group rotates slowly; inner group handles hover scale. */}
+        <g className="cl-artdeco-rays">
+          <g className="cl-artdeco-rays-inner" opacity="0.85">
+            <g stroke={C.gold} strokeWidth="1.1">
+              {RAYS.map((r, i) => (
+                <line
+                  key={i}
+                  x1="100"
+                  y1="108"
+                  x2={r.x2.toFixed(1)}
+                  y2={r.y2.toFixed(1)}
+                  strokeWidth={r.long ? 1.3 : 0.8}
+                />
+              ))}
+            </g>
+            {/* Sunburst outer arc */}
+            <path
+              d="M 41.6 85.4 A 66 66 0 0 1 158.4 85.4"
+              fill="none"
+              stroke={C.gold}
+              strokeWidth="1"
+              opacity="0.8"
             />
-          ))}
+          </g>
         </g>
-        {/* Sunburst outer arc */}
-        <path
-          d="M 41.6 85.4 A 66 66 0 0 1 158.4 85.4"
-          fill="none"
-          stroke={C.gold}
-          strokeWidth="1"
-          opacity="0.7"
-        />
 
         {/* Stepped ziggurat mountain */}
         <g fill={C.band} stroke={C.gold} strokeWidth="1">
@@ -250,13 +313,15 @@ export default function ArtDecoHermitCard() {
         </text>
 
         {/* Thin gold double frame with stepped corner motifs */}
-        <rect x="5" y="5" width="190" height="290" fill="none" stroke={C.gold} strokeWidth="1" />
-        <rect x="9" y="9" width="182" height="282" fill="none" stroke={C.gold} strokeWidth="0.5" />
-        <g stroke={C.gold} strokeWidth="1" fill="none">
-          <path d="M 5 24 L 5 5 L 24 5 M 5 17 L 17 5" opacity="0.9" />
-          <path d="M 195 24 L 195 5 L 176 5 M 195 17 L 183 5" opacity="0.9" />
-          <path d="M 5 276 L 5 295 L 24 295 M 5 283 L 17 295" opacity="0.9" />
-          <path d="M 195 276 L 195 295 L 176 295 M 195 283 L 183 295" opacity="0.9" />
+        <g className="cl-artdeco-frame">
+          <rect x="5" y="5" width="190" height="290" fill="none" stroke={C.gold} strokeWidth="1" />
+          <rect x="9" y="9" width="182" height="282" fill="none" stroke={C.gold} strokeWidth="0.5" />
+          <g stroke={C.gold} strokeWidth="1" fill="none">
+            <path d="M 5 24 L 5 5 L 24 5 M 5 17 L 17 5" opacity="0.9" />
+            <path d="M 195 24 L 195 5 L 176 5 M 195 17 L 183 5" opacity="0.9" />
+            <path d="M 5 276 L 5 295 L 24 295 M 5 283 L 17 295" opacity="0.9" />
+            <path d="M 195 276 L 195 295 L 176 295 M 195 283 L 183 295" opacity="0.9" />
+          </g>
         </g>
       </svg>
     </figure>

@@ -3,7 +3,10 @@
  * Neon tube sign on a dark bar wall. The Hermit outline is drawn as glowing
  * neon tubes: hooded figure + lantern in warm amber, staff in cyan, mountain
  * in violet. Layered glow via duplicated strokes + stacked drop-shadows.
- * One tube (the lantern) has a subtle flicker, disabled for reduced motion.
+ * Signature effects (all CSS-only, disabled for reduced motion): lantern
+ * flicker, a whole-sign ballast buzz every ~8s, the cyan staff runs as a
+ * sputtering weak tube, the frame tube breathes slowly, and :hover turns the
+ * dimmer up so every glow stack intensifies.
  */
 export default function NeonHermitCard() {
   return (
@@ -68,6 +71,11 @@ export default function NeonHermitCard() {
         }
         .cl-neon-frame {
           filter: drop-shadow(0 0 3px rgba(150, 160, 200, 0.35));
+          animation: cl-neon-breathe 11s ease-in-out infinite;
+        }
+        .cl-neon-amber, .cl-neon-cyan, .cl-neon-violet,
+        .cl-neon-red, .cl-neon-pink, .cl-neon-star {
+          transition: filter 0.35s ease;
         }
         .cl-neon-star {
           filter:
@@ -88,12 +96,89 @@ export default function NeonHermitCard() {
           50% { opacity: 1; }
         }
         .cl-neon-flicker { animation: cl-neon-flicker 4.2s linear infinite; }
+
+        /* ---- whole-sign ballast buzz: quick stutter every ~8s ---- */
+        @keyframes cl-neon-buzz {
+          0%, 100% { opacity: 1; filter: none; }
+          1.2% { opacity: 0.72; filter: brightness(0.82); }
+          2.1% { opacity: 1; filter: none; }
+          2.8% { opacity: 0.85; filter: brightness(0.9); }
+          3.6% { opacity: 1; filter: none; }
+        }
+        .cl-neon-buzz { animation: cl-neon-buzz 8.3s linear infinite; }
+
+        /* ---- weak tube: the cyan staff sputters on its own rhythm ---- */
+        @keyframes cl-neon-weak {
+          0%, 100% { opacity: 1; }
+          11% { opacity: 0.5; }
+          13% { opacity: 0.9; }
+          15% { opacity: 0.35; }
+          18% { opacity: 1; }
+          57% { opacity: 1; }
+          59% { opacity: 0.6; }
+          61.5% { opacity: 1; }
+        }
+        .cl-neon-weak { animation: cl-neon-weak 6.7s linear infinite; }
+
+        /* ---- very slow breathing on the frame tube ---- */
+        @keyframes cl-neon-breathe {
+          0%, 100% { filter: drop-shadow(0 0 2px rgba(150, 160, 200, 0.22)); opacity: 0.75; }
+          50% { filter: drop-shadow(0 0 5px rgba(170, 180, 220, 0.5)); opacity: 1; }
+        }
+
+        /* ---- hover: dimmer turned up, all tubes brighten ---- */
+        .cl-neon-card:hover .cl-neon-amber {
+          filter:
+            brightness(1.25)
+            drop-shadow(0 0 2px rgba(255, 200, 110, 1))
+            drop-shadow(0 0 8px rgba(255, 170, 50, 0.95))
+            drop-shadow(0 0 22px rgba(255, 150, 25, 0.65));
+        }
+        .cl-neon-card:hover .cl-neon-cyan {
+          filter:
+            brightness(1.25)
+            drop-shadow(0 0 2px rgba(140, 245, 255, 1))
+            drop-shadow(0 0 8px rgba(50, 220, 255, 0.95))
+            drop-shadow(0 0 22px rgba(0, 190, 255, 0.65));
+        }
+        .cl-neon-card:hover .cl-neon-violet {
+          filter:
+            brightness(1.25)
+            drop-shadow(0 0 2px rgba(220, 165, 255, 1))
+            drop-shadow(0 0 9px rgba(180, 100, 255, 0.9))
+            drop-shadow(0 0 24px rgba(150, 70, 255, 0.6));
+        }
+        .cl-neon-card:hover .cl-neon-red {
+          filter:
+            brightness(1.25)
+            drop-shadow(0 0 2px rgba(255, 130, 130, 1))
+            drop-shadow(0 0 8px rgba(255, 50, 50, 0.95))
+            drop-shadow(0 0 18px rgba(255, 25, 25, 0.7));
+        }
+        .cl-neon-card:hover .cl-neon-pink {
+          filter:
+            brightness(1.25)
+            drop-shadow(0 0 2px rgba(255, 175, 228, 1))
+            drop-shadow(0 0 9px rgba(255, 100, 200, 0.95))
+            drop-shadow(0 0 24px rgba(255, 70, 180, 0.65));
+        }
+        .cl-neon-card:hover .cl-neon-star {
+          filter:
+            brightness(1.3)
+            drop-shadow(0 0 3px rgba(255, 240, 190, 1))
+            drop-shadow(0 0 10px rgba(255, 210, 100, 1))
+            drop-shadow(0 0 26px rgba(255, 180, 60, 0.8));
+        }
+
         @media (prefers-reduced-motion: reduce) {
-          .cl-neon-flicker { animation: none; }
+          .cl-neon-flicker,
+          .cl-neon-buzz,
+          .cl-neon-weak,
+          .cl-neon-frame { animation: none; }
         }
       `}</style>
 
-      <svg viewBox="0 0 200 300" preserveAspectRatio="xMidYMid slice" role="img">
+      <svg className="cl-neon-buzz" viewBox="0 0 200 300" preserveAspectRatio="xMidYMid slice" role="img">
         {/* thin dim tube frame */}
         <rect
           className="cl-neon-frame"
@@ -140,8 +225,8 @@ export default function NeonHermitCard() {
           <circle cx="182" cy="236" r="2.2" fill="#1a1424" stroke="#5a3d80" strokeWidth="0.8" />
         </g>
 
-        {/* staff — cyan tube in the left hand */}
-        <g className="cl-neon-cyan" fill="none" strokeLinecap="round">
+        {/* staff — cyan tube in the left hand, runs as the sign's weak tube */}
+        <g className="cl-neon-cyan cl-neon-weak" fill="none" strokeLinecap="round">
           <path d="M 66 96 Q 62 146 66 206" stroke="#1e9ec4" strokeWidth="4" opacity="0.55" />
           <path d="M 66 96 Q 62 146 66 206" stroke="#d8f8ff" strokeWidth="1.5" />
           <circle cx="66" cy="96" r="2" fill="#0e1a20" stroke="#2a7a94" strokeWidth="0.8" />

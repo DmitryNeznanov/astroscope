@@ -21,7 +21,7 @@ const SKIN = "#eed9b8";
 
 function HaloRays() {
   return (
-    <g>
+    <g className="cl-an-rays">
       {Array.from({ length: 24 }).map((_, i) => {
         const angle = i * 15;
         const long = i % 2 === 0;
@@ -83,13 +83,53 @@ export default function ArtNouveauHermitCard() {
       className="cl-an-card"
       role="img"
       aria-label="The Hermit tarot card in Art Nouveau style"
-      style={{ aspectRatio: "2/3", width: "100%", margin: 0 }}
+      style={{ aspectRatio: "2/3", width: "100%", margin: 0, position: "relative" }}
     >
       <style>{`
-        .cl-an-card { overflow: hidden; }
+        .cl-an-card {
+          overflow: hidden;
+          transition: transform .35s ease, box-shadow .35s ease;
+        }
+        .cl-an-card:hover {
+          transform: translateY(-4px);
+          box-shadow: 0 14px 28px rgba(61, 47, 34, .28), 0 4px 10px rgba(61, 47, 34, .18);
+        }
+        .cl-an-halo-glow { opacity: 0; transition: opacity .4s ease; }
+        .cl-an-card:hover .cl-an-halo-glow { opacity: .45; }
         .cl-an-glow { animation: cl-an-pulse 4.5s ease-in-out infinite; }
         @keyframes cl-an-pulse { 0%, 100% { opacity: .35; } 50% { opacity: .8; } }
-        @media (prefers-reduced-motion: reduce) { .cl-an-glow { animation: none; } }
+        .cl-an-rays {
+          transform-box: fill-box;
+          transform-origin: center;
+          animation: cl-an-spin 75s linear infinite;
+        }
+        @keyframes cl-an-spin { to { transform: rotate(360deg); } }
+        .cl-an-shine {
+          position: absolute;
+          top: -25%;
+          bottom: -25%;
+          left: 0;
+          width: 45%;
+          pointer-events: none;
+          background: linear-gradient(105deg,
+            rgba(220, 191, 122, 0) 0%,
+            rgba(220, 191, 122, .38) 42%,
+            rgba(244, 236, 218, .5) 50%,
+            rgba(220, 191, 122, .38) 58%,
+            rgba(220, 191, 122, 0) 100%);
+          transform: translateX(-160%) skewX(-12deg);
+          animation: cl-an-sweep 7s ease-in-out infinite;
+        }
+        @keyframes cl-an-sweep {
+          0% { transform: translateX(-160%) skewX(-12deg); }
+          28% { transform: translateX(320%) skewX(-12deg); }
+          100% { transform: translateX(320%) skewX(-12deg); }
+        }
+        @media (prefers-reduced-motion: reduce) {
+          .cl-an-glow, .cl-an-rays, .cl-an-shine { animation: none; }
+          .cl-an-shine { display: none; }
+          .cl-an-card, .cl-an-halo-glow { transition: none; }
+        }
       `}</style>
       <svg
         viewBox="0 0 400 600"
@@ -110,6 +150,7 @@ export default function ArtNouveauHermitCard() {
         <circle cx={200} cy={185} r={58} fill="none" stroke={GOLD_DEEP} strokeWidth={1.4} />
         <circle cx={200} cy={185} r={96} fill="none" stroke={INK} strokeWidth={1.6} />
         <HaloDots />
+        <circle className="cl-an-halo-glow" cx={200} cy={185} r={96} fill={GOLD_PALE} opacity={0} />
 
         {/* ————— Distant peaks (soft, Mucha-like contours) ————— */}
         <path
@@ -318,6 +359,7 @@ export default function ArtNouveauHermitCard() {
           THE HERMIT
         </text>
       </svg>
+      <div className="cl-an-shine" aria-hidden="true" />
     </figure>
   );
 }

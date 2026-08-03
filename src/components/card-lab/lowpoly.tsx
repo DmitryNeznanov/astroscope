@@ -130,8 +130,42 @@ export default function LowpolyHermitCard() {
           height: 100%;
           display: block;
         }
+
+        /* one-shot staggered layer fade-in on mount */
+        .cl-lowpoly-mount { animation: cl-lowpoly-in 0.7s ease both; }
+        .cl-lowpoly-m2 { animation-delay: 0.08s; }
+        .cl-lowpoly-m3 { animation-delay: 0.16s; }
+        .cl-lowpoly-m4 { animation-delay: 0.24s; }
+        .cl-lowpoly-m5 { animation-delay: 0.32s; }
+        .cl-lowpoly-m6 { animation-delay: 0.4s; }
+        @keyframes cl-lowpoly-in {
+          from { opacity: 0; }
+        }
+
+        /* facet shimmer — slow low-amplitude opacity waves, staggered per layer */
+        .cl-lowpoly-sh-sky { animation: cl-lowpoly-shimmer 9s ease-in-out 0s infinite; }
+        .cl-lowpoly-sh-ridge { animation: cl-lowpoly-shimmer 11s ease-in-out -3s infinite; }
+        .cl-lowpoly-sh-peak { animation: cl-lowpoly-shimmer 10s ease-in-out -6s infinite; }
+        .cl-lowpoly-sh-figure { animation: cl-lowpoly-shimmer 12s ease-in-out -8s infinite; }
+        .cl-lowpoly-sh-fore { animation: cl-lowpoly-shimmer 13s ease-in-out -4s infinite; }
+        @keyframes cl-lowpoly-shimmer {
+          0%, 100% { opacity: 1; }
+          50% { opacity: 0.86; }
+        }
+
+        /* stars twinkle on their own quicker beat */
+        .cl-lowpoly-stars { animation: cl-lowpoly-twinkle 5s ease-in-out -1.5s infinite; }
+        @keyframes cl-lowpoly-twinkle {
+          0%, 100% { opacity: 1; }
+          50% { opacity: 0.45; }
+        }
+
+        /* lantern flame flicker; glow can swell on hover (scale, not opacity) */
         .cl-lowpoly-glow {
           animation: cl-lowpoly-flicker 3.8s ease-in-out infinite;
+          transform-box: fill-box;
+          transform-origin: center;
+          transition: transform 0.6s ease;
         }
         .cl-lowpoly-core {
           animation: cl-lowpoly-flicker 3.8s ease-in-out infinite;
@@ -140,8 +174,40 @@ export default function LowpolyHermitCard() {
           0%, 100% { opacity: 0.55; }
           50% { opacity: 0.95; }
         }
+
+        /* hover faux-parallax — layers drift in opposing directions */
+        .cl-lowpoly-l-sky, .cl-lowpoly-l-stars, .cl-lowpoly-l-ridge,
+        .cl-lowpoly-l-peak, .cl-lowpoly-l-figure, .cl-lowpoly-l-fore {
+          transition: transform 0.6s cubic-bezier(0.22, 0.61, 0.36, 1);
+        }
+        .cl-lowpoly-card:hover .cl-lowpoly-l-sky { transform: translate(-2px, -3px); }
+        .cl-lowpoly-card:hover .cl-lowpoly-l-stars { transform: translate(-3px, -4px); }
+        .cl-lowpoly-card:hover .cl-lowpoly-l-ridge { transform: translate(1.5px, -1.5px); }
+        .cl-lowpoly-card:hover .cl-lowpoly-l-peak { transform: translate(2px, 1.5px); }
+        .cl-lowpoly-card:hover .cl-lowpoly-l-figure { transform: translate(2px, 1.5px); }
+        .cl-lowpoly-card:hover .cl-lowpoly-l-fore { transform: translate(3.5px, 3px); }
+        .cl-lowpoly-card:hover .cl-lowpoly-glow { transform: scale(1.3); }
+
         @media (prefers-reduced-motion: reduce) {
-          .cl-lowpoly-glow, .cl-lowpoly-core { animation: none; }
+          .cl-lowpoly-mount, .cl-lowpoly-sh-sky, .cl-lowpoly-sh-ridge,
+          .cl-lowpoly-sh-peak, .cl-lowpoly-sh-figure, .cl-lowpoly-sh-fore,
+          .cl-lowpoly-stars, .cl-lowpoly-glow, .cl-lowpoly-core {
+            animation: none;
+          }
+          .cl-lowpoly-l-sky, .cl-lowpoly-l-stars, .cl-lowpoly-l-ridge,
+          .cl-lowpoly-l-peak, .cl-lowpoly-l-figure, .cl-lowpoly-l-fore,
+          .cl-lowpoly-glow {
+            transition: none;
+          }
+          .cl-lowpoly-card:hover .cl-lowpoly-l-sky,
+          .cl-lowpoly-card:hover .cl-lowpoly-l-stars,
+          .cl-lowpoly-card:hover .cl-lowpoly-l-ridge,
+          .cl-lowpoly-card:hover .cl-lowpoly-l-peak,
+          .cl-lowpoly-card:hover .cl-lowpoly-l-figure,
+          .cl-lowpoly-card:hover .cl-lowpoly-l-fore,
+          .cl-lowpoly-card:hover .cl-lowpoly-glow {
+            transform: none;
+          }
         }
       `}</style>
 
@@ -162,30 +228,53 @@ export default function LowpolyHermitCard() {
 
         <rect x="0" y="0" width="200" height="300" fill="#14102e" />
 
-        <Facets facets={SKY} />
-        <Facets facets={STARS} />
-        <Facets facets={RIDGES} />
-        <Facets facets={PEAK} />
+        <g className="cl-lowpoly-mount">
+          <g className="cl-lowpoly-l-sky cl-lowpoly-sh-sky">
+            <Facets facets={SKY} />
+          </g>
+        </g>
+        <g className="cl-lowpoly-mount cl-lowpoly-m2">
+          <g className="cl-lowpoly-l-stars cl-lowpoly-stars">
+            <Facets facets={STARS} />
+          </g>
+        </g>
+        <g className="cl-lowpoly-mount cl-lowpoly-m3">
+          <g className="cl-lowpoly-l-ridge cl-lowpoly-sh-ridge">
+            <Facets facets={RIDGES} />
+          </g>
+        </g>
+        <g className="cl-lowpoly-mount cl-lowpoly-m4">
+          <g className="cl-lowpoly-l-peak cl-lowpoly-sh-peak">
+            <Facets facets={PEAK} />
+          </g>
+        </g>
 
-        {/* lantern glow behind the figure */}
-        <ellipse
-          className="cl-lowpoly-glow"
-          cx="133"
-          cy="84.5"
-          rx="32"
-          ry="29"
-          fill="url(#cl-lowpoly-gold)"
-        />
+        <g className="cl-lowpoly-mount cl-lowpoly-m5">
+          <g className="cl-lowpoly-l-figure cl-lowpoly-sh-figure">
+            {/* lantern glow behind the figure */}
+            <ellipse
+              className="cl-lowpoly-glow"
+              cx="133"
+              cy="84.5"
+              rx="32"
+              ry="29"
+              fill="url(#cl-lowpoly-gold)"
+            />
+            <Facets facets={FIGURE} />
+            <Facets facets={LANTERN} />
+            <polygon
+              points={STAR_CORE.points}
+              fill={STAR_CORE.fill}
+              className={STAR_CORE.className}
+            />
+          </g>
+        </g>
 
-        <Facets facets={FIGURE} />
-        <Facets facets={LANTERN} />
-        <polygon
-          points={STAR_CORE.points}
-          fill={STAR_CORE.fill}
-          className={STAR_CORE.className}
-        />
-
-        <Facets facets={FOREGROUND} />
+        <g className="cl-lowpoly-mount cl-lowpoly-m6">
+          <g className="cl-lowpoly-l-fore cl-lowpoly-sh-fore">
+            <Facets facets={FOREGROUND} />
+          </g>
+        </g>
 
         {/* chrome: numeral */}
         <line x1="58" y1="27" x2="86" y2="27" stroke="#d8cfee" strokeOpacity="0.35" strokeWidth="0.75" />

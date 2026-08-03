@@ -96,20 +96,40 @@ export default function WoodcutHermitCard() {
       }}
     >
       <style>{`
-        .cl-wc-root svg { display: block; width: 100%; height: 100%; }
+        .cl-wc-press { width: 100%; height: 100%; }
+        .cl-wc-print { display: block; width: 100%; height: 100%; transition: filter 0.12s steps(2, end); }
+        .cl-wc-root:hover .cl-wc-print { filter: contrast(1.16); }
         @media (prefers-reduced-motion: no-preference) {
-          .cl-wc-flame { animation: cl-wc-flicker 2.6s steps(2, end) infinite; transform-origin: center; }
+          /* One-shot printing-press reveal: ink wipes in top-to-bottom in 8 chunky steps */
+          .cl-wc-press { animation: cl-wc-press 1s steps(8, end) both; }
+          @keyframes cl-wc-press {
+            from { clip-path: inset(0 0 100% 0); }
+            to { clip-path: inset(0 0 0 0); }
+          }
+          /* Lantern rays: aggressive stepped jitter, flame seen through gouges */
+          .cl-wc-flame { animation: cl-wc-flicker 1.1s steps(3, end) infinite; transform-origin: center; }
           @keyframes cl-wc-flicker {
             0%, 100% { opacity: 1; }
-            50% { opacity: 0.78; }
+            30% { opacity: 0.55; }
+            55% { opacity: 0.92; }
+            80% { opacity: 0.68; }
+          }
+          /* Hover: faint ink-jitter across the whole print */
+          .cl-wc-root:hover .cl-wc-print { animation: cl-wc-jitter 0.45s steps(2, end) infinite; }
+          @keyframes cl-wc-jitter {
+            0%, 100% { transform: translate(0, 0); }
+            25% { transform: translate(0.5px, -0.5px); }
+            50% { transform: translate(-0.5px, 0.5px); }
+            75% { transform: translate(0.5px, 0); }
           }
         }
         @media (prefers-reduced-motion: reduce) {
-          .cl-wc-flame { animation: none; }
+          .cl-wc-flame, .cl-wc-press, .cl-wc-root:hover .cl-wc-print { animation: none; }
         }
       `}</style>
 
-      <svg viewBox="0 0 200 300" preserveAspectRatio="xMidYMid slice" role="img" aria-label="The Hermit tarot card in woodcut style">
+      <div className="cl-wc-press">
+      <svg className="cl-wc-print" viewBox="0 0 200 300" preserveAspectRatio="xMidYMid slice" role="img" aria-label="The Hermit tarot card in woodcut style">
         {/* Raw paper */}
         <rect x="0" y="0" width="200" height="300" fill={CREAM} />
 
@@ -234,6 +254,7 @@ export default function WoodcutHermitCard() {
           strokeWidth="1.4"
         />
       </svg>
+      </div>
     </figure>
   );
 }

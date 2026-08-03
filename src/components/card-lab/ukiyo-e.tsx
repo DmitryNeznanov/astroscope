@@ -8,7 +8,12 @@
  * six-pointed star, a bamboo staff, and pine-needle clusters. Vertical red
  * hanko seal with "IX" top-right; tall title cartouche with "THE HERMIT"
  * set vertically on the right edge. Cream washi ground, double keyline frame.
- * Server-component safe: no hooks, no client code.
+ *
+ * Signature effects (CSS-only, server-component safe):
+ *  - outline cloud / mist bands drift sideways, alternating directions;
+ *  - the paper lantern sways gently from its hang point;
+ *  - on hover the bokashi sky band shimmers and the sparkles twinkle faster.
+ * All motion is guarded by prefers-reduced-motion.
  */
 
 const INK = "#16130f";
@@ -50,10 +55,11 @@ function pineCluster(cx: number, cy: number, scale: number, key: string) {
 }
 
 /** Flat-bottomed stylized cloud, drawn outline-only (no fill). */
-function outlineCloud(d: string, width: number, key: string) {
+function outlineCloud(d: string, width: number, key: string, className: string) {
   return (
     <path
       key={key}
+      className={className}
       d={d}
       fill="none"
       stroke={CREAM}
@@ -65,11 +71,13 @@ function outlineCloud(d: string, width: number, key: string) {
   );
 }
 
-/** Tiny four-point sky sparkle. */
-function sparkle(cx: number, cy: number, r: number, key: string) {
+/** Tiny four-point sky sparkle; twinkle paced per-sparkle via delay. */
+function sparkle(cx: number, cy: number, r: number, key: string, delay: string) {
   return (
     <path
       key={key}
+      className="cl-uke-sparkle"
+      style={{ animationDelay: delay }}
       d={`M${cx},${cy - r} L${cx + r * 0.28},${cy - r * 0.28} L${cx + r},${cy} L${cx + r * 0.28},${cy + r * 0.28} L${cx},${cy + r} L${cx - r * 0.28},${cy + r * 0.28} L${cx - r},${cy} L${cx - r * 0.28},${cy - r * 0.28} Z`}
       fill={CREAM}
       opacity={0.85}
@@ -95,15 +103,62 @@ export default function UkiyoEHermitCard() {
     >
       <style>{`
         .cl-uke-root svg { display: block; width: 100%; height: 100%; }
+        .cl-uke-shimmer {
+          position: absolute;
+          left: 4.5%; right: 4.5%; top: 3%; height: 15.5%;
+          background: linear-gradient(180deg, rgba(10,18,38,0.5), rgba(10,18,38,0));
+          background-size: 100% 220%;
+          background-position: 0% 0%;
+          pointer-events: none;
+        }
         @media (prefers-reduced-motion: no-preference) {
           .cl-uke-glow { animation: cl-uke-breathe 3.8s ease-in-out infinite; }
           @keyframes cl-uke-breathe {
             0%, 100% { opacity: 0.85; }
             50% { opacity: 1; }
           }
+          /* Drifting mist: cloud bands slide sideways, alternating directions */
+          .cl-uke-drift-a { animation: cl-uke-drift-a 26s ease-in-out infinite; }
+          .cl-uke-drift-b { animation: cl-uke-drift-b 34s ease-in-out infinite; }
+          @keyframes cl-uke-drift-a {
+            0%, 100% { transform: translateX(0); }
+            50% { transform: translateX(7px); }
+          }
+          @keyframes cl-uke-drift-b {
+            0%, 100% { transform: translateX(0); }
+            50% { transform: translateX(-8px); }
+          }
+          /* Lantern swaying from its hang point */
+          .cl-uke-sway {
+            transform-box: view-box;
+            transform-origin: 64px 150px;
+            animation: cl-uke-sway 4s ease-in-out infinite;
+          }
+          @keyframes cl-uke-sway {
+            0%, 100% { transform: rotate(-2deg); }
+            50% { transform: rotate(2deg); }
+          }
+          /* Sparkle twinkle — speeds up on hover */
+          .cl-uke-sparkle { animation: cl-uke-twinkle 4.5s ease-in-out infinite; }
+          @keyframes cl-uke-twinkle {
+            0%, 100% { opacity: 0.85; }
+            50% { opacity: 0.25; }
+          }
+          .cl-uke-root:hover .cl-uke-sparkle { animation-duration: 1.1s; }
+          /* Bokashi band shimmer on hover */
+          .cl-uke-root:hover .cl-uke-shimmer { animation: cl-uke-shimmer 2.8s ease-in-out infinite; }
+          @keyframes cl-uke-shimmer {
+            0%, 100% { background-position: 0% 0%; }
+            50% { background-position: 0% 100%; }
+          }
         }
         @media (prefers-reduced-motion: reduce) {
-          .cl-uke-glow { animation: none; }
+          .cl-uke-glow,
+          .cl-uke-drift-a,
+          .cl-uke-drift-b,
+          .cl-uke-sway,
+          .cl-uke-sparkle,
+          .cl-uke-shimmer { animation: none; }
         }
       `}</style>
 
@@ -142,14 +197,14 @@ export default function UkiyoEHermitCard() {
         <rect x="9" y="9" width="182" height="46" fill="url(#cl-uke-bokashi)" />
 
         {/* Sky sparkles */}
-        {sparkle(34, 34, 2.4, "s1")}
-        {sparkle(140, 26, 1.9, "s2")}
-        {sparkle(112, 52, 1.5, "s3")}
+        {sparkle(34, 34, 2.4, "s1", "0s")}
+        {sparkle(140, 26, 1.9, "s2", "-1.6s")}
+        {sparkle(112, 52, 1.5, "s3", "-3.1s")}
 
-        {/* ── Outline-only stylized clouds ── */}
-        {outlineCloud("M16,64 h20 a7,7 0 0 1 12,-4 a9,9 0 0 1 16,1 a6,6 0 0 1 11,3 h16", 1.2, "c1")}
-        {outlineCloud("M22,72 h14 a5,5 0 0 1 10,-2 a7,7 0 0 1 13,2 h18", 0.8, "c2")}
-        {outlineCloud("M104,84 h16 a6,6 0 0 1 11,-3 a8,8 0 0 1 14,2 a5,5 0 0 1 9,2 h14", 1.1, "c3")}
+        {/* ── Outline-only stylized clouds (drifting) ── */}
+        {outlineCloud("M16,64 h20 a7,7 0 0 1 12,-4 a9,9 0 0 1 16,1 a6,6 0 0 1 11,3 h16", 1.2, "c1", "cl-uke-drift-a")}
+        {outlineCloud("M22,72 h14 a5,5 0 0 1 10,-2 a7,7 0 0 1 13,2 h18", 0.8, "c2", "cl-uke-drift-b")}
+        {outlineCloud("M104,84 h16 a6,6 0 0 1 11,-3 a8,8 0 0 1 14,2 a5,5 0 0 1 9,2 h14", 1.1, "c3", "cl-uke-drift-a")}
 
         {/* ── Jagged Prussian-blue mountain ── */}
         <path
@@ -168,8 +223,8 @@ export default function UkiyoEHermitCard() {
           strokeLinejoin="round"
         />
 
-        {/* Mist band crossing the slopes, outline-only */}
-        {outlineCloud("M9,206 h24 a6,6 0 0 1 11,-3 a8,8 0 0 1 15,2 h30 a6,6 0 0 1 11,-2 h20", 1, "m1")}
+        {/* Mist band crossing the slopes, outline-only (drifting) */}
+        {outlineCloud("M9,206 h24 a6,6 0 0 1 11,-3 a8,8 0 0 1 15,2 h30 a6,6 0 0 1 11,-2 h20", 1, "m1", "cl-uke-drift-b")}
 
         {/* ── Pine in the foreground ── */}
         <path d="M30,256 C29,248 30,240 34,233" fill="none" stroke={INK} strokeWidth="1.6" strokeLinecap="round" />
@@ -183,23 +238,24 @@ export default function UkiyoEHermitCard() {
         {/* Hand */}
         <circle cx="64" cy="148.5" r="1.9" fill="#e8c9a0" stroke={INK} strokeWidth="0.6" />
 
-        {/* Lantern cord */}
-        <line x1="64" y1="150" x2="64" y2="154" stroke={INK} strokeWidth="0.8" />
-
-        {/* Lantern glow */}
-        <circle className="cl-uke-glow" cx="64" cy="165" r="27" fill="url(#cl-uke-lantern-glow)" />
-
-        {/* Paper lantern (chōchin): warm ochre body, black key-block ribs */}
-        <ellipse cx="64" cy="165" rx="9.5" ry="11" fill={OCHRE} stroke={INK} strokeWidth="1.2" />
-        <line x1="55.5" y1="160" x2="72.5" y2="160" stroke={INK} strokeWidth="0.7" />
-        <line x1="54.5" y1="165" x2="73.5" y2="165" stroke={INK} strokeWidth="0.7" />
-        <line x1="55.5" y1="170" x2="72.5" y2="170" stroke={INK} strokeWidth="0.7" />
-        <rect x="61" y="152.5" width="6" height="2.6" fill={INK} />
-        <rect x="61" y="175" width="6" height="2.6" fill={INK} />
-        {/* Six-pointed star shining inside the lantern */}
-        <g fill="#fff6dd">
-          <path d="M64,160.6 L67.8,167 L60.2,167 Z" />
-          <path d="M64,169.4 L60.2,163 L67.8,163 Z" />
+        {/* Hanging lantern assembly — sways gently from the hang point */}
+        <g className="cl-uke-sway">
+          {/* Lantern cord */}
+          <line x1="64" y1="150" x2="64" y2="154" stroke={INK} strokeWidth="0.8" />
+          {/* Lantern glow */}
+          <circle className="cl-uke-glow" cx="64" cy="165" r="27" fill="url(#cl-uke-lantern-glow)" />
+          {/* Paper lantern (chōchin): warm ochre body, black key-block ribs */}
+          <ellipse cx="64" cy="165" rx="9.5" ry="11" fill={OCHRE} stroke={INK} strokeWidth="1.2" />
+          <line x1="55.5" y1="160" x2="72.5" y2="160" stroke={INK} strokeWidth="0.7" />
+          <line x1="54.5" y1="165" x2="73.5" y2="165" stroke={INK} strokeWidth="0.7" />
+          <line x1="55.5" y1="170" x2="72.5" y2="170" stroke={INK} strokeWidth="0.7" />
+          <rect x="61" y="152.5" width="6" height="2.6" fill={INK} />
+          <rect x="61" y="175" width="6" height="2.6" fill={INK} />
+          {/* Six-pointed star shining inside the lantern */}
+          <g fill="#fff6dd">
+            <path d="M64,160.6 L67.8,167 L60.2,167 Z" />
+            <path d="M64,169.4 L60.2,163 L67.8,163 Z" />
+          </g>
         </g>
 
         {/* Bamboo staff in the right hand */}
@@ -289,6 +345,9 @@ export default function UkiyoEHermitCard() {
         <rect x="4" y="4" width="192" height="292" fill="none" stroke={INK} strokeWidth="1.6" />
         <rect x="8" y="8" width="184" height="284" fill="none" stroke={INK} strokeWidth="0.55" />
       </svg>
+
+      {/* Bokashi shimmer overlay — sits over the top sky band, animates on hover */}
+      <div className="cl-uke-shimmer" aria-hidden="true" />
     </figure>
   );
 }

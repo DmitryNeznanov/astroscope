@@ -16,13 +16,53 @@ export default function StainedGlassHermit() {
       <style>{`
         .cl-sg-card { display: block; line-height: 0; }
         .cl-sg-card svg { display: block; width: 100%; height: 100%; }
+
+        /* lantern glow pulse */
         .cl-sg-glow { animation: cl-sg-pulse 5s ease-in-out infinite; }
         @keyframes cl-sg-pulse {
           0%, 100% { opacity: 0.35; }
           50% { opacity: 0.7; }
         }
+
+        /* (1) sun beam sweeping across the window */
+        .cl-sg-beam {
+          opacity: 0.5;
+          mix-blend-mode: screen;
+          animation: cl-sg-sweep 8s linear infinite;
+          transition: opacity 0.6s ease;
+        }
+        @keyframes cl-sg-sweep {
+          from { transform: translateX(0); }
+          to { transform: translateX(340px); }
+        }
+
+        /* (2) glass breathing: low-amplitude brightness pulse, staggered */
+        .cl-sg-br1, .cl-sg-br2, .cl-sg-br3 {
+          animation: cl-sg-breathe 6s ease-in-out infinite;
+        }
+        .cl-sg-br2 { animation-delay: -2s; }
+        .cl-sg-br3 { animation-delay: -4s; }
+        @keyframes cl-sg-breathe {
+          0%, 100% { filter: brightness(1); }
+          50% { filter: brightness(1.09); }
+        }
+
+        /* (3) hover: lantern shards flare, beam intensifies */
+        .cl-sg-lantern, .cl-sg-rays { transition: filter 0.4s ease; }
+        .cl-sg-card:hover .cl-sg-lantern,
+        .cl-sg-card:hover .cl-sg-rays {
+          filter: brightness(1.45) saturate(1.25);
+        }
+        .cl-sg-card:hover .cl-sg-beam {
+          opacity: 0.95;
+          animation-duration: 3.5s;
+        }
+
         @media (prefers-reduced-motion: reduce) {
           .cl-sg-glow { animation: none; opacity: 0.5; }
+          .cl-sg-beam { animation: none; opacity: 0; }
+          .cl-sg-br1, .cl-sg-br2, .cl-sg-br3 { animation: none; }
+          .cl-sg-lantern, .cl-sg-rays, .cl-sg-beam { transition: none; }
         }
       `}</style>
 
@@ -61,6 +101,11 @@ export default function StainedGlassHermit() {
             <stop offset="0" stopColor="#8b5cc4" />
             <stop offset="1" stopColor="#53297e" />
           </radialGradient>
+          <linearGradient id="cl-sg-beamgrad" x1="0" y1="0" x2="1" y2="0">
+            <stop offset="0" stopColor="#ffedbe" stopOpacity="0" />
+            <stop offset="0.5" stopColor="#fff6dd" stopOpacity="0.55" />
+            <stop offset="1" stopColor="#ffedbe" stopOpacity="0" />
+          </linearGradient>
         </defs>
 
         {/* window silhouette background so the arch reads on any page bg */}
@@ -72,7 +117,7 @@ export default function StainedGlassHermit() {
         <g clipPath="url(#cl-sg-arch)">
           {/* ---- background: purple / indigo shards ---- */}
           <rect x="0" y="0" width="200" height="300" fill="#241c46" />
-          <g stroke={LEAD} strokeWidth="3.5" strokeLinejoin="round">
+          <g className="cl-sg-br1" stroke={LEAD} strokeWidth="3.5" strokeLinejoin="round">
             <polygon points="22,132 22,58 74,38 100,92 58,140" fill="#4b3a75" />
             <polygon points="178,132 178,58 126,38 100,92 142,140" fill="#372a5e" />
             <polygon points="22,132 58,140 54,214 22,222" fill="#55408a" />
@@ -81,13 +126,13 @@ export default function StainedGlassHermit() {
           </g>
 
           {/* ---- distant mountain peaks ---- */}
-          <g stroke={LEAD} strokeWidth="3.5" strokeLinejoin="round">
+          <g className="cl-sg-br2" stroke={LEAD} strokeWidth="3.5" strokeLinejoin="round">
             <polygon points="22,238 70,150 104,182 96,238" fill="#3d3566" />
             <polygon points="96,238 104,182 132,144 178,238" fill="#2f2a52" />
           </g>
 
           {/* ---- lantern light rays (amber shards radiating outward) ---- */}
-          <g stroke={LEAD} strokeWidth="3" strokeLinejoin="round">
+          <g className="cl-sg-rays" stroke={LEAD} strokeWidth="3" strokeLinejoin="round">
             <polygon points="148,92 172,78 154,100" fill="#f2b43a" />
             <polygon points="150,104 176,110 148,114" fill="#e8a02a" />
             <polygon points="144,114 156,138 136,118" fill="#f2b43a" />
@@ -101,7 +146,7 @@ export default function StainedGlassHermit() {
           <circle cx="60" cy="126" r="5.5" fill="#c98a2e" stroke={LEAD} strokeWidth="3" />
 
           {/* ---- the Hermit: hooded figure in deep blue robe segments ---- */}
-          <g stroke={LEAD} strokeWidth="3.5" strokeLinejoin="round">
+          <g className="cl-sg-br3" stroke={LEAD} strokeWidth="3.5" strokeLinejoin="round">
             {/* raised right arm */}
             <polygon points="102,152 126,116 136,124 114,160" fill="#1d3f8f" />
             {/* robe, three leaded segments */}
@@ -117,7 +162,7 @@ export default function StainedGlassHermit() {
           <circle cx="66" cy="168" r="5" fill="#c98a2e" stroke={LEAD} strokeWidth="3" />
 
           {/* ---- the lantern: brightest amber segment ---- */}
-          <g stroke={LEAD} strokeWidth="3.5" strokeLinejoin="round">
+          <g className="cl-sg-lantern" stroke={LEAD} strokeWidth="3.5" strokeLinejoin="round">
             <polygon points="132,84 144,84 140,78 136,78" fill="#3a2c14" />
             <polygon points="138,86 150,94 150,108 138,116 126,108 126,94" fill="url(#cl-sg-amber)" />
           </g>
@@ -135,7 +180,7 @@ export default function StainedGlassHermit() {
 
           {/* ---- rose window with IX ---- */}
           <circle cx="100" cy="54" r="27" fill="#141026" stroke={LEAD} strokeWidth="4" />
-          <g stroke={LEAD} strokeWidth="2.5" strokeLinejoin="round">
+          <g className="cl-sg-br2" stroke={LEAD} strokeWidth="2.5" strokeLinejoin="round">
             <path d="M 100 54 L 100 32 A 22 22 0 0 1 115.6 38.4 Z" fill="url(#cl-sg-ruby)" />
             <path d="M 100 54 L 115.6 38.4 A 22 22 0 0 1 122 54 Z" fill="url(#cl-sg-amethyst)" />
             <path d="M 100 54 L 122 54 A 22 22 0 0 1 115.6 69.6 Z" fill="url(#cl-sg-ruby)" />
@@ -176,6 +221,18 @@ export default function StainedGlassHermit() {
           >
             THE HERMIT
           </text>
+
+          {/* ---- sun beam sweeping across the window (screen blend) ---- */}
+          <g transform="rotate(18 100 150)">
+            <rect
+              className="cl-sg-beam"
+              x="-130"
+              y="-80"
+              width="110"
+              height="460"
+              fill="url(#cl-sg-beamgrad)"
+            />
+          </g>
         </g>
 
         {/* outer lead frame of the lancet window */}

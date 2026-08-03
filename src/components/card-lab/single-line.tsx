@@ -49,6 +49,25 @@ export default function SingleLineCard() {
       aria-label="The Hermit tarot card drawn as one continuous line"
     >
       <style>{`
+        /* signature effect: the single stroke draws itself on mount.
+           Measured path length ~2452 units; dasharray 2500 covers it. */
+        .cl-sline .cl-sline-ink {
+          stroke-dasharray: 2500;
+          stroke-dashoffset: 2500;
+          animation: cl-sline-draw 3s ease-in-out forwards;
+          transition: stroke 0.4s ease;
+        }
+        @keyframes cl-sline-draw {
+          to { stroke-dashoffset: 0; }
+        }
+        /* lantern light fades in only after the stroke completes */
+        .cl-sline .cl-sline-glowfade {
+          opacity: 0;
+          animation: cl-sline-glowin 0.9s ease 3.05s forwards;
+        }
+        @keyframes cl-sline-glowin {
+          to { opacity: 1; }
+        }
         .cl-sline .cl-sline-glow {
           transform-box: fill-box;
           transform-origin: center;
@@ -58,8 +77,31 @@ export default function SingleLineCard() {
           0%, 100% { opacity: 0.7; transform: scale(1); }
           50% { opacity: 1; transform: scale(1.08); }
         }
+        /* hover: ink deepens, lantern breathes */
+        .cl-sline:hover .cl-sline-ink {
+          stroke: #120e08;
+        }
+        .cl-sline:hover .cl-sline-glow {
+          animation: cl-sline-breathe 2.2s ease-in-out infinite;
+        }
+        @keyframes cl-sline-breathe {
+          0%, 100% { opacity: 0.75; transform: scale(1); }
+          50% { opacity: 1; transform: scale(1.15); }
+        }
         @media (prefers-reduced-motion: reduce) {
-          .cl-sline .cl-sline-glow { animation: none; }
+          .cl-sline .cl-sline-ink {
+            animation: none;
+            stroke-dasharray: none;
+            stroke-dashoffset: 0;
+          }
+          .cl-sline .cl-sline-glowfade {
+            animation: none;
+            opacity: 1;
+          }
+          .cl-sline .cl-sline-glow,
+          .cl-sline:hover .cl-sline-glow {
+            animation: none;
+          }
         }
       `}</style>
       <svg
@@ -105,17 +147,21 @@ export default function SingleLineCard() {
           IX
         </text>
 
-        {/* the lantern light — the only second element on the card */}
-        <circle
-          className="cl-sline-glow"
-          cx="290"
-          cy="192"
-          r="46"
-          fill="url(#cl-sline-gold)"
-        />
+        {/* the lantern light — the only second element on the card;
+            fades in only after the stroke has finished drawing */}
+        <g className="cl-sline-glowfade">
+          <circle
+            className="cl-sline-glow"
+            cx="290"
+            cy="192"
+            r="46"
+            fill="url(#cl-sline-gold)"
+          />
+        </g>
 
         {/* the entire scene as one unbroken ink stroke */}
         <path
+          className="cl-sline-ink"
           d={d}
           fill="none"
           stroke="#2b241c"

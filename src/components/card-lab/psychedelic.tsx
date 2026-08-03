@@ -54,7 +54,11 @@ function ContourBands() {
       />,
     );
   }
-  return <g className="cl-psy-rings">{discs}</g>;
+  return (
+    <g className="cl-psy-rings-wrap">
+      <g className="cl-psy-rings">{discs}</g>
+    </g>
+  );
 }
 
 /** Warped bubble border: alternating-size circles marching the inner frame. */
@@ -228,7 +232,7 @@ function HermitFigure() {
 /** Warped bulbous title on a wavy baseline, with a vibrating offset shadow. */
 function TitleBanner() {
   return (
-    <g>
+    <g className="cl-psy-title">
       <defs>
         <path id="cl-psy-titlePath" d="M52 544 Q126 528 200 540 T348 538" fill="none" />
       </defs>
@@ -275,14 +279,31 @@ export default function PsychedelicCard() {
       <style>{`
         @keyframes cl-psy-pulse { 0%, 100% { opacity: .45 } 50% { opacity: .95 } }
         @keyframes cl-psy-spin { to { transform: rotate(360deg) } }
+        @keyframes cl-psy-hue { to { filter: hue-rotate(360deg) } }
+        @keyframes cl-psy-wobble {
+          0%, 100% { transform: translateY(0) skewX(0deg) }
+          25% { transform: translateY(-1.5px) skewX(-1.2deg) }
+          75% { transform: translateY(1.5px) skewX(1.2deg) }
+        }
         .cl-psy-glow { animation: cl-psy-pulse 3.2s ease-in-out infinite }
         .cl-psy-rings {
           transform-box: view-box;
           transform-origin: ${LX}px ${LY}px;
-          animation: cl-psy-spin 120s linear infinite;
+          animation: cl-psy-spin 120s linear infinite, cl-psy-hue 24s linear infinite;
+        }
+        .cl-psy-title {
+          transform-box: fill-box;
+          transform-origin: center;
+          animation: cl-psy-wobble 5s ease-in-out infinite;
+        }
+        .cl-psy-card:hover .cl-psy-rings {
+          animation-duration: 12s, 24s;
+        }
+        .cl-psy-card:hover .cl-psy-rings-wrap {
+          filter: saturate(1.4);
         }
         @media (prefers-reduced-motion: reduce) {
-          .cl-psy-glow, .cl-psy-rings { animation: none }
+          .cl-psy-glow, .cl-psy-rings, .cl-psy-title { animation: none }
         }
       `}</style>
       <svg

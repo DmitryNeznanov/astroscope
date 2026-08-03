@@ -20,20 +20,80 @@ export default function PopArtHermitCard() {
           overflow: hidden;
           border-radius: 12px;
           background: #ffffff;
+          /* one-shot panel-slam on mount: 1.15 -> 1, hard ease-out */
+          animation: cl-popart-slam 0.45s cubic-bezier(0.16, 1, 0.3, 1) both;
         }
-        .cl-popart-card svg { display: block; width: 100%; height: 100%; }
+        @keyframes cl-popart-slam {
+          from { transform: scale(1.15); }
+          to { transform: scale(1); }
+        }
+        .cl-popart-card svg {
+          display: block;
+          width: 100%;
+          height: 100%;
+          transform-origin: 50% 50%;
+          /* hover snap: fast overshoot transition */
+          transition: transform 0.18s cubic-bezier(0.34, 1.56, 0.64, 1);
+        }
+        .cl-popart-card:hover svg { transform: scale(1.03); }
         .cl-popart-text {
           font-family: "Arial Black", Arial, Helvetica, sans-serif;
           font-weight: 900;
         }
+
         /* gentle pulse on the star inside the lantern */
         @keyframes cl-popart-glow {
           0%, 100% { opacity: 1; }
           50% { opacity: 0.35; }
         }
         .cl-popart-star { animation: cl-popart-glow 2.4s ease-in-out infinite; }
+
+        /* starburst POP: scale pulse once every 4s, snappy overshoot */
+        .cl-popart-burst {
+          transform-box: fill-box;
+          transform-origin: center;
+          animation: cl-popart-burst 4s cubic-bezier(0.34, 1.56, 0.64, 1) infinite;
+        }
+        @keyframes cl-popart-burst {
+          0%, 100% { transform: scale(1); }
+          5% { transform: scale(1.08); }
+          10% { transform: scale(1); }
+        }
+        /* detached rays flick on/off in hard steps, synced with the pop */
+        .cl-popart-rays {
+          animation: cl-popart-rays 4s steps(1, end) infinite;
+        }
+        @keyframes cl-popart-rays {
+          0% { opacity: 0; }
+          5% { opacity: 1; }
+          7% { opacity: 0; }
+          9% { opacity: 1; }
+          14%, 100% { opacity: 1; }
+        }
+
+        /* thought bubble: hidden until hover, dots appear one by one */
+        .cl-popart-bubble {
+          opacity: 0;
+          transition: opacity 0.15s ease-out;
+        }
+        .cl-popart-card:hover .cl-popart-bubble { opacity: 1; }
+        .cl-popart-td {
+          opacity: 0;
+          transition: opacity 0.05s steps(1, end);
+        }
+        .cl-popart-card:hover .cl-popart-td { opacity: 1; }
+        .cl-popart-card:hover .cl-popart-td-1 { transition-delay: 0.2s; }
+        .cl-popart-card:hover .cl-popart-td-2 { transition-delay: 0.45s; }
+        .cl-popart-card:hover .cl-popart-td-3 { transition-delay: 0.7s; }
+
         @media (prefers-reduced-motion: reduce) {
-          .cl-popart-star { animation: none; }
+          .cl-popart-card { animation: none; }
+          .cl-popart-card svg { transition: none; }
+          .cl-popart-star,
+          .cl-popart-burst,
+          .cl-popart-rays { animation: none; }
+          .cl-popart-bubble,
+          .cl-popart-td { transition: none; }
         }
       `}</style>
 
@@ -89,12 +149,15 @@ export default function PopArtHermitCard() {
 
         {/* ---- lantern starburst: yellow explosion + black outline rays ---- */}
         <g strokeLinejoin="round">
-          <line x1="76" y1="52" x2="76" y2="42" stroke="#0a0a0a" strokeWidth="3.5" />
-          <line x1="110" y1="62" x2="117" y2="55" stroke="#0a0a0a" strokeWidth="3.5" />
-          <line x1="120" y1="96" x2="131" y2="96" stroke="#0a0a0a" strokeWidth="3.5" />
-          <line x1="42" y1="62" x2="35" y2="55" stroke="#0a0a0a" strokeWidth="3.5" />
-          <line x1="32" y1="96" x2="21" y2="96" stroke="#0a0a0a" strokeWidth="3.5" />
+          <g className="cl-popart-rays">
+            <line x1="76" y1="52" x2="76" y2="42" stroke="#0a0a0a" strokeWidth="3.5" />
+            <line x1="110" y1="62" x2="117" y2="55" stroke="#0a0a0a" strokeWidth="3.5" />
+            <line x1="120" y1="96" x2="131" y2="96" stroke="#0a0a0a" strokeWidth="3.5" />
+            <line x1="42" y1="62" x2="35" y2="55" stroke="#0a0a0a" strokeWidth="3.5" />
+            <line x1="32" y1="96" x2="21" y2="96" stroke="#0a0a0a" strokeWidth="3.5" />
+          </g>
           <polygon
+            className="cl-popart-burst"
             points="76.0,60.0 81.4,75.7 94.0,64.8 90.8,81.2 107.2,78.0 96.3,90.6 112.0,96.0 96.3,101.4 107.2,114.0 90.8,110.8 94.0,127.2 81.4,116.3 76.0,132.0 70.6,116.3 58.0,127.2 61.2,110.8 44.8,114.0 55.7,101.4 40.0,96.0 55.7,90.6 44.8,78.0 61.2,81.2 58.0,64.8 70.6,75.7"
             fill="#ffe719"
             stroke="#0a0a0a"
@@ -206,8 +269,8 @@ export default function PopArtHermitCard() {
           <circle cx="124.5" cy="132" r="1" fill="#0a0a0a" />
         </g>
 
-        {/* ---- thought bubble with '...' ---- */}
-        <g>
+        {/* ---- thought bubble with '...' (revealed on hover, dot by dot) ---- */}
+        <g className="cl-popart-bubble">
           <circle cx="152" cy="112" r="2" fill="#ffffff" stroke="#0a0a0a" strokeWidth="1.8" />
           <circle cx="160" cy="103" r="3" fill="#ffffff" stroke="#0a0a0a" strokeWidth="1.8" />
           <ellipse
@@ -227,7 +290,9 @@ export default function PopArtHermitCard() {
             fontSize="11"
             fill="#0a0a0a"
           >
-            ...
+            <tspan className="cl-popart-td cl-popart-td-1">.</tspan>
+            <tspan className="cl-popart-td cl-popart-td-2">.</tspan>
+            <tspan className="cl-popart-td cl-popart-td-3">.</tspan>
           </text>
         </g>
 

@@ -6,7 +6,11 @@
  * into single SVG paths. Classic sampler chrome: red/gold checker border with
  * green corner blocks, a gold "IX" stitched top-center, and "THE / HERMIT" in
  * a 3x5 cross-stitch alphabet on bare cloth below the scene. The lantern has
- * a white star inside and softly twinkling glow stitches.
+ * a white star inside and glow stitches that twinkle with a soft irregular
+ * blink. Signature effects (CSS-only): on mount the border is "stitched" with
+ * a quick stepped clip-path wipe, then the scene is stitched row by row over
+ * ~2.8s in steps(20); on hover the fabric warms as if held up to the light
+ * and the lantern twinkle speeds up. Reduced motion = fully stitched at once.
  * Server-component safe: no hooks, no client code.
  */
 
@@ -114,12 +118,19 @@ function drawText(
   }
 }
 
-/** Compose the full 28x42 stitch map: cell key "x,y" -> floss color. */
-function buildStitches(): CellMap {
+/** Compose the full 28x42 stitch map: cell key "x,y" -> floss color.
+ *  Border stitches are kept in their own map so the border can be revealed
+ *  with its own (quicker) stitching wipe before the scene is stitched. */
+function buildStitches(): { border: CellMap; scene: CellMap } {
+  const border: CellMap = new Map();
   const cells: CellMap = new Map();
   const set = (x: number, y: number, color: string) => {
     if (x < 0 || x >= GW || y < 0 || y >= GH) return;
     cells.set(`${x},${y}`, color);
+  };
+  const setBorder = (x: number, y: number, color: string) => {
+    if (x < 0 || x >= GW || y < 0 || y >= GH) return;
+    border.set(`${x},${y}`, color);
   };
 
   // 1) Sampler border: red/gold checker, forest-green corner blocks.
@@ -128,7 +139,7 @@ function buildStitches(): CellMap {
       const onBorder = x < 2 || x >= GW - 2 || y < 2 || y >= GH - 2;
       if (!onBorder) continue;
       const corner = (x < 2 || x >= GW - 2) && (y < 2 || y >= GH - 2);
-      set(x, y, corner ? FLOSS.green : (x + y) % 2 ? FLOSS.red : FLOSS.gold);
+      setBorder(x, y, corner ? FLOSS.green : (x + y) % 2 ? FLOSS.red : FLOSS.gold);
     }
   }
 
@@ -182,12 +193,17 @@ function buildStitches(): CellMap {
   drawText(set, "THE", FONT3, 8, 29, FLOSS.red, 1); // 11 wide, centered
   drawText(set, "HERMIT", FONT3, 2, 35, FLOSS.red, 1); // 23 wide, centered
 
-  return cells;
+  return { border, scene: cells };
 }
 
-/** Group stitches by floss color into one SVG path per color. */
-function groupPaths(cells: CellMap): { color: string; d: string }[] {
+/** Group stitches by floss color into one SVG path per color — except the
+ *  lantern-glow stitches, which each get their own path so they can twinkle
+ *  on staggered delays (glowIndex = delay slot). */
+type StitchPath = { color: string; d: string; glowIndex?: number };
+
+function groupPaths(cells: CellMap): StitchPath[] {
   const groups = new Map<string, string[]>();
+  const glowSegs: string[] = [];
   for (const [key, color] of cells) {
     const [x, y] = key.split(",").map(Number);
     const x0 = x * CS + 1.3;
@@ -196,14 +212,25 @@ function groupPaths(cells: CellMap): { color: string; d: string }[] {
     const y1 = (y + 1) * CS - 1.3;
     // One cross-stitch: two short diagonal strokes per cell.
     const seg = `M${x0} ${y0}L${x1} ${y1}M${x1} ${y0}L${x0} ${y1}`;
+    if (color === FLOSS.glow) {
+      glowSegs.push(seg);
+      continue;
+    }
     const arr = groups.get(color);
     if (arr) arr.push(seg);
     else groups.set(color, [seg]);
   }
-  return Array.from(groups, ([color, segs]) => ({ color, d: segs.join("") }));
+  const out: StitchPath[] = Array.from(groups, ([color, segs]) => ({
+    color,
+    d: segs.join(""),
+  }));
+  glowSegs.forEach((d, i) => out.push({ color: FLOSS.glow, d, glowIndex: i }));
+  return out;
 }
 
-const STITCH_PATHS = groupPaths(buildStitches());
+const STITCHES = buildStitches();
+const BORDER_PATHS = groupPaths(STITCHES.border);
+const SCENE_PATHS = groupPaths(STITCHES.scene);
 
 export default function CrossStitchHermitCard() {
   return (
@@ -234,16 +261,55 @@ export default function CrossStitchHermitCard() {
             repeating-linear-gradient(0deg, rgba(133, 109, 66, 0.10) 0 1px, transparent 1px 4px),
             repeating-linear-gradient(90deg, rgba(133, 109, 66, 0.10) 0 1px, transparent 1px 4px),
             radial-gradient(ellipse at center, transparent 55%, rgba(101, 78, 42, 0.18) 100%);
+          transition: filter 0.5s ease;
         }
+        .cl-cs-card svg {
+          transition: filter 0.5s ease;
+        }
+        /* Stitching reveal: border is stitched first (quick wipe), then the
+           scene is stitched row by row, top to bottom, in stepped passes. */
+        .cl-cs-card .cl-cs-border-wipe {
+          animation: cl-cs-wipe 0.9s steps(6) both;
+        }
+        .cl-cs-card .cl-cs-scene-wipe {
+          animation: cl-cs-wipe 2.8s steps(20) 0.7s both;
+        }
+        @keyframes cl-cs-wipe {
+          from { clip-path: inset(0 0 100% 0); }
+          to { clip-path: inset(0 0 0 0); }
+        }
+        /* Lantern glow: soft irregular blink, staggered per stitch. */
         .cl-cs-card .cl-cs-glow {
-          animation: cl-cs-twinkle 2.4s ease-in-out infinite;
+          animation: cl-cs-twinkle 2.6s ease-in-out infinite;
         }
         @keyframes cl-cs-twinkle {
           0%, 100% { opacity: 0.45; }
-          50% { opacity: 1; }
+          17% { opacity: 0.95; }
+          31% { opacity: 0.55; }
+          54% { opacity: 1; }
+          68% { opacity: 0.4; }
+          84% { opacity: 0.8; }
+        }
+        /* Held up to the light: warm brightness shift, livelier lantern. */
+        .cl-cs-card:hover .cl-cs-aida {
+          filter: brightness(1.09) sepia(0.22) saturate(1.12);
+        }
+        .cl-cs-card:hover svg {
+          filter: brightness(1.05);
+        }
+        .cl-cs-card:hover .cl-cs-glow {
+          animation-duration: 0.9s;
         }
         @media (prefers-reduced-motion: reduce) {
-          .cl-cs-card .cl-cs-glow { animation: none; }
+          .cl-cs-card .cl-cs-border-wipe,
+          .cl-cs-card .cl-cs-scene-wipe,
+          .cl-cs-card .cl-cs-glow {
+            animation: none;
+          }
+          .cl-cs-card .cl-cs-aida,
+          .cl-cs-card svg {
+            transition: none;
+          }
         }
       `}</style>
       <div className="cl-cs-aida" />
@@ -252,17 +318,36 @@ export default function CrossStitchHermitCard() {
         preserveAspectRatio="xMidYMid meet"
         style={{ position: "absolute", inset: 0, width: "100%", height: "100%" }}
       >
-        {STITCH_PATHS.map(({ color, d }) => (
-          <path
-            key={color}
-            d={d}
-            fill="none"
-            stroke={color}
-            strokeWidth={2.3}
-            strokeLinecap="round"
-            className={color === FLOSS.glow ? "cl-cs-glow" : undefined}
-          />
-        ))}
+        <g className="cl-cs-border-wipe">
+          {BORDER_PATHS.map(({ color, d }) => (
+            <path
+              key={color}
+              d={d}
+              fill="none"
+              stroke={color}
+              strokeWidth={2.3}
+              strokeLinecap="round"
+            />
+          ))}
+        </g>
+        <g className="cl-cs-scene-wipe">
+          {SCENE_PATHS.map(({ color, d, glowIndex }) => (
+            <path
+              key={glowIndex !== undefined ? `glow-${glowIndex}` : color}
+              d={d}
+              fill="none"
+              stroke={color}
+              strokeWidth={2.3}
+              strokeLinecap="round"
+              className={glowIndex !== undefined ? "cl-cs-glow" : undefined}
+              style={
+                glowIndex !== undefined
+                  ? { animationDelay: `${glowIndex * 0.7}s` }
+                  : undefined
+              }
+            />
+          ))}
+        </g>
       </svg>
     </figure>
   );

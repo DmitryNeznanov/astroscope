@@ -155,8 +155,76 @@ export default function PixelHermitCard() {
           0%, 100% { opacity: 1; }
           50% { opacity: 0.55; }
         }
+
+        /* Hover: the lantern sparkles — faster stutter + brightness boost. */
+        .cl-pixel-card:hover .cl-pixel-glow {
+          animation-duration: 0.45s;
+          filter: brightness(1.45) saturate(1.2);
+        }
+
+        /* One-shot CRT power-on stutter when the card mounts. */
+        .cl-pixel-card {
+          animation: cl-pixel-power 0.6s linear 1 both;
+        }
+        @keyframes cl-pixel-power {
+          0% { opacity: 0; transform: translate(0, 0); }
+          12% { opacity: 0; transform: translate(0, 0); }
+          13% { opacity: 1; transform: translate(1px, -1px); }
+          28% { opacity: 1; transform: translate(1px, -1px); }
+          29% { opacity: 0.15; transform: translate(0, 0); }
+          45% { opacity: 0.15; transform: translate(0, 0); }
+          46% { opacity: 1; transform: translate(-1px, 1px); }
+          58% { opacity: 1; transform: translate(-1px, 1px); }
+          59% { opacity: 0.35; transform: translate(1px, 0); }
+          72% { opacity: 0.35; transform: translate(1px, 0); }
+          73% { opacity: 1; transform: translate(0, 0); }
+          100% { opacity: 1; transform: translate(0, 0); }
+        }
+
+        /* Persistent scanlines: faint dark 1px lines every 3px. */
+        .cl-pixel-scanlines {
+          position: absolute;
+          inset: 0;
+          pointer-events: none;
+          background: repeating-linear-gradient(
+            0deg,
+            rgba(10, 5, 25, 0.28) 0,
+            rgba(10, 5, 25, 0.28) 1px,
+            transparent 1px,
+            transparent 3px
+          );
+        }
+
+        /* CRT refresh sweep: a thin light band traveling down the card. */
+        .cl-pixel-sweep {
+          position: absolute;
+          left: 0;
+          right: 0;
+          top: 0;
+          height: 12%;
+          pointer-events: none;
+          background: linear-gradient(
+            180deg,
+            transparent 0%,
+            rgba(244, 236, 216, 0.05) 30%,
+            rgba(244, 236, 216, 0.16) 55%,
+            rgba(255, 233, 168, 0.22) 70%,
+            transparent 100%
+          );
+          animation: cl-pixel-sweep 4.5s linear infinite;
+        }
+        @keyframes cl-pixel-sweep {
+          0% { transform: translateY(-110%); opacity: 0; }
+          6% { opacity: 1; }
+          88% { opacity: 1; }
+          100% { transform: translateY(950%); opacity: 0; }
+        }
+
         @media (prefers-reduced-motion: reduce) {
           .cl-pixel-glow { animation: none; }
+          .cl-pixel-card { animation: none; }
+          .cl-pixel-sweep { animation: none; display: none; }
+          .cl-pixel-card:hover .cl-pixel-glow { animation: none; }
         }
       `}</style>
 
@@ -227,6 +295,10 @@ export default function PixelHermitCard() {
           THE HERMIT
         </text>
       </svg>
+
+      {/* CRT overlays: persistent scanlines + traveling refresh band. */}
+      <div className="cl-pixel-scanlines" aria-hidden="true" />
+      <div className="cl-pixel-sweep" aria-hidden="true" />
     </figure>
   );
 }

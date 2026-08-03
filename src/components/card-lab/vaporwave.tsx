@@ -2,11 +2,17 @@
  * VAPORWAVE — The Hermit (IX)
  * 80s retro-futurism: a chrome/marble statue Hermit standing on a glowing
  * perspective grid floor (pink/cyan) beneath a black sky with a huge striped
- * retro sun (magenta→orange, horizontal gap stripes widening downward).
- * Palm silhouette and a broken Greek column flank the scene; wireframe
- * shapes float overhead. IX in chrome gradient, THE HERMIT in italic serif
- * with a vertical latin accent. Glow via stacked drop-shadows; the sun
- * stripes drift and shapes bob, disabled for reduced motion.
+ * retro sun (magenta→orange). Palm silhouette and a broken Greek column flank
+ * the scene; wireframe shapes float overhead. IX in chrome gradient,
+ * THE HERMIT in italic serif with a vertical latin accent.
+ *
+ * Signature effects (CSS-only):
+ *  - the sun's gap-stripes scroll downward on a seamless loop;
+ *  - the floor grid scrolls toward the viewer (seamless wrap, horizon fade);
+ *  - scanlines drift slowly;
+ *  - on hover a chrome sheen sweeps the statue (screen blend) and the
+ *    pink/cyan rim lights intensify.
+ * All motion is disabled under prefers-reduced-motion.
  */
 export default function VaporwaveHermitCard() {
   return (
@@ -55,7 +61,48 @@ export default function VaporwaveHermitCard() {
             drop-shadow(0 0 10px rgba(123, 47, 247, 0.5));
         }
 
-        /* ---- subtle motion ---- */
+        /* ---- signature: sun gap-stripes scroll downward (period 13px) ---- */
+        @keyframes cl-vapor-sunscroll {
+          from { transform: translateY(0); }
+          to { transform: translateY(13px); }
+        }
+        .cl-vapor-sunscroll { animation: cl-vapor-sunscroll 8s linear infinite; }
+
+        /* ---- signature: floor grid scrolls toward the viewer (period 22px) ---- */
+        @keyframes cl-vapor-gridscroll {
+          from { transform: translateY(0); }
+          to { transform: translateY(22px); }
+        }
+        .cl-vapor-gridscroll { animation: cl-vapor-gridscroll 4.5s linear infinite; }
+
+        /* ---- signature: scanline drift (period 4px) ---- */
+        @keyframes cl-vapor-scandrift {
+          from { transform: translateY(0); }
+          to { transform: translateY(4px); }
+        }
+        .cl-vapor-scandrift { animation: cl-vapor-scandrift 9s linear infinite; }
+
+        /* ---- signature: hover chrome sheen sweep across the statue ---- */
+        .cl-vapor-sheen { opacity: 0; mix-blend-mode: screen; }
+        @keyframes cl-vapor-sweep {
+          0% { transform: translateX(-90px); opacity: 0; }
+          25% { opacity: 0.65; }
+          75% { opacity: 0.65; }
+          100% { transform: translateX(150px); opacity: 0; }
+        }
+        .cl-vapor-card:hover .cl-vapor-sheen { animation: cl-vapor-sweep 1s ease-in-out; }
+
+        /* ---- signature: hover rim lights intensify ---- */
+        .cl-vapor-rim { transition: filter 0.4s ease, stroke-width 0.4s ease; }
+        .cl-vapor-card:hover .cl-vapor-rim {
+          stroke-width: 2.3;
+          filter:
+            drop-shadow(0 0 3px rgba(255, 255, 255, 0.95))
+            drop-shadow(0 0 10px rgba(255, 90, 200, 0.85))
+            drop-shadow(0 0 22px rgba(90, 236, 255, 0.7));
+        }
+
+        /* ---- ambient motion ---- */
         @keyframes cl-vapor-drift {
           0%, 100% { transform: translateY(0); }
           50% { transform: translateY(-3px); }
@@ -67,8 +114,16 @@ export default function VaporwaveHermitCard() {
           50% { opacity: 0.45; }
         }
         .cl-vapor-twinkle { animation: cl-vapor-twinkle 3.2s ease-in-out infinite; }
+
         @media (prefers-reduced-motion: reduce) {
-          .cl-vapor-float, .cl-vapor-float-alt, .cl-vapor-twinkle { animation: none; }
+          .cl-vapor-sunscroll,
+          .cl-vapor-gridscroll,
+          .cl-vapor-scandrift,
+          .cl-vapor-float,
+          .cl-vapor-float-alt,
+          .cl-vapor-twinkle { animation: none; }
+          .cl-vapor-card:hover .cl-vapor-sheen { animation: none; }
+          .cl-vapor-rim { transition: none; }
         }
       `}</style>
 
@@ -102,16 +157,24 @@ export default function VaporwaveHermitCard() {
             <stop offset="0" stopColor="#2d0a52" />
             <stop offset="1" stopColor="#10031c" />
           </linearGradient>
-          {/* sun stripe mask — gaps widen toward the bottom */}
-          <mask id="clVaporSunMask">
-            <circle cx="100" cy="168" r="56" fill="#fff" />
-            <rect x="38" y="158" width="124" height="2.5" fill="#000" />
-            <rect x="38" y="167" width="124" height="3.5" fill="#000" />
-            <rect x="38" y="177" width="124" height="5" fill="#000" />
-            <rect x="38" y="188" width="124" height="6.5" fill="#000" />
-            <rect x="38" y="200" width="124" height="8.5" fill="#000" />
-            <rect x="38" y="214" width="124" height="11" fill="#000" />
-          </mask>
+          {/* horizon fade for the scrolling grid lines */}
+          <linearGradient
+            id="clVaporGridFade"
+            gradientUnits="userSpaceOnUse"
+            x1="0"
+            y1="190"
+            x2="0"
+            y2="214"
+          >
+            <stop offset="0" stopColor="#fff" stopOpacity="0" />
+            <stop offset="1" stopColor="#fff" stopOpacity="1" />
+          </linearGradient>
+          {/* diagonal chrome sheen band */}
+          <linearGradient id="clVaporSheen" x1="0" y1="0" x2="1" y2="1">
+            <stop offset="0" stopColor="#fff" stopOpacity="0" />
+            <stop offset="0.5" stopColor="#fff" stopOpacity="0.95" />
+            <stop offset="1" stopColor="#fff" stopOpacity="0" />
+          </linearGradient>
           {/* subtle checker for the statue's floor patch */}
           <pattern id="clVaporCheck" width="7" height="7" patternUnits="userSpaceOnUse">
             <rect width="7" height="7" fill="#ff2e9a" opacity="0.35" />
@@ -122,6 +185,30 @@ export default function VaporwaveHermitCard() {
           <pattern id="clVaporScan" width="4" height="4" patternUnits="userSpaceOnUse">
             <rect width="4" height="1.2" fill="#000" opacity="0.16" />
           </pattern>
+          {/* sun disc clip + lower-half clip so stripes slide in from mid-sun */}
+          <clipPath id="clVaporSunClip">
+            <circle cx="100" cy="168" r="56" />
+          </clipPath>
+          <clipPath id="clVaporStripeClip">
+            <rect x="30" y="150" width="140" height="90" />
+          </clipPath>
+          {/* statue silhouette clip for the sheen sweep */}
+          <clipPath id="clVaporFigClip">
+            <path
+              d="M 100 90
+                 C 88 92 82 102 83 114
+                 C 78 124 76 138 75 154
+                 C 74 170 73 188 72 210
+                 L 128 210
+                 C 127 188 126 170 125 154
+                 C 124 138 122 124 117 114
+                 C 118 102 112 92 100 90 Z"
+            />
+          </clipPath>
+          {/* grid lines fade in from the horizon while scrolling */}
+          <mask id="clVaporGridMask">
+            <rect x="0" y="188" width="200" height="116" fill="url(#clVaporGridFade)" />
+          </mask>
         </defs>
 
         {/* sky stars */}
@@ -134,20 +221,28 @@ export default function VaporwaveHermitCard() {
           <circle cx="186" cy="98" r="0.8" />
         </g>
 
-        {/* striped retro sun */}
+        {/* striped retro sun — stripes scroll downward, seamless (period 13px) */}
         <g className="cl-vapor-glow-sun">
-          <circle cx="100" cy="168" r="56" fill="url(#clVaporSun)" mask="url(#clVaporSunMask)" />
+          <g clipPath="url(#clVaporSunClip)">
+            <circle cx="100" cy="168" r="56" fill="url(#clVaporSun)" />
+            <g clipPath="url(#clVaporStripeClip)">
+              <g className="cl-vapor-sunscroll" fill="#160328" opacity="0.88">
+                <rect x="30" y="137" width="140" height="5" />
+                <rect x="30" y="150" width="140" height="5" />
+                <rect x="30" y="163" width="140" height="5" />
+                <rect x="30" y="176" width="140" height="5" />
+                <rect x="30" y="189" width="140" height="5" />
+                <rect x="30" y="202" width="140" height="5" />
+                <rect x="30" y="215" width="140" height="5" />
+              </g>
+            </g>
+          </g>
         </g>
 
         {/* grid floor */}
         <rect x="0" y="190" width="200" height="110" fill="url(#clVaporFloor)" />
-        <g
-          className="cl-vapor-glow-pink"
-          stroke="#ff2e9a"
-          strokeWidth="0.8"
-          opacity="0.9"
-        >
-          {/* converging verticals */}
+        <g className="cl-vapor-glow-pink" stroke="#ff2e9a" strokeWidth="0.8" opacity="0.9">
+          {/* converging verticals — static */}
           <path d="M 100 190 L -45 300" fill="none" />
           <path d="M 100 190 L -12 300" fill="none" />
           <path d="M 100 190 L 22 300" fill="none" />
@@ -157,16 +252,23 @@ export default function VaporwaveHermitCard() {
           <path d="M 100 190 L 178 300" fill="none" />
           <path d="M 100 190 L 212 300" fill="none" />
           <path d="M 100 190 L 245 300" fill="none" />
-          {/* horizontals, spacing grows toward the viewer */}
-          <path d="M 0 193.5 H 200" fill="none" strokeWidth="0.5" />
-          <path d="M 0 198 H 200" fill="none" strokeWidth="0.5" />
-          <path d="M 0 204 H 200" fill="none" strokeWidth="0.6" />
-          <path d="M 0 212 H 200" fill="none" strokeWidth="0.7" />
-          <path d="M 0 222 H 200" fill="none" />
-          <path d="M 0 234 H 200" fill="none" />
-          <path d="M 0 249 H 200" fill="none" />
-          <path d="M 0 267 H 200" fill="none" stroke="#22e6ff" opacity="0.8" />
-          <path d="M 0 287 H 200" fill="none" />
+        </g>
+        {/* scrolling horizontals — period 22px, faded in from the horizon */}
+        <g mask="url(#clVaporGridMask)">
+          <g
+            className="cl-vapor-gridscroll cl-vapor-glow-pink"
+            stroke="#ff2e9a"
+            strokeWidth="0.9"
+            opacity="0.9"
+          >
+            <path d="M 0 168 H 200" fill="none" />
+            <path d="M 0 190 H 200" fill="none" />
+            <path d="M 0 212 H 200" fill="none" />
+            <path d="M 0 234 H 200" fill="none" />
+            <path d="M 0 256 H 200" fill="none" />
+            <path d="M 0 278 H 200" fill="none" />
+            <path d="M 0 300 H 200" fill="none" />
+          </g>
         </g>
         {/* horizon line */}
         <path
@@ -289,13 +391,13 @@ export default function VaporwaveHermitCard() {
           {/* rim light — pink on the left, cyan on the right */}
           <g fill="none" strokeLinecap="round">
             <path
-              className="cl-vapor-glow-pink"
+              className="cl-vapor-rim cl-vapor-glow-pink"
               d="M 100 90 C 88 92 82 102 83 114 C 78 124 76 138 75 154 C 74 170 73 188 72 210"
               stroke="#ff5cb4"
               strokeWidth="1.4"
             />
             <path
-              className="cl-vapor-glow-cyan"
+              className="cl-vapor-rim cl-vapor-glow-cyan"
               d="M 100 90 C 112 92 118 102 117 114 C 122 124 124 138 125 154 C 126 170 127 188 128 210"
               stroke="#5cecff"
               strokeWidth="1.4"
@@ -316,6 +418,18 @@ export default function VaporwaveHermitCard() {
               fill="#fff3d0"
             />
           </g>
+        </g>
+
+        {/* hover chrome sheen — diagonal band clipped to the statue, screen blend */}
+        <g clipPath="url(#clVaporFigClip)">
+          <rect
+            className="cl-vapor-sheen"
+            x="30"
+            y="60"
+            width="70"
+            height="170"
+            fill="url(#clVaporSheen)"
+          />
         </g>
 
         {/* IX — chrome gradient numeral, top center */}
@@ -371,8 +485,15 @@ export default function VaporwaveHermitCard() {
           fill="none"
         />
 
-        {/* scanlines */}
-        <rect x="0" y="0" width="200" height="300" fill="url(#clVaporScan)" />
+        {/* scanlines — drifting slowly (period 4px) */}
+        <rect
+          className="cl-vapor-scandrift"
+          x="0"
+          y="-4"
+          width="200"
+          height="308"
+          fill="url(#clVaporScan)"
+        />
       </svg>
     </figure>
   );
