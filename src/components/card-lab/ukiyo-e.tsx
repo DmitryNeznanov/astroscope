@@ -1,13 +1,17 @@
 /**
  * Card Lab — UKIYO-E
- * Edo-period woodblock print take on THE HERMIT (IX), in the manner of
+ * Edo-period woodblock print take on the Major Arcana, in the manner of
  * Hokusai / Hiroshige. Flat unmodulated color blocks with crisp key-block
- * (sumi) outlines: indigo night sky with a bokashi gradient band at top,
- * outline-only stylized clouds, a jagged Prussian-blue peak, the hermit in
- * layered indigo + rust robes, a glowing ochre paper lantern with a small
- * six-pointed star, a bamboo staff, and pine-needle clusters. Vertical red
- * hanko seal with "IX" top-right; tall title cartouche with "THE HERMIT"
- * set vertically on the right edge. Cream washi ground, double keyline frame.
+ * (sumi) outlines: gradient night sky with a bokashi band at top,
+ * outline-only stylized clouds, a jagged peak, the wanderer in layered
+ * robes, a glowing paper lantern with a small six-pointed star, a bamboo
+ * staff, and pine-needle clusters. Vertical red hanko seal with the roman
+ * numeral top-right; tall title cartouche with the card name set vertically
+ * on the right edge. Cream washi ground, double keyline frame.
+ *
+ * Reusable: `{ number = 9, name = "THE HERMIT", variant = 0 }`.
+ * With no props it renders THE HERMIT (IX) exactly as the original card.
+ * `variant` (0-7) selects one of four color schemes, mirrored for 4-7.
  *
  * Signature effects (CSS-only, server-component safe, always on):
  *  - a shooting star streaks diagonally across the night sky every ~8s;
@@ -18,16 +22,84 @@
  * All motion is guarded by prefers-reduced-motion.
  */
 
+import { toRoman } from "@/lib/roman";
+
 const INK = "#16130f";
 const CREAM = "#f4ecd8";
-const PRUSSIAN = "#1d3a5f";
-const PRUSSIAN_LIGHT = "#2e5484";
-const INDIGO = "#27335f";
-const RUST = "#a94e2a";
 const OCHRE = "#e0a437";
 const BAMBOO = "#c79a4e";
 const VERMILION = "#b3342a";
 const SERIF = "Georgia, 'Times New Roman', 'Hiragino Mincho ProN', serif";
+
+interface Palette {
+  /** Sky gradient stops, zenith → horizon */
+  sky: [string, string, string, string];
+  /** Bokashi wash color at the very top */
+  bokashi: string;
+  mountain: string;
+  facet: string;
+  robe: string;
+  inner: string;
+  lantern: string;
+  glow: string;
+}
+
+/** Four color-block schemes; index 0 is the original night scene. */
+const PALETTES: Palette[] = [
+  {
+    // 0 — classic indigo night (the original Hermit)
+    sky: ["#101d38", "#1b2f55", "#2a4a7c", "#46689a"],
+    bokashi: "#0a1226",
+    mountain: "#1d3a5f",
+    facet: "#2e5484",
+    robe: "#27335f",
+    inner: "#a94e2a",
+    lantern: OCHRE,
+    glow: "#f2c14e",
+  },
+  {
+    // 1 — ember dusk: warm rust sky, rust robe over indigo
+    sky: ["#2a1420", "#4a2230", "#7a3b2e", "#b06a3a"],
+    bokashi: "#1c0d16",
+    mountain: "#5e2a24",
+    facet: "#7a3b2e",
+    robe: "#a94e2a",
+    inner: "#27335f",
+    lantern: OCHRE,
+    glow: "#f2c14e",
+  },
+  {
+    // 2 — aizuri-e: the all-blue print, pale gold lantern accent
+    sky: ["#0d1f3c", "#16324f", "#1d3a5f", "#3a5f86"],
+    bokashi: "#081530",
+    mountain: "#16324f",
+    facet: "#274a6e",
+    robe: "#1d3a5f",
+    inner: "#5e87a8",
+    lantern: "#e8c25a",
+    glow: "#f2c14e",
+  },
+  {
+    // 3 — plum dawn: violet sky, rust robe with ochre lining
+    sky: ["#1c1230", "#33204e", "#573a6e", "#8a6a92"],
+    bokashi: "#120b22",
+    mountain: "#33204e",
+    facet: "#4a3168",
+    robe: "#a94e2a",
+    inner: OCHRE,
+    lantern: OCHRE,
+    glow: "#f2c14e",
+  },
+];
+
+export interface UkiyoECardProps {
+  /** Major Arcana number 1-22, rendered as a roman numeral in the hanko seal. */
+  number?: number;
+  /** Card name, set vertically in the right-edge cartouche (auto-sized to fit). */
+  name?: string;
+  /** 0-7: palette = variant % 4, composition mirrored for variant >= 4. */
+  variant?: number;
+}
 
 /** Fan of short needle strokes — a pine cluster that rustles on its branch. */
 function pineCluster(cx: number, cy: number, scale: number, key: string, delay: string) {
@@ -91,9 +163,36 @@ function sparkle(cx: number, cy: number, r: number, key: string, delay: string) 
   );
 }
 
-export default function UkiyoEHermitCard() {
-  const titleLetters = "THE HERMIT".split("");
-  let titleY = 60;
+export default function UkiyoECard({ number = 9, name = "THE HERMIT", variant = 0 }: UkiyoECardProps) {
+  const v = ((variant % 8) + 8) % 8;
+  const mirror = v >= 4;
+  const pal = PALETTES[v % 4];
+  // Deterministic per-variant scatter for the sky decorations (0 for variant 0).
+  const shift = (v * 11) % 13;
+
+  // Gradient ids must be unique per variant so gallery siblings don't share defs.
+  const skyId = `cl-uke-sky-${v}`;
+  const bokashiId = `cl-uke-bokashi-${v}`;
+  const glowId = `cl-uke-glow-${v}`;
+
+  // ── Hanko seal: numeral stacked vertically, growing downward if long ──
+  const numeral = toRoman(number);
+  const n = numeral.length;
+  const sealFont = n <= 3 ? 8.5 : 6;
+  const sealStep = n <= 2 ? 9.5 : 7;
+  const sealH = n <= 2 ? 23 : 13.5 + (n - 1) * sealStep;
+  const sealBottom = 14 + sealH;
+
+  // ── Title cartouche: letters stacked vertically, font scaled to fit ──
+  const cartTop = sealBottom + 7;
+  const cartBottom = 258;
+  const chars = name.split("");
+  const letterCount = chars.filter((c) => c !== " ").length;
+  const spaceCount = chars.length - letterCount;
+  const avail = cartBottom - cartTop - 24;
+  const step = Math.max(5, Math.min(20, avail / (letterCount + spaceCount * 0.4)));
+  const titleFont = Math.min(12, step * 0.62);
+  let titleY = cartTop + 16;
 
   return (
     <figure
@@ -190,24 +289,24 @@ export default function UkiyoEHermitCard() {
         }
       `}</style>
 
-      <svg viewBox="0 0 200 300" preserveAspectRatio="xMidYMid slice" role="img" aria-label="The Hermit tarot card in ukiyo-e woodblock print style">
+      <svg viewBox="0 0 200 300" preserveAspectRatio="xMidYMid slice" role="img" aria-label={`${name} tarot card in ukiyo-e woodblock print style`}>
         <defs>
-          {/* Night sky: deep indigo at the zenith, lifting toward the horizon */}
-          <linearGradient id="cl-uke-sky" x1="0" y1="0" x2="0" y2="1">
-            <stop offset="0" stopColor="#101d38" />
-            <stop offset="0.22" stopColor="#1b2f55" />
-            <stop offset="0.6" stopColor="#2a4a7c" />
-            <stop offset="1" stopColor="#46689a" />
+          {/* Night sky: deep at the zenith, lifting toward the horizon */}
+          <linearGradient id={skyId} x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0" stopColor={pal.sky[0]} />
+            <stop offset="0.22" stopColor={pal.sky[1]} />
+            <stop offset="0.6" stopColor={pal.sky[2]} />
+            <stop offset="1" stopColor={pal.sky[3]} />
           </linearGradient>
           {/* Bokashi band: hand-wiped darker wash across the very top */}
-          <linearGradient id="cl-uke-bokashi" x1="0" y1="0" x2="0" y2="1">
-            <stop offset="0" stopColor="#0a1226" stopOpacity="0.65" />
-            <stop offset="1" stopColor="#0a1226" stopOpacity="0" />
+          <linearGradient id={bokashiId} x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0" stopColor={pal.bokashi} stopOpacity="0.65" />
+            <stop offset="1" stopColor={pal.bokashi} stopOpacity="0" />
           </linearGradient>
-          <radialGradient id="cl-uke-lantern-glow" cx="0.5" cy="0.5" r="0.5">
-            <stop offset="0" stopColor="#f2c14e" stopOpacity="0.6" />
-            <stop offset="0.55" stopColor="#f2c14e" stopOpacity="0.22" />
-            <stop offset="1" stopColor="#f2c14e" stopOpacity="0" />
+          <radialGradient id={glowId} cx="0.5" cy="0.5" r="0.5">
+            <stop offset="0" stopColor={pal.glow} stopOpacity="0.6" />
+            <stop offset="0.55" stopColor={pal.glow} stopOpacity="0.22" />
+            <stop offset="1" stopColor={pal.glow} stopOpacity="0" />
           </radialGradient>
         </defs>
 
@@ -220,146 +319,141 @@ export default function UkiyoEHermitCard() {
           <line x1="60" y1="286" x2="92" y2="284" />
         </g>
 
-        {/* ── Indigo night sky ── */}
-        <rect x="9" y="9" width="182" height="192" fill="url(#cl-uke-sky)" />
-        <rect x="9" y="9" width="182" height="46" fill="url(#cl-uke-bokashi)" />
+        {/* ── Scene (mirrored for variants 4-7) ── */}
+        <g transform={mirror ? "translate(200,0) scale(-1,1)" : undefined}>
+          {/* Night sky */}
+          <rect x="9" y="9" width="182" height="192" fill={`url(#${skyId})`} />
+          <rect x="9" y="9" width="182" height="46" fill={`url(#${bokashiId})`} />
 
-        {/* Sky sparkles */}
-        {sparkle(34, 34, 2.4, "s1", "0s")}
-        {sparkle(140, 26, 1.9, "s2", "-1.6s")}
-        {sparkle(112, 52, 1.5, "s3", "-3.1s")}
+          {/* Sky sparkles */}
+          {sparkle(34 + shift, 34, 2.4, "s1", "0s")}
+          {sparkle(140 - shift, 26, 1.9, "s2", "-1.6s")}
+          {sparkle(112, 52 + shift * 0.4, 1.5, "s3", "-3.1s")}
 
-        {/* ── Shooting star crossing the sky diagonally ── */}
-        <g className="cl-uke-shoot">
-          <line x1="150" y1="22" x2="168" y2="11" stroke={CREAM} strokeWidth="1.4" strokeLinecap="round" />
-          <line x1="154" y1="19.5" x2="176" y2="6" stroke={CREAM} strokeWidth="0.8" strokeLinecap="round" opacity="0.4" />
-          <circle cx="149" cy="23" r="1.3" fill="#fff6dd" />
-        </g>
-
-        {/* ── Outline-only stylized clouds (drifting) ── */}
-        {outlineCloud("M16,64 h20 a7,7 0 0 1 12,-4 a9,9 0 0 1 16,1 a6,6 0 0 1 11,3 h16", 1.2, "c1", "cl-uke-drift-a")}
-        {outlineCloud("M22,72 h14 a5,5 0 0 1 10,-2 a7,7 0 0 1 13,2 h18", 0.8, "c2", "cl-uke-drift-b")}
-        {outlineCloud("M104,84 h16 a6,6 0 0 1 11,-3 a8,8 0 0 1 14,2 a5,5 0 0 1 9,2 h14", 1.1, "c3", "cl-uke-drift-a")}
-
-        {/* ── Jagged Prussian-blue mountain ── */}
-        <path
-          d="M9,235 L42,210 L58,222 L86,190 L100,206 L114,200 L136,222 L158,212 L182,226 L182,235 Z"
-          fill={PRUSSIAN}
-          stroke={INK}
-          strokeWidth="1.2"
-          strokeLinejoin="round"
-        />
-        {/* Lit facet on the right slope — a separate flat color block */}
-        <path
-          d="M86,190 L100,206 L114,200 L136,222 L110,235 L92,214 Z"
-          fill={PRUSSIAN_LIGHT}
-          stroke={INK}
-          strokeWidth="0.7"
-          strokeLinejoin="round"
-        />
-
-        {/* Mist band crossing the slopes, outline-only (drifting) */}
-        {outlineCloud("M9,206 h24 a6,6 0 0 1 11,-3 a8,8 0 0 1 15,2 h30 a6,6 0 0 1 11,-2 h20", 1, "m1", "cl-uke-drift-b")}
-
-        {/* ── Pine in the foreground (needles rustle) ── */}
-        <path d="M30,256 C29,248 30,240 34,233" fill="none" stroke={INK} strokeWidth="1.6" strokeLinecap="round" />
-        {pineCluster(35, 232, 1, "p1", "0s")}
-        {pineCluster(31, 242, 0.85, "p2", "-0.9s")}
-        {pineCluster(28, 250, 0.7, "p3", "-1.8s")}
-
-        {/* ── THE HERMIT on the peak ── */}
-        {/* Raised left sleeve (indigo), arm lifting the lantern */}
-        <path d="M78,156 L66,146 L62,152 L74,163 Z" fill={INDIGO} stroke={INK} strokeWidth="1" strokeLinejoin="round" />
-        {/* Hand */}
-        <circle cx="64" cy="148.5" r="1.9" fill="#e8c9a0" stroke={INK} strokeWidth="0.6" />
-
-        {/* Hanging lantern assembly — sways gently from the hang point */}
-        <g className="cl-uke-sway">
-          {/* Lantern cord */}
-          <line x1="64" y1="150" x2="64" y2="154" stroke={INK} strokeWidth="0.8" />
-          {/* Lantern glow */}
-          <circle className="cl-uke-glow" cx="64" cy="165" r="27" fill="url(#cl-uke-lantern-glow)" />
-          {/* Paper lantern (chōchin): warm ochre body, black key-block ribs */}
-          <ellipse cx="64" cy="165" rx="9.5" ry="11" fill={OCHRE} stroke={INK} strokeWidth="1.2" />
-          <line x1="55.5" y1="160" x2="72.5" y2="160" stroke={INK} strokeWidth="0.7" />
-          <line x1="54.5" y1="165" x2="73.5" y2="165" stroke={INK} strokeWidth="0.7" />
-          <line x1="55.5" y1="170" x2="72.5" y2="170" stroke={INK} strokeWidth="0.7" />
-          <rect x="61" y="152.5" width="6" height="2.6" fill={INK} />
-          <rect x="61" y="175" width="6" height="2.6" fill={INK} />
-          {/* Six-pointed star shining inside the lantern */}
-          <g fill="#fff6dd">
-            <path d="M64,160.6 L67.8,167 L60.2,167 Z" />
-            <path d="M64,169.4 L60.2,163 L67.8,163 Z" />
+          {/* Shooting star crossing the sky diagonally */}
+          <g className="cl-uke-shoot">
+            <line x1={150 + shift} y1="22" x2={168 + shift} y2="11" stroke={CREAM} strokeWidth="1.4" strokeLinecap="round" />
+            <line x1={154 + shift} y1="19.5" x2={176 + shift} y2="6" stroke={CREAM} strokeWidth="0.8" strokeLinecap="round" opacity="0.4" />
+            <circle cx={149 + shift} cy="23" r="1.3" fill="#fff6dd" />
           </g>
+
+          {/* Outline-only stylized clouds (drifting) */}
+          {outlineCloud("M16,64 h20 a7,7 0 0 1 12,-4 a9,9 0 0 1 16,1 a6,6 0 0 1 11,3 h16", 1.2, "c1", "cl-uke-drift-a")}
+          {outlineCloud("M22,72 h14 a5,5 0 0 1 10,-2 a7,7 0 0 1 13,2 h18", 0.8, "c2", "cl-uke-drift-b")}
+          {outlineCloud("M104,84 h16 a6,6 0 0 1 11,-3 a8,8 0 0 1 14,2 a5,5 0 0 1 9,2 h14", 1.1, "c3", "cl-uke-drift-a")}
+
+          {/* Jagged mountain */}
+          <path
+            d="M9,235 L42,210 L58,222 L86,190 L100,206 L114,200 L136,222 L158,212 L182,226 L182,235 Z"
+            fill={pal.mountain}
+            stroke={INK}
+            strokeWidth="1.2"
+            strokeLinejoin="round"
+          />
+          {/* Lit facet on the right slope — a separate flat color block */}
+          <path
+            d="M86,190 L100,206 L114,200 L136,222 L110,235 L92,214 Z"
+            fill={pal.facet}
+            stroke={INK}
+            strokeWidth="0.7"
+            strokeLinejoin="round"
+          />
+
+          {/* Mist band crossing the slopes, outline-only (drifting) */}
+          {outlineCloud("M9,206 h24 a6,6 0 0 1 11,-3 a8,8 0 0 1 15,2 h30 a6,6 0 0 1 11,-2 h20", 1, "m1", "cl-uke-drift-b")}
+
+          {/* Pine in the foreground (needles rustle) */}
+          <path d="M30,256 C29,248 30,240 34,233" fill="none" stroke={INK} strokeWidth="1.6" strokeLinecap="round" />
+          {pineCluster(35, 232, 1, "p1", "0s")}
+          {pineCluster(31, 242, 0.85, "p2", "-0.9s")}
+          {v % 2 === 0 && pineCluster(28, 250, 0.7, "p3", "-1.8s")}
+
+          {/* ── THE WANDERER on the peak ── */}
+          {/* Raised left sleeve, arm lifting the lantern */}
+          <path d="M78,156 L66,146 L62,152 L74,163 Z" fill={pal.robe} stroke={INK} strokeWidth="1" strokeLinejoin="round" />
+          {/* Hand */}
+          <circle cx="64" cy="148.5" r="1.9" fill="#e8c9a0" stroke={INK} strokeWidth="0.6" />
+
+          {/* Hanging lantern assembly — sways gently from the hang point */}
+          <g className="cl-uke-sway">
+            {/* Lantern cord */}
+            <line x1="64" y1="150" x2="64" y2="154" stroke={INK} strokeWidth="0.8" />
+            {/* Lantern glow */}
+            <circle className="cl-uke-glow" cx="64" cy="165" r="27" fill={`url(#${glowId})`} />
+            {/* Paper lantern (chōchin): warm body, black key-block ribs */}
+            <ellipse cx="64" cy="165" rx="9.5" ry="11" fill={pal.lantern} stroke={INK} strokeWidth="1.2" />
+            <line x1="55.5" y1="160" x2="72.5" y2="160" stroke={INK} strokeWidth="0.7" />
+            <line x1="54.5" y1="165" x2="73.5" y2="165" stroke={INK} strokeWidth="0.7" />
+            <line x1="55.5" y1="170" x2="72.5" y2="170" stroke={INK} strokeWidth="0.7" />
+            <rect x="61" y="152.5" width="6" height="2.6" fill={INK} />
+            <rect x="61" y="175" width="6" height="2.6" fill={INK} />
+            {/* Six-pointed star shining inside the lantern */}
+            <g fill="#fff6dd">
+              <path d="M64,160.6 L67.8,167 L60.2,167 Z" />
+              <path d="M64,169.4 L60.2,163 L67.8,163 Z" />
+            </g>
+          </g>
+
+          {/* Bamboo staff in the right hand */}
+          <line x1="105" y1="146" x2="105" y2="196" stroke={INK} strokeWidth="3.1" strokeLinecap="round" />
+          <line x1="105" y1="146" x2="105" y2="196" stroke={BAMBOO} strokeWidth="2" strokeLinecap="round" />
+          <line x1="103.4" y1="162" x2="106.6" y2="162" stroke={INK} strokeWidth="0.8" />
+          <line x1="103.4" y1="178" x2="106.6" y2="178" stroke={INK} strokeWidth="0.8" />
+
+          {/* Right sleeve reaching the staff */}
+          <path d="M96,156 L105,157.5 L104,164.5 L95,164 Z" fill={pal.robe} stroke={INK} strokeWidth="1" strokeLinejoin="round" />
+          <circle cx="104.5" cy="161" r="1.7" fill="#e8c9a0" stroke={INK} strokeWidth="0.6" />
+
+          {/* Outer robe: one flat bell-shaped block */}
+          <path
+            d="M86,140 C80,141 76,147 76,153 L74,166 L71,193 L101,193 L98,166 L96,153 C96,147 92,141 86,140 Z"
+            fill={pal.robe}
+            stroke={INK}
+            strokeWidth="1.2"
+            strokeLinejoin="round"
+          />
+          {/* Inner robe: contrast layer showing at the front opening */}
+          <path d="M82,159 L90,159 L94,193 L78,193 Z" fill={pal.inner} stroke={INK} strokeWidth="0.8" strokeLinejoin="round" />
+          {/* Collar folds */}
+          <path d="M82,159 L86,166 L90,159" fill="none" stroke={INK} strokeWidth="0.8" />
+
+          {/* Hood shadow and face */}
+          <path
+            d="M80,152 C80,147 83,145 86,145 C89,145 92,147 92,152 C92,156 89,158.5 86,158.5 C83,158.5 80,156 80,152 Z"
+            fill={INK}
+          />
+          <ellipse cx="86" cy="152.5" rx="2.4" ry="2.8" fill="#e8c9a0" />
+          {/* Beard suggestion */}
+          <path d="M84,155 L86,158 L88,155 Z" fill={CREAM} opacity="0.85" />
         </g>
 
-        {/* Bamboo staff in the right hand */}
-        <line x1="105" y1="146" x2="105" y2="196" stroke={INK} strokeWidth="3.1" strokeLinecap="round" />
-        <line x1="105" y1="146" x2="105" y2="196" stroke={BAMBOO} strokeWidth="2" strokeLinecap="round" />
-        <line x1="103.4" y1="162" x2="106.6" y2="162" stroke={INK} strokeWidth="0.8" />
-        <line x1="103.4" y1="178" x2="106.6" y2="178" stroke={INK} strokeWidth="0.8" />
-
-        {/* Right sleeve reaching the staff */}
-        <path d="M96,156 L105,157.5 L104,164.5 L95,164 Z" fill={INDIGO} stroke={INK} strokeWidth="1" strokeLinejoin="round" />
-        <circle cx="104.5" cy="161" r="1.7" fill="#e8c9a0" stroke={INK} strokeWidth="0.6" />
-
-        {/* Outer robe: deep indigo, one flat bell-shaped block */}
-        <path
-          d="M86,140 C80,141 76,147 76,153 L74,166 L71,193 L101,193 L98,166 L96,153 C96,147 92,141 86,140 Z"
-          fill={INDIGO}
-          stroke={INK}
-          strokeWidth="1.2"
-          strokeLinejoin="round"
-        />
-        {/* Inner robe: rust layer showing at the front opening */}
-        <path d="M82,159 L90,159 L94,193 L78,193 Z" fill={RUST} stroke={INK} strokeWidth="0.8" strokeLinejoin="round" />
-        {/* Collar folds */}
-        <path d="M82,159 L86,166 L90,159" fill="none" stroke={INK} strokeWidth="0.8" />
-
-        {/* Hood shadow and face */}
-        <path
-          d="M80,152 C80,147 83,145 86,145 C89,145 92,147 92,152 C92,156 89,158.5 86,158.5 C83,158.5 80,156 80,152 Z"
-          fill={INK}
-        />
-        <ellipse cx="86" cy="152.5" rx="2.4" ry="2.8" fill="#e8c9a0" />
-        {/* Beard suggestion */}
-        <path d="M84,155 L86,158 L88,155 Z" fill={CREAM} opacity="0.85" />
-
-        {/* ── Hanko seal: vertical red block, top-right, with IX ── */}
-        <rect x="177" y="14" width="15" height="23" fill={VERMILION} />
-        <text
-          x="184.5"
-          y="23"
-          textAnchor="middle"
-          fontFamily={SERIF}
-          fontWeight="bold"
-          fontSize="8.5"
-          fill={CREAM}
-        >
-          I
-        </text>
-        <text
-          x="184.5"
-          y="32.5"
-          textAnchor="middle"
-          fontFamily={SERIF}
-          fontWeight="bold"
-          fontSize="8.5"
-          fill={CREAM}
-        >
-          X
-        </text>
+        {/* ── Hanko seal: vertical red block, top-right, with the numeral ── */}
+        <rect x="177" y="14" width="15" height={sealH} fill={VERMILION} />
+        {numeral.split("").map((ch, i) => (
+          <text
+            key={`n-${i}`}
+            x="184.5"
+            y={23 + i * sealStep}
+            textAnchor="middle"
+            fontFamily={SERIF}
+            fontWeight="bold"
+            fontSize={sealFont}
+            fill={CREAM}
+          >
+            {ch}
+          </text>
+        ))}
 
         {/* ── Title cartouche: tall narrow slip on the right edge ── */}
-        <rect x="177" y="44" width="15" height="214" fill="#f6eeda" stroke={INK} strokeWidth="1" />
-        <rect x="179.5" y="46.5" width="10" height="209" fill="none" stroke={INK} strokeWidth="0.45" />
-        {titleLetters.map((ch, i) => {
+        <rect x="177" y={cartTop} width="15" height={cartBottom - cartTop} fill="#f6eeda" stroke={INK} strokeWidth="1" />
+        <rect x="179.5" y={cartTop + 2.5} width="10" height={cartBottom - cartTop - 5} fill="none" stroke={INK} strokeWidth="0.45" />
+        {chars.map((ch, i) => {
           if (ch === " ") {
-            titleY += 8;
+            titleY += step * 0.4;
             return null;
           }
           const y = titleY;
-          titleY += 20;
+          titleY += step;
           return (
             <text
               key={`t-${i}`}
@@ -368,7 +462,7 @@ export default function UkiyoEHermitCard() {
               textAnchor="middle"
               fontFamily={SERIF}
               fontWeight="bold"
-              fontSize="12"
+              fontSize={titleFont}
               fill={INK}
             >
               {ch}

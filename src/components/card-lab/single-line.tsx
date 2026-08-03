@@ -1,3 +1,5 @@
+import { toRoman } from "@/lib/roman";
+
 /**
  * Card Lab — SINGLE LINE
  *
@@ -6,10 +8,57 @@
  * SVG path, dark ink on warm white paper. The stroke doubles back on
  * itself deliberately (staff, robe edges) the way continuous-line art
  * does. The only second element is the lantern light: a soft gold
- * radial glow. Gallery-minimal chrome: hairline frame, small serif IX,
- * letterspaced tiny caps.
+ * radial glow. Gallery-minimal chrome: hairline frame, small serif
+ * numeral, letterspaced tiny caps.
+ *
+ * Reusable via optional props ({ number, name, variant }); called with
+ * no props it renders the original Hermit card exactly. variant (0-7)
+ * picks one of four ink/paper palettes, with variants 4-7 mirroring the
+ * composition horizontally (a one-line drawing mirrors gracefully).
  */
-export default function SingleLineCard() {
+export type SingleLineCardProps = {
+  number?: number;
+  name?: string;
+  variant?: number;
+};
+
+type Palette = {
+  ink: string;
+  inkHover: string;
+  paper: string;
+  glow: string;
+  spark: string;
+};
+
+const PALETTES: Palette[] = [
+  // 0 — original: dark umber ink, warm white paper, gold light
+  { ink: "#2b241c", inkHover: "#120e08", paper: "#faf5ec", glow: "#dcab4a", spark: "#e3b95c" },
+  // 1 — sepia study: brown ink, aged paper, copper light
+  { ink: "#4a3524", inkHover: "#2c1e11", paper: "#f6efe2", glow: "#c9893b", spark: "#dda452" },
+  // 2 — blueprint-adjacent: blue-black ink, cool paper, amber light
+  { ink: "#1f2733", inkHover: "#0c1119", paper: "#f3f4ef", glow: "#d9a441", spark: "#e7bd60" },
+  // 3 — forest: deep green ink, pale moss paper, honey light
+  { ink: "#243122", inkHover: "#101a0f", paper: "#f4f3e6", glow: "#cfa03f", spark: "#dfb354" },
+];
+
+export default function SingleLineCard({
+  number = 9,
+  name = "THE HERMIT",
+  variant = 0,
+}: SingleLineCardProps) {
+  const v = ((Math.round(variant) % 8) + 8) % 8;
+  const palette = PALETTES[v % 4];
+  const mirrored = v >= 4;
+  const scope = `cl-sline-v${v}`;
+  const gradientId = `cl-sline-gold-${v}`;
+
+  // Shrink the tiny-caps title for long arcana names so it always fits
+  // inside the frame ("THE HERMIT" at 13px / 7px tracking is the base).
+  const baseChars = 10;
+  const titleScale = Math.min(1, baseChars / Math.max(name.length, 1));
+  const titleSize = Math.max(8, 13 * titleScale);
+  const titleTracking = Math.max(3.5, 7 * titleScale);
+
   // One unbroken stroke. Drawing order:
   //   staff cap loop → down staff → back up staff (sketchy double line)
   //   → left shoulder → hood (with a small inner face dip)
@@ -44,14 +93,16 @@ export default function SingleLineCard() {
 
   return (
     <figure
-      className="cl-sline"
+      className={`cl-sline ${scope}`}
       style={{ aspectRatio: "2/3", width: "100%", margin: 0 }}
-      aria-label="The Hermit tarot card drawn as one continuous line"
+      aria-label={`${name} tarot card drawn as one continuous line`}
     >
       <style>{`
         /* signature effect: the single stroke draws itself on mount.
-           Measured path length ~2452 units; dasharray 2500 covers it. */
-        .cl-sline .cl-sline-ink {
+           Measured path length ~2452 units; dasharray 2500 covers it.
+           Rules are scoped per-variant (${scope}) so several variants
+           can share one gallery page without CSS collisions. */
+        .${scope} .cl-sline-ink {
           stroke-dasharray: 2500;
           stroke-dashoffset: 2500;
           animation: cl-sline-draw 3s ease-in-out forwards;
@@ -61,14 +112,14 @@ export default function SingleLineCard() {
           to { stroke-dashoffset: 0; }
         }
         /* lantern light fades in only after the stroke completes */
-        .cl-sline .cl-sline-glowfade {
+        .${scope} .cl-sline-glowfade {
           opacity: 0;
           animation: cl-sline-glowin 0.9s ease 3.05s forwards;
         }
         @keyframes cl-sline-glowin {
           to { opacity: 1; }
         }
-        .cl-sline .cl-sline-glow {
+        .${scope} .cl-sline-glow {
           transform-box: fill-box;
           transform-origin: center;
           animation: cl-sline-flicker 7s ease-in-out infinite;
@@ -79,13 +130,13 @@ export default function SingleLineCard() {
         }
         /* signature idle effect: a bright spark perpetually re-traces
            the drawn line. A second copy of the path shows only a short
-           60-unit gold dash; animating dashoffset through the full
-           period (2460) carries it along the whole stroke. */
-        .cl-sline .cl-sline-spark {
+           60-unit dash; animating dashoffset through the full period
+           (2460) carries it along the whole stroke. */
+        .${scope} .cl-sline-spark {
           opacity: 0;
           stroke-dasharray: 60 2400;
           stroke-dashoffset: 0;
-          filter: drop-shadow(0 0 4px rgba(220, 171, 74, 0.9));
+          filter: drop-shadow(0 0 4px ${palette.spark});
           animation: cl-sline-sparktravel 7s linear 3.05s infinite backwards;
         }
         @keyframes cl-sline-sparktravel {
@@ -95,10 +146,10 @@ export default function SingleLineCard() {
           100% { stroke-dashoffset: -2460; opacity: 0; }
         }
         /* hover: ink deepens, lantern breathes */
-        .cl-sline:hover .cl-sline-ink {
-          stroke: #120e08;
+        .${scope}:hover .cl-sline-ink {
+          stroke: ${palette.inkHover};
         }
-        .cl-sline:hover .cl-sline-glow {
+        .${scope}:hover .cl-sline-glow {
           animation: cl-sline-breathe 2.2s ease-in-out infinite;
         }
         @keyframes cl-sline-breathe {
@@ -106,20 +157,20 @@ export default function SingleLineCard() {
           50% { opacity: 1; transform: scale(1.15); }
         }
         @media (prefers-reduced-motion: reduce) {
-          .cl-sline .cl-sline-ink {
+          .${scope} .cl-sline-ink {
             animation: none;
             stroke-dasharray: none;
             stroke-dashoffset: 0;
           }
-          .cl-sline .cl-sline-glowfade {
+          .${scope} .cl-sline-glowfade {
             animation: none;
             opacity: 1;
           }
-          .cl-sline .cl-sline-glow,
-          .cl-sline:hover .cl-sline-glow {
+          .${scope} .cl-sline-glow,
+          .${scope}:hover .cl-sline-glow {
             animation: none;
           }
-          .cl-sline .cl-sline-spark {
+          .${scope} .cl-sline-spark {
             animation: none;
             opacity: 0;
           }
@@ -133,15 +184,15 @@ export default function SingleLineCard() {
         style={{ display: "block", width: "100%", height: "100%" }}
       >
         <defs>
-          <radialGradient id="cl-sline-gold" cx="50%" cy="50%" r="50%">
-            <stop offset="0%" stopColor="#dcab4a" stopOpacity="0.65" />
-            <stop offset="45%" stopColor="#dcab4a" stopOpacity="0.28" />
-            <stop offset="100%" stopColor="#dcab4a" stopOpacity="0" />
+          <radialGradient id={gradientId} cx="50%" cy="50%" r="50%">
+            <stop offset="0%" stopColor={palette.glow} stopOpacity="0.65" />
+            <stop offset="45%" stopColor={palette.glow} stopOpacity="0.28" />
+            <stop offset="100%" stopColor={palette.glow} stopOpacity="0" />
           </radialGradient>
         </defs>
 
-        {/* warm white paper */}
-        <rect x="0" y="0" width="400" height="600" fill="#faf5ec" />
+        {/* paper */}
+        <rect x="0" y="0" width="400" height="600" fill={palette.paper} />
 
         {/* hairline gallery frame */}
         <rect
@@ -150,7 +201,7 @@ export default function SingleLineCard() {
           width="364"
           height="564"
           fill="none"
-          stroke="#2b241c"
+          stroke={palette.ink}
           strokeWidth="1"
           opacity="0.8"
         />
@@ -163,47 +214,50 @@ export default function SingleLineCard() {
           fontFamily="Georgia, 'Times New Roman', serif"
           fontSize="21"
           letterSpacing="4"
-          fill="#2b241c"
+          fill={palette.ink}
         >
-          IX
+          {toRoman(number)}
         </text>
 
-        {/* the lantern light — the only second element on the card;
-            fades in only after the stroke has finished drawing */}
-        <g className="cl-sline-glowfade">
-          <circle
-            className="cl-sline-glow"
-            cx="290"
-            cy="192"
-            r="46"
-            fill="url(#cl-sline-gold)"
+        {/* artwork — mirrored horizontally for variants 4-7 */}
+        <g transform={mirrored ? "translate(400 0) scale(-1 1)" : undefined}>
+          {/* the lantern light — the only second element on the card;
+              fades in only after the stroke has finished drawing */}
+          <g className="cl-sline-glowfade">
+            <circle
+              className="cl-sline-glow"
+              cx="290"
+              cy="192"
+              r="46"
+              fill={`url(#${gradientId})`}
+            />
+          </g>
+
+          {/* the entire scene as one unbroken ink stroke */}
+          <path
+            className="cl-sline-ink"
+            d={d}
+            fill="none"
+            stroke={palette.ink}
+            strokeWidth="2.2"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            opacity="0.92"
+          />
+
+          {/* spark: a short bright segment of the same stroke that
+              perpetually travels the drawn line after the draw-on */}
+          <path
+            className="cl-sline-spark"
+            d={d}
+            fill="none"
+            stroke={palette.spark}
+            strokeWidth="2.6"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            pointerEvents="none"
           />
         </g>
-
-        {/* the entire scene as one unbroken ink stroke */}
-        <path
-          className="cl-sline-ink"
-          d={d}
-          fill="none"
-          stroke="#2b241c"
-          strokeWidth="2.2"
-          strokeLinecap="round"
-          strokeLinejoin="round"
-          opacity="0.92"
-        />
-
-        {/* spark: a short gold segment of the same stroke that
-            perpetually travels the drawn line after the draw-on */}
-        <path
-          className="cl-sline-spark"
-          d={d}
-          fill="none"
-          stroke="#e3b95c"
-          strokeWidth="2.6"
-          strokeLinecap="round"
-          strokeLinejoin="round"
-          pointerEvents="none"
-        />
 
         {/* title */}
         <text
@@ -211,11 +265,11 @@ export default function SingleLineCard() {
           y="564"
           textAnchor="middle"
           fontFamily="Georgia, 'Times New Roman', serif"
-          fontSize="13"
-          letterSpacing="7"
-          fill="#2b241c"
+          fontSize={titleSize}
+          letterSpacing={titleTracking}
+          fill={palette.ink}
         >
-          THE HERMIT
+          {name}
         </text>
       </svg>
     </figure>

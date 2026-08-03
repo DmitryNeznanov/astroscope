@@ -4,8 +4,12 @@
  * ~44 flat polygons (no strokes) building a dusk-gradient sky, teal ridges,
  * a violet mountain peak, the hooded figure with staff, and a warm gold
  * lantern whose facets are brightest at the star-core and darken outward.
+ * Reusable via optional props: { number, name, variant } — with defaults it
+ * renders the original Hermit card pixel-for-pixel. variant 0-7 selects one
+ * of 4 hue-rotated palettes x 2 orientations (mirrored composition).
  * Self-contained: inline SVG + scoped <style> (prefix `cl-lowpoly-`).
  */
+import { toRoman } from "@/lib/roman";
 
 type Facet = {
   points: string;
@@ -109,7 +113,33 @@ function Facets({ facets }: { facets: Facet[] }) {
   );
 }
 
-export default function LowpolyHermitCard() {
+type LowpolyHermitCardProps = {
+  /** Major Arcana number 1-22, rendered as a roman numeral. */
+  number?: number;
+  /** Card name on the bottom band; long names are squeezed to fit. */
+  name?: string;
+  /** 0-7: 4 hue-rotated palettes x 2 orientations. 0 = original artwork. */
+  variant?: number;
+};
+
+/** Artwork hue rotation (deg) per variant scheme; 0 keeps the original palette. */
+const SCHEME_HUES = [0, -30, 45, -60] as const;
+
+export default function LowpolyHermitCard({
+  number = 9,
+  name = "THE HERMIT",
+  variant = 0,
+}: LowpolyHermitCardProps) {
+  const v = ((Math.round(variant) % 8) + 8) % 8;
+  const scheme = v % 4; // palette scheme
+  const mirrored = v >= 4; // upper four variants flip the composition
+  const hue = SCHEME_HUES[scheme];
+  const hueStyle = hue === 0 ? undefined : { filter: `hue-rotate(${hue}deg)` };
+  const starShift = scheme * 5; // decorative stars drift per scheme
+  const numeral = toRoman(number);
+  const title = name.toUpperCase();
+  const longName = title.length >= 14;
+
   return (
     <figure
       className="cl-lowpoly-card"
@@ -242,7 +272,7 @@ export default function LowpolyHermitCard() {
         viewBox="0 0 200 300"
         preserveAspectRatio="xMidYMid slice"
         role="img"
-        aria-label="The Hermit tarot card in low-poly style"
+        aria-label={`${title} tarot card in low-poly style`}
       >
         <defs>
           <radialGradient id="cl-lowpoly-gold" cx="50%" cy="50%" r="50%">
@@ -254,51 +284,60 @@ export default function LowpolyHermitCard() {
 
         <rect x="0" y="0" width="200" height="300" fill="#14102e" />
 
-        <g className="cl-lowpoly-mount">
-          <g className="cl-lowpoly-l-sky cl-lowpoly-sh-sky">
-            <Facets facets={SKY} />
+        {/* artwork: palette hue lives on the mount groups (they only animate
+            opacity, so it never fights the shimmer/flash filter animations);
+            variants >= 4 mirror the whole composition, chrome stays put */}
+        <g transform={mirrored ? "translate(200 0) scale(-1 1)" : undefined}>
+          <g className="cl-lowpoly-mount" style={hueStyle}>
+            <g className="cl-lowpoly-l-sky cl-lowpoly-sh-sky">
+              <Facets facets={SKY} />
+            </g>
           </g>
-        </g>
-        <g className="cl-lowpoly-mount cl-lowpoly-m2">
-          <g className="cl-lowpoly-l-stars cl-lowpoly-stars">
-            <Facets facets={STARS} />
+          <g
+            className="cl-lowpoly-mount cl-lowpoly-m2"
+            style={hueStyle}
+            transform={starShift ? `translate(${starShift} ${-scheme * 3})` : undefined}
+          >
+            <g className="cl-lowpoly-l-stars cl-lowpoly-stars">
+              <Facets facets={STARS} />
+            </g>
           </g>
-        </g>
-        <g className="cl-lowpoly-mount cl-lowpoly-m3">
-          <g className="cl-lowpoly-l-ridge cl-lowpoly-sh-ridge">
-            <Facets facets={RIDGES} />
+          <g className="cl-lowpoly-mount cl-lowpoly-m3" style={hueStyle}>
+            <g className="cl-lowpoly-l-ridge cl-lowpoly-sh-ridge">
+              <Facets facets={RIDGES} />
+            </g>
           </g>
-        </g>
-        <g className="cl-lowpoly-mount cl-lowpoly-m4">
-          <g className="cl-lowpoly-l-peak cl-lowpoly-sh-peak">
-            <Facets facets={PEAK} />
+          <g className="cl-lowpoly-mount cl-lowpoly-m4" style={hueStyle}>
+            <g className="cl-lowpoly-l-peak cl-lowpoly-sh-peak">
+              <Facets facets={PEAK} />
+            </g>
           </g>
-        </g>
 
-        <g className="cl-lowpoly-mount cl-lowpoly-m5">
-          <g className="cl-lowpoly-l-figure cl-lowpoly-sh-figure">
-            {/* lantern glow behind the figure */}
-            <ellipse
-              className="cl-lowpoly-glow"
-              cx="133"
-              cy="84.5"
-              rx="32"
-              ry="29"
-              fill="url(#cl-lowpoly-gold)"
-            />
-            <Facets facets={FIGURE} />
-            <Facets facets={LANTERN} />
-            <polygon
-              points={STAR_CORE.points}
-              fill={STAR_CORE.fill}
-              className={STAR_CORE.className}
-            />
+          <g className="cl-lowpoly-mount cl-lowpoly-m5" style={hueStyle}>
+            <g className="cl-lowpoly-l-figure cl-lowpoly-sh-figure">
+              {/* lantern glow behind the figure */}
+              <ellipse
+                className="cl-lowpoly-glow"
+                cx="133"
+                cy="84.5"
+                rx="32"
+                ry="29"
+                fill="url(#cl-lowpoly-gold)"
+              />
+              <Facets facets={FIGURE} />
+              <Facets facets={LANTERN} />
+              <polygon
+                points={STAR_CORE.points}
+                fill={STAR_CORE.fill}
+                className={STAR_CORE.className}
+              />
+            </g>
           </g>
-        </g>
 
-        <g className="cl-lowpoly-mount cl-lowpoly-m6">
-          <g className="cl-lowpoly-l-fore cl-lowpoly-sh-fore">
-            <Facets facets={FOREGROUND} />
+          <g className="cl-lowpoly-mount cl-lowpoly-m6" style={hueStyle}>
+            <g className="cl-lowpoly-l-fore cl-lowpoly-sh-fore">
+              <Facets facets={FOREGROUND} />
+            </g>
           </g>
         </g>
 
@@ -315,7 +354,7 @@ export default function LowpolyHermitCard() {
           letterSpacing="2.5"
           fill="#cfc6ea"
         >
-          IX
+          {numeral}
         </text>
 
         {/* chrome: name band */}
@@ -330,8 +369,9 @@ export default function LowpolyHermitCard() {
           letterSpacing="3.6"
           fill="#e6dff4"
           opacity="0.92"
+          {...(longName ? { textLength: 150, lengthAdjust: "spacingAndGlyphs" } : {})}
         >
-          THE HERMIT
+          {title}
         </text>
 
         {/* hairline inner frame */}

@@ -1,28 +1,53 @@
+import { toRoman } from "@/lib/roman";
+
 /**
- * VAPORWAVE — The Hermit (IX)
+ * VAPORWAVE — reusable tarot card (default: The Hermit, IX)
  * 80s retro-futurism: a chrome/marble statue Hermit standing on a glowing
  * perspective grid floor (pink/cyan) beneath a black sky with a huge striped
  * retro sun (magenta→orange). Palm silhouette and a broken Greek column flank
- * the scene; wireframe shapes float overhead. IX in chrome gradient,
- * THE HERMIT in italic serif with a vertical latin accent.
+ * the scene; wireframe shapes float overhead. Chrome-gradient numeral,
+ * italic serif card name with a vertical latin accent.
  *
- * Signature effects (CSS-only, always on):
- *  - the sun slowly hue-shifts magenta-orange -> cyan-purple and back (~20s);
- *  - the sun's gap-stripes scroll downward on a seamless loop;
- *  - the floor grid scrolls toward the viewer (seamless wrap, horizon fade);
- *  - scanlines drift slowly;
- *  - the wireframe triangle rotates, the ring pulses scale, palm fronds sway;
- *  - every ~8s a 2-frame CRT glitch (RGB-split jitter via steps);
- *  - on hover a chrome sheen sweeps the statue (screen blend) and the
- *    pink/cyan rim lights intensify.
+ * Props (all optional — no props renders The Hermit exactly):
+ *  - number: card number, rendered as a roman numeral via toRoman (1-22);
+ *  - name: card name; long names are auto-fitted (smaller size/tracking);
+ *  - variant (0-7): bit 0 mirrors the scene, bits 1-2 pick one of four
+ *    hue-shifted palettes; palettes 2-3 also swap the floating shapes
+ *    (diamond + square instead of triangle + ring). variant=0 is the
+ *    canonical look.
+ *
+ * Signature effects (CSS-only, always on, work for every variant):
+ * sun hue-shift + scrolling gap-stripes, grid scroll toward the viewer,
+ * scanline drift, spinning triangle, pulsing ring, swaying palm fronds,
+ * ~8s CRT glitch, hover chrome sheen + rim intensify.
  * All motion is disabled under prefers-reduced-motion.
  */
-export default function VaporwaveHermitCard() {
+export interface VaporwaveCardProps {
+  number?: number;
+  name?: string;
+  variant?: number;
+}
+
+export default function VaporwaveHermitCard({
+  number = 9,
+  name = "THE HERMIT",
+  variant = 0,
+}: VaporwaveCardProps) {
+  const v = Math.max(0, Math.min(7, Math.floor(variant)));
+  const palette = (v >> 1) & 3; // 0-3: hue-rotate palette scheme
+  const mirrored = (v & 1) === 1; // bit 0: mirror the scene
+  const altShapes = palette >= 2; // palettes 2-3 swap the floating shapes
+  const sceneClass = palette > 0 ? `cl-vapor-pal-${palette}` : undefined;
+
+  // Fit long card names (e.g. WHEEL OF FORTUNE) without changing THE HERMIT.
+  const nameSize = name.length <= 10 ? 16 : name.length <= 15 ? 13 : 11;
+  const nameTracking = name.length <= 10 ? 3 : 1.5;
+
   return (
     <figure
       className="cl-vapor-card"
       style={{ aspectRatio: "2/3", width: "100%", margin: 0 }}
-      aria-label="The Hermit tarot card in vaporwave retro-futurism style"
+      aria-label={`${name} tarot card in vaporwave retro-futurism style`}
     >
       <style>{`
         .cl-vapor-card {
@@ -33,6 +58,11 @@ export default function VaporwaveHermitCard() {
           box-shadow: inset 0 0 60px rgba(0, 0, 0, 0.8);
         }
         .cl-vapor-card svg { display: block; width: 100%; height: 100%; }
+
+        /* ---- variant palettes (hue-rotate the whole scene) ---- */
+        .cl-vapor-pal-1 { filter: hue-rotate(130deg); }
+        .cl-vapor-pal-2 { filter: hue-rotate(210deg); }
+        .cl-vapor-pal-3 { filter: hue-rotate(300deg); }
 
         /* ---- glow stacks ---- */
         .cl-vapor-glow-pink {
@@ -106,7 +136,7 @@ export default function VaporwaveHermitCard() {
         }
         .cl-vapor-glitch { animation: cl-vapor-glitch 8s steps(1, end) infinite; }
 
-        /* ---- signature: wireframe triangle slow rotation ---- */
+        /* ---- signature: floating shape slow rotation ---- */
         @keyframes cl-vapor-spin {
           from { transform: rotate(0deg); }
           to { transform: rotate(360deg); }
@@ -205,7 +235,7 @@ export default function VaporwaveHermitCard() {
             <stop offset="0.8" stopColor="#9aa2b4" />
             <stop offset="1" stopColor="#d8dde7" />
           </linearGradient>
-          {/* chrome banding for the IX numeral */}
+          {/* chrome banding for the numeral */}
           <linearGradient id="clVaporChromeTx" x1="0" y1="0" x2="0" y2="1">
             <stop offset="0" stopColor="#ffffff" />
             <stop offset="0.4" stopColor="#c8ccd8" />
@@ -273,234 +303,264 @@ export default function VaporwaveHermitCard() {
           </mask>
         </defs>
 
-        {/* sky stars */}
-        <g fill="#e8dcff" opacity="0.8">
-          <circle cx="24" cy="30" r="0.9" />
-          <circle cx="58" cy="18" r="0.7" />
-          <circle cx="146" cy="26" r="0.9" />
-          <circle cx="178" cy="48" r="0.7" />
-          <circle cx="16" cy="86" r="0.7" />
-          <circle cx="186" cy="98" r="0.8" />
-        </g>
+        {/* scene — palette hue-shift + optional mirror apply here; texts stay put */}
+        <g
+          className={sceneClass}
+          transform={mirrored ? "translate(200 0) scale(-1 1)" : undefined}
+        >
+          {/* sky stars */}
+          <g fill="#e8dcff" opacity="0.8">
+            <circle cx="24" cy="30" r="0.9" />
+            <circle cx="58" cy="18" r="0.7" />
+            <circle cx="146" cy="26" r="0.9" />
+            <circle cx="178" cy="48" r="0.7" />
+            <circle cx="16" cy="86" r="0.7" />
+            <circle cx="186" cy="98" r="0.8" />
+          </g>
 
-        {/* striped retro sun — hue-shifts slowly, stripes scroll down seamlessly */}
-        <g className="cl-vapor-hueshift">
-          <g clipPath="url(#clVaporSunClip)">
-            <circle cx="100" cy="168" r="56" fill="url(#clVaporSun)" />
-            <g clipPath="url(#clVaporStripeClip)">
-              <g className="cl-vapor-sunscroll" fill="#160328" opacity="0.88">
-                <rect x="30" y="137" width="140" height="5" />
-                <rect x="30" y="150" width="140" height="5" />
-                <rect x="30" y="163" width="140" height="5" />
-                <rect x="30" y="176" width="140" height="5" />
-                <rect x="30" y="189" width="140" height="5" />
-                <rect x="30" y="202" width="140" height="5" />
-                <rect x="30" y="215" width="140" height="5" />
+          {/* striped retro sun — hue-shifts slowly, stripes scroll down seamlessly */}
+          <g className="cl-vapor-hueshift">
+            <g clipPath="url(#clVaporSunClip)">
+              <circle cx="100" cy="168" r="56" fill="url(#clVaporSun)" />
+              <g clipPath="url(#clVaporStripeClip)">
+                <g className="cl-vapor-sunscroll" fill="#160328" opacity="0.88">
+                  <rect x="30" y="137" width="140" height="5" />
+                  <rect x="30" y="150" width="140" height="5" />
+                  <rect x="30" y="163" width="140" height="5" />
+                  <rect x="30" y="176" width="140" height="5" />
+                  <rect x="30" y="189" width="140" height="5" />
+                  <rect x="30" y="202" width="140" height="5" />
+                  <rect x="30" y="215" width="140" height="5" />
+                </g>
               </g>
             </g>
           </g>
-        </g>
 
-        {/* grid floor */}
-        <rect x="0" y="190" width="200" height="110" fill="url(#clVaporFloor)" />
-        <g className="cl-vapor-glow-pink" stroke="#ff2e9a" strokeWidth="0.8" opacity="0.9">
-          {/* converging verticals — static */}
-          <path d="M 100 190 L -45 300" fill="none" />
-          <path d="M 100 190 L -12 300" fill="none" />
-          <path d="M 100 190 L 22 300" fill="none" />
-          <path d="M 100 190 L 56 300" fill="none" />
-          <path d="M 100 190 L 100 300" fill="none" stroke="#22e6ff" />
-          <path d="M 100 190 L 144 300" fill="none" />
-          <path d="M 100 190 L 178 300" fill="none" />
-          <path d="M 100 190 L 212 300" fill="none" />
-          <path d="M 100 190 L 245 300" fill="none" />
-        </g>
-        {/* scrolling horizontals — period 22px, faded in from the horizon */}
-        <g mask="url(#clVaporGridMask)">
-          <g
-            className="cl-vapor-gridscroll cl-vapor-glow-pink"
-            stroke="#ff2e9a"
-            strokeWidth="0.9"
-            opacity="0.9"
-          >
-            <path d="M 0 168 H 200" fill="none" />
-            <path d="M 0 190 H 200" fill="none" />
-            <path d="M 0 212 H 200" fill="none" />
-            <path d="M 0 234 H 200" fill="none" />
-            <path d="M 0 256 H 200" fill="none" />
-            <path d="M 0 278 H 200" fill="none" />
-            <path d="M 0 300 H 200" fill="none" />
+          {/* grid floor */}
+          <rect x="0" y="190" width="200" height="110" fill="url(#clVaporFloor)" />
+          <g className="cl-vapor-glow-pink" stroke="#ff2e9a" strokeWidth="0.8" opacity="0.9">
+            {/* converging verticals — static */}
+            <path d="M 100 190 L -45 300" fill="none" />
+            <path d="M 100 190 L -12 300" fill="none" />
+            <path d="M 100 190 L 22 300" fill="none" />
+            <path d="M 100 190 L 56 300" fill="none" />
+            <path d="M 100 190 L 100 300" fill="none" stroke="#22e6ff" />
+            <path d="M 100 190 L 144 300" fill="none" />
+            <path d="M 100 190 L 178 300" fill="none" />
+            <path d="M 100 190 L 212 300" fill="none" />
+            <path d="M 100 190 L 245 300" fill="none" />
           </g>
-        </g>
-        {/* horizon line */}
-        <path
-          className="cl-vapor-glow-cyan"
-          d="M 0 190 H 200"
-          stroke="#7df3ff"
-          strokeWidth="1"
-          fill="none"
-        />
-
-        {/* palm silhouette — left, fronds sway from the trunk top */}
-        <g fill="#0e0218">
-          <path d="M 30 196 C 29 184 30 172 34 160 L 37 161 C 34 172 33 184 34 196 Z" />
-          <g className="cl-vapor-sway">
-            <path d="M 35 161 C 28 154 20 152 12 154 C 19 148 29 149 35 155 Z" />
-            <path d="M 35 160 C 30 150 22 145 14 145 C 22 140 32 145 36 154 Z" />
-            <path d="M 36 159 C 36 149 32 141 26 137 C 34 138 39 147 38 157 Z" />
-            <path d="M 37 159 C 42 150 50 146 58 147 C 51 142 41 147 37 156 Z" />
-            <path d="M 37 161 C 44 155 52 154 60 157 C 53 151 43 153 37 158 Z" />
+          {/* scrolling horizontals — period 22px, faded in from the horizon */}
+          <g mask="url(#clVaporGridMask)">
+            <g
+              className="cl-vapor-gridscroll cl-vapor-glow-pink"
+              stroke="#ff2e9a"
+              strokeWidth="0.9"
+              opacity="0.9"
+            >
+              <path d="M 0 168 H 200" fill="none" />
+              <path d="M 0 190 H 200" fill="none" />
+              <path d="M 0 212 H 200" fill="none" />
+              <path d="M 0 234 H 200" fill="none" />
+              <path d="M 0 256 H 200" fill="none" />
+              <path d="M 0 278 H 200" fill="none" />
+              <path d="M 0 300 H 200" fill="none" />
+            </g>
           </g>
-        </g>
-
-        {/* broken Greek column — right */}
-        <g>
-          <path
-            d="M 168 206 L 170 148 L 172 142 L 174 147 L 177 140 L 180 146 L 182 143 L 184 206 Z"
-            fill="#b9c0ce"
-          />
-          <path
-            d="M 168 206 L 170 148 L 172 142 L 174 147 L 177 140 L 180 146 L 182 143 L 184 206 Z"
-            fill="none"
-            stroke="#ff9ad2"
-            strokeWidth="0.7"
-            opacity="0.7"
-          />
-          {/* fluting */}
-          <g stroke="#7b8296" strokeWidth="0.6" opacity="0.8">
-            <path d="M 172 152 L 171 204" />
-            <path d="M 176 152 L 175.6 204" />
-            <path d="M 180 152 L 180.4 204" />
-          </g>
-          {/* fallen capital fragment */}
-          <path
-            className="cl-vapor-float-alt"
-            d="M 172 128 L 184 126 L 186 132 L 174 135 Z"
-            fill="#cdd3de"
-            stroke="#22e6ff"
-            strokeWidth="0.6"
-          />
-        </g>
-
-        {/* floating wireframe shapes — triangle spins, ring pulses */}
-        <g className="cl-vapor-float" fill="none" strokeLinejoin="round">
-          <g className="cl-vapor-spin">
-            <path
-              className="cl-vapor-glow-cyan"
-              d="M 30 52 L 46 82 L 14 82 Z"
-              stroke="#22e6ff"
-              strokeWidth="1"
-            />
-            <path d="M 30 52 L 30 82 M 30 52 L 22 82 M 30 52 L 38 82" stroke="#22e6ff" strokeWidth="0.4" opacity="0.6" />
-          </g>
-        </g>
-        <g className="cl-vapor-float-alt cl-vapor-glow-pink">
-          <circle
-            className="cl-vapor-pulse"
-            cx="166"
-            cy="74"
-            r="9"
-            fill="none"
-            stroke="#ff2e9a"
-            strokeWidth="1.1"
-          />
-        </g>
-        <path
-          className="cl-vapor-float"
-          d="M 152 108 h 8 M 156 104 v 8"
-          stroke="#7b2ff7"
-          strokeWidth="1.2"
-          fill="none"
-          opacity="0.9"
-        />
-
-        {/* checker patch under the statue */}
-        <path d="M 62 210 L 138 210 L 150 230 L 50 230 Z" fill="url(#clVaporCheck)" />
-
-        {/* statue reflection on the floor */}
-        <use href="#clVaporFig" transform="translate(0 420) scale(1 -1)" opacity="0.14" />
-
-        {/* chrome statue Hermit */}
-        <g id="clVaporFig">
-          {/* staff in the left hand */}
+          {/* horizon line */}
           <path
             className="cl-vapor-glow-cyan"
-            d="M 64 100 Q 60 155 64 210"
+            d="M 0 190 H 200"
+            stroke="#7df3ff"
+            strokeWidth="1"
             fill="none"
-            stroke="#dfe6ee"
-            strokeWidth="2.6"
-            strokeLinecap="round"
           />
-          {/* robe / hood body */}
-          <path
-            d="M 100 90
-               C 88 92 82 102 83 114
-               C 78 124 76 138 75 154
-               C 74 170 73 188 72 210
-               L 128 210
-               C 127 188 126 170 125 154
-               C 124 138 122 124 117 114
-               C 118 102 112 92 100 90 Z"
-            fill="url(#clVaporChrome)"
-          />
-          {/* hood opening */}
-          <path
-            d="M 92 108 C 92 100 96 96 100 96 C 104 96 108 100 108 108 C 104 112 96 112 92 108 Z"
-            fill="#140a26"
-          />
-          {/* marble veins / robe folds */}
-          <g fill="none" stroke="#8f97a8" strokeWidth="0.7" opacity="0.55">
-            <path d="M 96 130 C 94 150 95 176 93 204" />
-            <path d="M 108 134 C 110 156 108 182 110 206" />
+
+          {/* palm silhouette — left, fronds sway from the trunk top */}
+          <g fill="#0e0218">
+            <path d="M 30 196 C 29 184 30 172 34 160 L 37 161 C 34 172 33 184 34 196 Z" />
+            <g className="cl-vapor-sway">
+              <path d="M 35 161 C 28 154 20 152 12 154 C 19 148 29 149 35 155 Z" />
+              <path d="M 35 160 C 30 150 22 145 14 145 C 22 140 32 145 36 154 Z" />
+              <path d="M 36 159 C 36 149 32 141 26 137 C 34 138 39 147 38 157 Z" />
+              <path d="M 37 159 C 42 150 50 146 58 147 C 51 142 41 147 37 156 Z" />
+              <path d="M 37 161 C 44 155 52 154 60 157 C 53 151 43 153 37 158 Z" />
+            </g>
           </g>
-          {/* arms */}
-          <path d="M 80 124 C 74 126 69 130 67 136" fill="none" stroke="#c3c9d6" strokeWidth="4.6" strokeLinecap="round" />
-          <path d="M 120 122 C 128 116 134 108 138 100" fill="none" stroke="#c3c9d6" strokeWidth="4.6" strokeLinecap="round" />
-          {/* rim light — pink on the left, cyan on the right */}
-          <g fill="none" strokeLinecap="round">
-            <path
-              className="cl-vapor-rim cl-vapor-glow-pink"
-              d="M 100 90 C 88 92 82 102 83 114 C 78 124 76 138 75 154 C 74 170 73 188 72 210"
-              stroke="#ff5cb4"
-              strokeWidth="1.4"
-            />
-            <path
-              className="cl-vapor-rim cl-vapor-glow-cyan"
-              d="M 100 90 C 112 92 118 102 117 114 C 122 124 124 138 125 154 C 126 170 127 188 128 210"
-              stroke="#5cecff"
-              strokeWidth="1.4"
-            />
-          </g>
-          {/* lantern raised in the right hand */}
+
+          {/* broken Greek column — right */}
           <g>
-            <path d="M 134 86 Q 141 79 148 86" fill="none" stroke="#dfe6ee" strokeWidth="1.6" />
             <path
-              d="M 133 88 L 149 88 L 151 106 L 131 106 Z"
-              fill="url(#clVaporChrome)"
-              stroke="#8f97a8"
-              strokeWidth="0.7"
+              d="M 168 206 L 170 148 L 172 142 L 174 147 L 177 140 L 180 146 L 182 143 L 184 206 Z"
+              fill="#b9c0ce"
             />
             <path
-              className="cl-vapor-glow-star cl-vapor-twinkle"
-              d="M 141 92 L 142.3 95.7 L 146 96 L 142.3 96.3 L 141 100 L 139.7 96.3 L 136 96 L 139.7 95.7 Z"
-              fill="#fff3d0"
+              d="M 168 206 L 170 148 L 172 142 L 174 147 L 177 140 L 180 146 L 182 143 L 184 206 Z"
+              fill="none"
+              stroke="#ff9ad2"
+              strokeWidth="0.7"
+              opacity="0.7"
+            />
+            {/* fluting */}
+            <g stroke="#7b8296" strokeWidth="0.6" opacity="0.8">
+              <path d="M 172 152 L 171 204" />
+              <path d="M 176 152 L 175.6 204" />
+              <path d="M 180 152 L 180.4 204" />
+            </g>
+            {/* fallen capital fragment */}
+            <path
+              className="cl-vapor-float-alt"
+              d="M 172 128 L 184 126 L 186 132 L 174 135 Z"
+              fill="#cdd3de"
+              stroke="#22e6ff"
+              strokeWidth="0.6"
+            />
+          </g>
+
+          {/* floating wireframe shapes — spin/pulse; swapped in palettes 2-3 */}
+          <g className="cl-vapor-float" fill="none" strokeLinejoin="round">
+            <g className="cl-vapor-spin">
+              {altShapes ? (
+                <path
+                  className="cl-vapor-glow-cyan"
+                  d="M 30 52 L 45 67 L 30 82 L 15 67 Z"
+                  stroke="#22e6ff"
+                  strokeWidth="1"
+                />
+              ) : (
+                <>
+                  <path
+                    className="cl-vapor-glow-cyan"
+                    d="M 30 52 L 46 82 L 14 82 Z"
+                    stroke="#22e6ff"
+                    strokeWidth="1"
+                  />
+                  <path d="M 30 52 L 30 82 M 30 52 L 22 82 M 30 52 L 38 82" stroke="#22e6ff" strokeWidth="0.4" opacity="0.6" />
+                </>
+              )}
+            </g>
+          </g>
+          <g className="cl-vapor-float-alt cl-vapor-glow-pink">
+            {altShapes ? (
+              <rect
+                className="cl-vapor-pulse"
+                x="159"
+                y="67"
+                width="14"
+                height="14"
+                fill="none"
+                stroke="#ff2e9a"
+                strokeWidth="1.1"
+              />
+            ) : (
+              <circle
+                className="cl-vapor-pulse"
+                cx="166"
+                cy="74"
+                r="9"
+                fill="none"
+                stroke="#ff2e9a"
+                strokeWidth="1.1"
+              />
+            )}
+          </g>
+          <path
+            className="cl-vapor-float"
+            d="M 152 108 h 8 M 156 104 v 8"
+            stroke="#7b2ff7"
+            strokeWidth="1.2"
+            fill="none"
+            opacity="0.9"
+          />
+
+          {/* checker patch under the statue */}
+          <path d="M 62 210 L 138 210 L 150 230 L 50 230 Z" fill="url(#clVaporCheck)" />
+
+          {/* statue reflection on the floor */}
+          <use href="#clVaporFig" transform="translate(0 420) scale(1 -1)" opacity="0.14" />
+
+          {/* chrome statue Hermit */}
+          <g id="clVaporFig">
+            {/* staff in the left hand */}
+            <path
+              className="cl-vapor-glow-cyan"
+              d="M 64 100 Q 60 155 64 210"
+              fill="none"
+              stroke="#dfe6ee"
+              strokeWidth="2.6"
+              strokeLinecap="round"
+            />
+            {/* robe / hood body */}
+            <path
+              d="M 100 90
+                 C 88 92 82 102 83 114
+                 C 78 124 76 138 75 154
+                 C 74 170 73 188 72 210
+                 L 128 210
+                 C 127 188 126 170 125 154
+                 C 124 138 122 124 117 114
+                 C 118 102 112 92 100 90 Z"
+              fill="url(#clVaporChrome)"
+            />
+            {/* hood opening */}
+            <path
+              d="M 92 108 C 92 100 96 96 100 96 C 104 96 108 100 108 108 C 104 112 96 112 92 108 Z"
+              fill="#140a26"
+            />
+            {/* marble veins / robe folds */}
+            <g fill="none" stroke="#8f97a8" strokeWidth="0.7" opacity="0.55">
+              <path d="M 96 130 C 94 150 95 176 93 204" />
+              <path d="M 108 134 C 110 156 108 182 110 206" />
+            </g>
+            {/* arms */}
+            <path d="M 80 124 C 74 126 69 130 67 136" fill="none" stroke="#c3c9d6" strokeWidth="4.6" strokeLinecap="round" />
+            <path d="M 120 122 C 128 116 134 108 138 100" fill="none" stroke="#c3c9d6" strokeWidth="4.6" strokeLinecap="round" />
+            {/* rim light — pink on the left, cyan on the right */}
+            <g fill="none" strokeLinecap="round">
+              <path
+                className="cl-vapor-rim cl-vapor-glow-pink"
+                d="M 100 90 C 88 92 82 102 83 114 C 78 124 76 138 75 154 C 74 170 73 188 72 210"
+                stroke="#ff5cb4"
+                strokeWidth="1.4"
+              />
+              <path
+                className="cl-vapor-rim cl-vapor-glow-cyan"
+                d="M 100 90 C 112 92 118 102 117 114 C 122 124 124 138 125 154 C 126 170 127 188 128 210"
+                stroke="#5cecff"
+                strokeWidth="1.4"
+              />
+            </g>
+            {/* lantern raised in the right hand */}
+            <g>
+              <path d="M 134 86 Q 141 79 148 86" fill="none" stroke="#dfe6ee" strokeWidth="1.6" />
+              <path
+                d="M 133 88 L 149 88 L 151 106 L 131 106 Z"
+                fill="url(#clVaporChrome)"
+                stroke="#8f97a8"
+                strokeWidth="0.7"
+              />
+              <path
+                className="cl-vapor-glow-star cl-vapor-twinkle"
+                d="M 141 92 L 142.3 95.7 L 146 96 L 142.3 96.3 L 141 100 L 139.7 96.3 L 136 96 L 139.7 95.7 Z"
+                fill="#fff3d0"
+              />
+            </g>
+          </g>
+
+          {/* hover chrome sheen — diagonal band clipped to the statue, screen blend */}
+          <g clipPath="url(#clVaporFigClip)">
+            <rect
+              className="cl-vapor-sheen"
+              x="30"
+              y="60"
+              width="70"
+              height="170"
+              fill="url(#clVaporSheen)"
             />
           </g>
         </g>
 
-        {/* hover chrome sheen — diagonal band clipped to the statue, screen blend */}
-        <g clipPath="url(#clVaporFigClip)">
-          <rect
-            className="cl-vapor-sheen"
-            x="30"
-            y="60"
-            width="70"
-            height="170"
-            fill="url(#clVaporSheen)"
-          />
-        </g>
-
-        {/* IX — chrome gradient numeral, top center */}
+        {/* numeral — chrome gradient, top center (unmirrored) */}
         <text
           className="cl-vapor-glow-ix"
           x="100"
@@ -514,10 +574,10 @@ export default function VaporwaveHermitCard() {
           stroke="#2a0a44"
           strokeWidth="0.5"
         >
-          IX
+          {toRoman(number)}
         </text>
 
-        {/* THE HERMIT — italic serif with vertical latin accent */}
+        {/* card name — italic serif with vertical latin accent (unmirrored) */}
         <text
           className="cl-vapor-glow-pink"
           x="98"
@@ -525,11 +585,11 @@ export default function VaporwaveHermitCard() {
           textAnchor="middle"
           fontFamily="Georgia, 'Times New Roman', serif"
           fontStyle="italic"
-          fontSize="16"
-          letterSpacing="3"
+          fontSize={nameSize}
+          letterSpacing={nameTracking}
           fill="#ffd7f0"
         >
-          THE HERMIT
+          {name}
         </text>
         <text
           x="182"

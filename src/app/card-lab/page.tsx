@@ -1,3 +1,4 @@
+import Link from "next/link";
 import PixelCard from "@/components/card-lab/pixel";
 import ArtNouveauCard from "@/components/card-lab/art-nouveau";
 import BauhausCard from "@/components/card-lab/bauhaus";
@@ -14,6 +15,25 @@ import PsychedelicCard from "@/components/card-lab/psychedelic";
 import PopArtCard from "@/components/card-lab/pop-art";
 import CrossStitchCard from "@/components/card-lab/cross-stitch";
 import VaporwaveCard from "@/components/card-lab/vaporwave";
+
+const STYLE_SLUGS = [
+  "pixel",
+  "art-nouveau",
+  "bauhaus",
+  "blueprint",
+  "stained-glass",
+  "woodcut",
+  "neon",
+  "lowpoly",
+  "ukiyo-e",
+  "art-deco",
+  "single-line",
+  "papercut",
+  "psychedelic",
+  "pop-art",
+  "cross-stitch",
+  "vaporwave",
+];
 
 const STYLES = [
   {
@@ -135,16 +155,24 @@ export default function CardLab() {
         </p>
 
         <div className="mt-12 grid grid-cols-1 gap-10 sm:grid-cols-2 lg:grid-cols-4">
-          {STYLES.map((s) => {
+          {STYLES.map((s, i) => {
             const Card = s.component;
             return (
               <div key={s.name}>
                 <div className="overflow-hidden rounded-lg shadow-2xl shadow-black/60">
                   <Card />
                 </div>
-                <h2 className="mt-4 text-lg font-semibold text-neutral-100">
-                  {s.name}
-                </h2>
+                <div className="mt-4 flex items-baseline justify-between gap-2">
+                  <h2 className="text-lg font-semibold text-neutral-100">
+                    {s.name}
+                  </h2>
+                  <Link
+                    href={`/card-lab/${STYLE_SLUGS[i]}`}
+                    className="shrink-0 rounded-full border border-neutral-600 px-3 py-1 text-xs text-neutral-300 transition hover:border-neutral-300 hover:text-white"
+                  >
+                    Gallery →
+                  </Link>
+                </div>
                 <p className="mt-1 text-sm leading-relaxed text-neutral-400">
                   {s.note}
                 </p>

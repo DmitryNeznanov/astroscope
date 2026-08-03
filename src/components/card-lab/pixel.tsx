@@ -1,37 +1,105 @@
 /**
  * Card Lab — PIXEL
- * 8-bit pixel-art take on THE HERMIT (IX): a tarot card pulled from a 1992
- * handheld RPG. The scene is a 24x36 logical-pixel bitmap drawn as crisp-edged
- * SVG <rect> blocks on a cartridge-purple card, with a stepped pixel-corner
- * frame, blocky rect-drawn "IX", a pixel-bordered nameplate, and checkerboard
- * dithering around the lantern's amber glow.
+ * 8-bit pixel-art tarot card: a card pulled from a 1992 handheld RPG. The
+ * scene is a 24x36 logical-pixel bitmap drawn as crisp-edged SVG <rect>
+ * blocks on a dark cartridge card, with a stepped pixel-corner frame, blocky
+ * rect-drawn roman numeral, a pixel-bordered nameplate, and checkerboard
+ * dithering around the lantern's glow.
+ *
+ * Reusable via optional props { number, name, variant }; with no props it
+ * renders THE HERMIT (IX) in the original purple scheme. `variant` (0-7)
+ * selects one of four console-inspired palettes, and variants 4-7 also
+ * mirror the scene and shuffle the starfield.
  * Server-component safe: no hooks, no client code.
  */
 
 import type { ReactNode } from "react";
+import { toRoman } from "@/lib/roman";
 
-/** Logical-pixel palette: deep purples, one warm amber ramp, off-white. */
-const PALETTE: Record<string, string> = {
-  s: "#f4ecd8", // star off-white
-  d: "#7a68ad", // dim star / distant sparkle
-  g: "#c07f24", // glow dither, dim amber
-  o: "#e09a2e", // glow dither, mid amber
-  L: "#ffb52e", // lantern amber
-  l: "#ffe9a8", // lantern core (the star inside)
-  W: "#2d1d55", // staff
-  H: "#5a4394", // hood highlight
-  R: "#4a3580", // robe
-  r: "#2e1f52", // robe shadow
-  f: "#120a24", // face void under the hood
-  b: "#e8dfc8", // beard off-white
-  m: "#2a1c4e", // mountain dark
-  M: "#453278", // mountain lit face
-  n: "#cfc4e8", // snowcap
+/** Full per-scheme look: scene palette + chrome colors. */
+type Scheme = {
+  sky: string; // card background
+  frame: string; // stepped outer frame + nameplate border
+  frameInner: string; // inner hairline frame
+  plate: string; // nameplate fill
+  accent: string; // nameplate corner studs
+  ink: string; // numeral + name text
+  pal: Record<string, string>;
 };
 
 /**
- * The whole scene as a 24x36 bitmap, one char per pixel, top row first.
- * "." is transparent (shows the card's sky-purple background).
+ * Bitmap palette chars: s/d stars, g/o/L/l lantern glow ramp, W staff,
+ * H/R/r/f/b hermit, m/M/n mountain.
+ */
+const SCHEMES: Scheme[] = [
+  // 0 — original cartridge purple (variant 0 must equal the first card).
+  {
+    sky: "#1b1032",
+    frame: "#8f76c9",
+    frameInner: "#4a3580",
+    plate: "#241847",
+    accent: "#ffb52e",
+    ink: "#f4ecd8",
+    pal: {
+      s: "#f4ecd8", d: "#7a68ad", g: "#c07f24", o: "#e09a2e",
+      L: "#ffb52e", l: "#ffe9a8", W: "#2d1d55", H: "#5a4394",
+      R: "#4a3580", r: "#2e1f52", f: "#120a24", b: "#e8dfc8",
+      m: "#2a1c4e", M: "#453278", n: "#cfc4e8",
+    },
+  },
+  // 1 — DMG Game Boy greens, four-shade handheld classic.
+  {
+    sky: "#0f380f",
+    frame: "#8bac0f",
+    frameInner: "#306230",
+    plate: "#0f380f",
+    accent: "#9bbc0f",
+    ink: "#9bbc0f",
+    pal: {
+      s: "#9bbc0f", d: "#306230", g: "#306230", o: "#8bac0f",
+      L: "#8bac0f", l: "#9bbc0f", W: "#306230", H: "#8bac0f",
+      R: "#306230", r: "#0f380f", f: "#081f08", b: "#9bbc0f",
+      m: "#0f380f", M: "#306230", n: "#9bbc0f",
+    },
+  },
+  // 2 — NES midnight blue, warm amber lantern kept for contrast.
+  {
+    sky: "#0b1030",
+    frame: "#4aa8e0",
+    frameInner: "#1c3a6e",
+    plate: "#101d42",
+    accent: "#ffd75e",
+    ink: "#e8f2ff",
+    pal: {
+      s: "#e8f2ff", d: "#5a78b8", g: "#b8912a", o: "#e0b23e",
+      L: "#ffd75e", l: "#fff3c0", W: "#1c2c55", H: "#3a6ea8",
+      R: "#2a4f80", r: "#16264e", f: "#080e24", b: "#dce8f8",
+      m: "#14204a", M: "#284a8a", n: "#bcd0f0",
+    },
+  },
+  // 3 — Virtual Boy red-on-black.
+  {
+    sky: "#100000",
+    frame: "#c03028",
+    frameInner: "#580c08",
+    plate: "#1a0505",
+    accent: "#ff4030",
+    ink: "#ffb0a0",
+    pal: {
+      s: "#ffd8c8", d: "#883028", g: "#982818", o: "#d03820",
+      L: "#ff5038", l: "#ffd0b8", W: "#400c08", H: "#a02820",
+      R: "#781810", r: "#380a06", f: "#0c0000", b: "#ffc8b8",
+      m: "#280606", M: "#581410", n: "#f0a898",
+    },
+  },
+];
+
+const GRID_W = 24;
+const GRID_H = 36;
+
+/**
+ * The scene as a 24x36 bitmap, one char per pixel, top row first.
+ * "." is transparent (shows the card's sky background).
  */
 const ROWS: string[] = [
   "........................",
@@ -72,12 +140,10 @@ const ROWS: string[] = [
   "mmmmmmmmmmmmmmmmmmmmmmmm",
 ];
 
-const GRID_W = 24;
-const GRID_H = 36;
-
-/** 3x5 blocky pixel glyphs (only what the chrome needs). */
+/** 3x5 blocky pixel glyphs — everything a roman numeral (1-39) needs. */
 const GLYPHS: Record<string, string[]> = {
   I: ["111", "010", "010", "010", "111"],
+  V: ["101", "101", "101", "101", "010"],
   X: ["101", "101", "010", "101", "101"],
 };
 
@@ -116,7 +182,26 @@ function PixelGlyph({
   );
 }
 
-export default function PixelHermitCard() {
+export type PixelCardProps = {
+  /** Major arcana number, 1-22 (rendered as a pixel roman numeral). */
+  number?: number;
+  /** Card name for the nameplate; long names are squished to fit. */
+  name?: string;
+  /** 0-7: palette = variant % 4, variants 4-7 mirror + reshuffle stars. */
+  variant?: number;
+};
+
+export default function PixelTarotCard({
+  number = 9,
+  name = "THE HERMIT",
+  variant = 0,
+}: PixelCardProps) {
+  const v = ((Math.round(variant) % 8) + 8) % 8;
+  const scheme = SCHEMES[v % 4];
+  const mirrored = v >= 4;
+  const starShift = (v * 5) % GRID_W;
+  const pal = scheme.pal;
+
   // Chars that belong to the hermit sprite (staff, hood, robe, face, beard,
   // lantern and its glow dither); everything else is sky/mountain background.
   const isSprite = (ch: string) => "WHRrfbLlgo".includes(ch);
@@ -128,14 +213,16 @@ export default function PixelHermitCard() {
   ROWS.forEach((raw, y) => {
     const row = raw.padEnd(GRID_W, ".").slice(0, GRID_W);
     [...row].forEach((ch, x) => {
-      const fill = PALETTE[ch];
+      const fill = pal[ch];
       if (!fill) return;
       const glow = ch === "l" || ch === "L" || ch === "o" || ch === "g";
       const star = ch === "s" || ch === "d";
+      // Variants reshuffle the starfield horizontally (variant 0: no shift).
+      const cx = star ? (x + starShift) % GRID_W : x;
       const cell = (
         <rect
           key={`${x}-${y}`}
-          x={x}
+          x={cx}
           y={y}
           width={1.02}
           height={1.02}
@@ -152,6 +239,14 @@ export default function PixelHermitCard() {
     });
   });
 
+  // Pixel-glyph roman numeral, centered as one block (4px grid, 1px gaps).
+  const numeral = toRoman(number);
+  const numeralWidth = (numeral.length * 4 - 1) * 4;
+  const numeralX = (200 - numeralWidth) / 2;
+
+  // Long names are compressed onto the nameplate with SVG textLength.
+  const longName = name.length > 10;
+
   return (
     <figure
       className="cl-pixel-card"
@@ -161,7 +256,7 @@ export default function PixelHermitCard() {
         margin: 0,
         position: "relative",
         overflow: "hidden",
-        background: "#1b1032",
+        background: scheme.sky,
       }}
     >
       <style>{`
@@ -290,63 +385,73 @@ export default function PixelHermitCard() {
           </clipPath>
         </defs>
 
-        {/* Sky + mountain. */}
-        {bgCells}
-
-        {/* The hermit sprite: bobs like a game idle animation. */}
-        <g className="cl-pixel-sprite">{spriteCells}</g>
-
-        {/* Screen glitch: a shifted copy of the whole scene, clipped to one
-            horizontal band, flashed for a split second every few seconds. */}
-        <g className="cl-pixel-glitch" clipPath="url(#cl-pixel-band)">
+        <g transform={mirrored ? `translate(${GRID_W} 0) scale(-1 1)` : undefined}>
+          {/* Sky + mountain. */}
           {bgCells}
-          {spriteCells}
+
+          {/* The hermit sprite: bobs like a game idle animation. */}
+          <g className="cl-pixel-sprite">{spriteCells}</g>
+
+          {/* Screen glitch: a shifted copy of the whole scene, clipped to one
+              horizontal band, flashed for a split second every few seconds. */}
+          <g className="cl-pixel-glitch" clipPath="url(#cl-pixel-band)">
+            {bgCells}
+            {spriteCells}
+          </g>
         </g>
       </svg>
 
-      {/* Chrome: stepped pixel-corner frame, IX, nameplate, corner stars. */}
+      {/* Chrome: stepped pixel-corner frame, numeral, nameplate, stars. */}
       <svg
         viewBox="0 0 200 300"
         preserveAspectRatio="none"
         shapeRendering="crispEdges"
         style={{ position: "absolute", inset: 0, width: "100%", height: "100%" }}
         role="img"
-        aria-label="The Hermit, tarot card nine, rendered in 8-bit pixel art"
+        aria-label={`${name}, tarot card ${numeral}, rendered in 8-bit pixel art`}
       >
         {/* Stepped-corner frame (two evenodd paths = thick pixel border). */}
         <path
           fillRule="evenodd"
-          fill="#8f76c9"
+          fill={scheme.frame}
           d="M16,0 H184 V8 H192 V16 H200 V284 H192 V292 H184 V300 H16 V292 H8 V284 H0 V16 H8 V8 H16 Z
              M24,8 H176 V16 H184 V24 H192 V276 H184 V284 H176 V292 H24 V284 H16 V276 H8 V24 H16 V16 H24 Z"
         />
         {/* Inner hairline frame for the classic RPG double border. */}
         <path
           fillRule="evenodd"
-          fill="#4a3580"
+          fill={scheme.frameInner}
           d="M28,12 H172 V20 H180 V28 H188 V272 H180 V280 H172 V288 H28 V280 H20 V272 H12 V28 H20 V20 H28 Z
              M31,15 H169 V23 H177 V31 H185 V269 H177 V277 H169 V285 H31 V277 H23 V269 H15 V31 H23 V23 H31 Z"
         />
 
-        {/* IX in blocky pixel caps, centered top. */}
-        <PixelGlyph ch="I" x={86} y={18} px={4} fill="#f4ecd8" />
-        <PixelGlyph ch="X" x={102} y={18} px={4} fill="#f4ecd8" />
+        {/* Roman numeral in blocky pixel caps, centered top. */}
+        {[...numeral].map((ch, i) => (
+          <PixelGlyph
+            key={`${ch}-${i}`}
+            ch={ch}
+            x={numeralX + i * 16}
+            y={18}
+            px={4}
+            fill={scheme.ink}
+          />
+        ))}
 
         {/* Tiny pixel stars flanking the numeral. */}
-        <rect x={62} y={26} width={4} height={4} fill="#7a68ad" />
-        <rect x={134} y={22} width={4} height={4} fill="#f4ecd8" />
+        <rect x={62} y={26} width={4} height={4} fill={pal.d} />
+        <rect x={134} y={22} width={4} height={4} fill={scheme.ink} />
 
         {/* Nameplate: pixel-bordered cartridge label. */}
-        <rect x={28} y={252} width={144} height={30} fill="#241847" />
+        <rect x={28} y={252} width={144} height={30} fill={scheme.plate} />
         <path
           fillRule="evenodd"
-          fill="#8f76c9"
+          fill={scheme.frame}
           d="M28,252 H172 V282 H28 Z M32,256 H168 V278 H32 Z"
         />
-        <rect x={36} y={260} width={4} height={4} fill="#ffb52e" />
-        <rect x={160} y={260} width={4} height={4} fill="#ffb52e" />
-        <rect x={36} y={270} width={4} height={4} fill="#ffb52e" />
-        <rect x={160} y={270} width={4} height={4} fill="#ffb52e" />
+        <rect x={36} y={260} width={4} height={4} fill={scheme.accent} />
+        <rect x={160} y={260} width={4} height={4} fill={scheme.accent} />
+        <rect x={36} y={270} width={4} height={4} fill={scheme.accent} />
+        <rect x={160} y={270} width={4} height={4} fill={scheme.accent} />
         <text
           x={100}
           y={272}
@@ -354,10 +459,12 @@ export default function PixelHermitCard() {
           fontFamily="'Courier New', Courier, monospace"
           fontWeight="bold"
           fontSize={13}
-          letterSpacing={3}
-          fill="#f4ecd8"
+          letterSpacing={longName ? 1 : 3}
+          textLength={longName ? 132 : undefined}
+          lengthAdjust={longName ? "spacingAndGlyphs" : undefined}
+          fill={scheme.ink}
         >
-          THE HERMIT
+          {name}
         </text>
       </svg>
 

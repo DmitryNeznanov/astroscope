@@ -1,15 +1,26 @@
 /**
  * Card Lab — WOODCUT
- * German expressionist woodcut / linocut take on THE HERMIT (IX).
+ * German expressionist woodcut / linocut Major Arcana card.
  * Pure black ink on raw cream paper: heavy carved black masses, the lantern
  * as the single carved-out white light source, aggressive hatch bundles and
  * gouge marks, crude angular anatomy, thick wobbling border.
  * Server-component safe: no hooks, no client code.
+ *
+ * Reusable via optional props — with no props it renders THE HERMIT (IX),
+ * variant 0, exactly the original gallery card.
  */
 
-const CREAM = "#f1e7d3";
-const INK = "#161310";
+import { toRoman } from "@/lib/roman";
+
 const SERIF = "Georgia, 'Times New Roman', 'Liberation Serif', serif";
+
+/** Ink/paper schemes. Index 0 is the canonical black-on-cream print. */
+const PALETTES = [
+  { paper: "#f1e7d3", ink: "#161310" }, // 0 classic black ink on cream
+  { paper: "#161310", ink: "#f1e7d3" }, // 1 inverse print — cream ink on black paper
+  { paper: "#e9dab9", ink: "#3b2417" }, // 2 bistre brown on tan
+  { paper: "#f2e4cd", ink: "#5a1810" }, // 3 oxblood red on cream
+];
 
 /** Bundle of short parallel hatch strokes — the woodcut shading unit.
  *  Pass animIdx to make the bundle "alive": it wraps the strokes in a group
@@ -65,7 +76,7 @@ function hatchBundle(
 }
 
 /** Jagged white gouge rays radiating from the lantern. */
-function lanternRays(cx: number, cy: number) {
+function lanternRays(cx: number, cy: number, color: string) {
   const rays: Array<[number, number, number]> = [
     [-162, 34, 2.6],
     [-140, 42, 2.2],
@@ -90,7 +101,7 @@ function lanternRays(cx: number, cy: number) {
         key={`ray-${i}`}
         points={`${cx},${cy} ${midX},${midY} ${cx + Math.cos(rad) * len},${cy + Math.sin(rad) * len}`}
         fill="none"
-        stroke={CREAM}
+        stroke={color}
         strokeWidth={w}
         strokeLinecap="butt"
         strokeLinejoin="miter"
@@ -99,7 +110,76 @@ function lanternRays(cx: number, cy: number) {
   });
 }
 
-export default function WoodcutHermitCard() {
+/** Crude hand-set wood type title. "THE HERMIT" uses the canonical hand-tuned
+ *  sorts so variant 0 is pixel-faithful; any other name is composed
+ *  deterministically — every glyph gets a pseudo-random size/baseline wobble —
+ *  and is squeezed to the measure with textLength so long names still fit. */
+function woodTypeTitle(name: string, ink: string) {
+  if (name === "THE HERMIT") {
+    return (
+      <text x="100" y="282" textAnchor="middle" fontFamily={SERIF} fill={ink} letterSpacing="2.5">
+        <tspan fontSize="15" fontWeight="bold">T</tspan>
+        <tspan fontSize="16" fontWeight="bold" dy="-0.6">H</tspan>
+        <tspan fontSize="14.5" fontWeight="bold" dy="0.5">E</tspan>
+        <tspan fontSize="15" dy="0">&#8194;</tspan>
+        <tspan fontSize="16" fontWeight="bold" dy="-0.5">H</tspan>
+        <tspan fontSize="14.5" fontWeight="bold" dy="0.4">E</tspan>
+        <tspan fontSize="15.5" fontWeight="bold" dy="-0.3">R</tspan>
+        <tspan fontSize="15" fontWeight="bold" dy="0.5">M</tspan>
+        <tspan fontSize="16" fontWeight="bold" dy="-0.6">I</tspan>
+        <tspan fontSize="15" fontWeight="bold" dy="0.4">T</tspan>
+      </text>
+    );
+  }
+  return (
+    <text
+      x="100"
+      y="282"
+      textAnchor="middle"
+      fontFamily={SERIF}
+      fill={ink}
+      letterSpacing="2.5"
+      textLength="148"
+      lengthAdjust="spacingAndGlyphs"
+    >
+      {name.split("").map((ch, i) => {
+        const code = ch.charCodeAt(0);
+        const size = 14.5 + ((code * 7 + i * 13) % 4) * 0.5;
+        const dy = (((code * 5 + i * 11) % 3) - 1) * 0.5;
+        return (
+          <tspan key={`t-${i}`} fontSize={size} fontWeight="bold" dy={dy}>
+            {ch === " " ? "\u2002" : ch}
+          </tspan>
+        );
+      })}
+    </text>
+  );
+}
+
+export interface WoodcutCardProps {
+  /** Major Arcana number 1-22 (0 renders as I). */
+  number?: number;
+  /** Card name set in crude wood type along the bottom. */
+  name?: string;
+  /** 0-7: low 2 bits pick the ink/paper scheme, bit 3 mirrors the block. */
+  variant?: number;
+}
+
+export default function WoodcutHermitCard({
+  number = 9,
+  name = "THE HERMIT",
+  variant = 0,
+}: WoodcutCardProps) {
+  const { paper: CREAM, ink: INK } = PALETTES[variant % PALETTES.length];
+  const mirror = variant >= 4;
+  const roman = toRoman(number);
+  // Cartouche widens only when the numeral outgrows the canonical block.
+  const wide = roman.length > 2;
+  const cw = 30 + roman.length * 12;
+  const cartouchePath = wide
+    ? `M${100 - cw / 2},15 L${100 + cw / 2},14 L${100 + cw / 2 + 1},40 L${100 - cw / 2 - 1},41 Z`
+    : "M73,15 L127,14 L128,40 L72,41 Z";
+
   return (
     <figure
       className="cl-wc-root"
@@ -170,10 +250,12 @@ export default function WoodcutHermitCard() {
 
       <div className="cl-wc-repress">
       <div className="cl-wc-press">
-      <svg className="cl-wc-print" viewBox="0 0 200 300" preserveAspectRatio="xMidYMid slice" role="img" aria-label="The Hermit tarot card in woodcut style">
+      <svg className="cl-wc-print" viewBox="0 0 200 300" preserveAspectRatio="xMidYMid slice" role="img" aria-label={`${name} tarot card in woodcut style`}>
         {/* Raw paper */}
         <rect x="0" y="0" width="200" height="300" fill={CREAM} />
 
+        {/* Artwork block — mirrored for variants 4-7 (text stays unmirrored) */}
+        <g transform={mirror ? "translate(200 0) scale(-1 1)" : undefined}>
         {/* Ink sky — one heavy black mass across the upper card */}
         <path d="M12,44 L188,42 L188,178 L12,176 Z" fill={INK} />
 
@@ -228,7 +310,7 @@ export default function WoodcutHermitCard() {
         {/* ── THE LANTERN — the single carved-out light source ── */}
         <g className="cl-wc-flame">
           <g className="cl-wc-rays">
-            {lanternRays(121, 114)}
+            {lanternRays(121, 114, CREAM)}
           </g>
           {/* Radiant white core */}
           <path d="M121,104 L128,114 L121,124 L114,114 Z" fill={CREAM} />
@@ -247,37 +329,27 @@ export default function WoodcutHermitCard() {
         {/* Scattered knife nicks in the sky around the figure */}
         {hatchBundle(34, 120, 3, 11, 6, 5, -35, CREAM, 1.4, 12)}
         {hatchBundle(150, 130, 3, 10, -5, 5, 40, CREAM, 1.4, 13)}
+        </g>
 
-        {/* ── Top cartouche: IX carved white-on-black ── */}
+        {/* ── Top cartouche: numeral carved white-on-black ── */}
         <g transform="rotate(-1.2 100 27)">
-          <path d="M73,15 L127,14 L128,40 L72,41 Z" fill={INK} />
+          <path d={cartouchePath} fill={INK} />
           <text
             x="100"
             y="34"
             textAnchor="middle"
             fontFamily={SERIF}
             fontWeight="bold"
-            fontSize="17"
-            letterSpacing="3"
+            fontSize={wide ? 15 : 17}
+            letterSpacing={wide ? 2 : 3}
             fill={CREAM}
           >
-            IX
+            {roman}
           </text>
         </g>
 
         {/* ── Bottom title: crude hand-set wood type ── */}
-        <text x="100" y="282" textAnchor="middle" fontFamily={SERIF} fill={INK} letterSpacing="2.5">
-          <tspan fontSize="15" fontWeight="bold">T</tspan>
-          <tspan fontSize="16" fontWeight="bold" dy="-0.6">H</tspan>
-          <tspan fontSize="14.5" fontWeight="bold" dy="0.5">E</tspan>
-          <tspan fontSize="15" dy="0">&#8194;</tspan>
-          <tspan fontSize="16" fontWeight="bold" dy="-0.5">H</tspan>
-          <tspan fontSize="14.5" fontWeight="bold" dy="0.4">E</tspan>
-          <tspan fontSize="15.5" fontWeight="bold" dy="-0.3">R</tspan>
-          <tspan fontSize="15" fontWeight="bold" dy="0.5">M</tspan>
-          <tspan fontSize="16" fontWeight="bold" dy="-0.6">I</tspan>
-          <tspan fontSize="15" fontWeight="bold" dy="0.4">T</tspan>
-        </text>
+        {woodTypeTitle(name, INK)}
         {/* Wood-type quoin marks flanking the title */}
         <rect x="30" y="274" width="4" height="4" fill={INK} transform="rotate(3 32 276)" />
         <rect x="166" y="273" width="4" height="4" fill={INK} transform="rotate(-4 168 275)" />
