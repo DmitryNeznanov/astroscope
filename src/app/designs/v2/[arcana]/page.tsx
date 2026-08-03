@@ -2,12 +2,11 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import type { Metadata } from "next";
 import { ARCANA, getArcana } from "@/lib/arcana";
-import { ArcanaArt } from "@/components/arcana-art";
 import {
+  DebossArt,
   MiniTarotCard,
   V2_BASE_STYLES,
   ACCENT,
-  INK,
   PAPER,
   RULE,
   pad,
@@ -42,24 +41,26 @@ export async function generateMetadata({
 /* ------------------------------------------------------------------ */
 
 const V2_DETAIL_STYLES = `
-  /* The tarot card centerpiece — paper body, crisp double hairline frame */
+  /* -------------------------------------------------------------- */
+  /* The tarot card centerpiece — letterpress on cotton paper        */
+  /* -------------------------------------------------------------- */
   .v2-tarot-stack {
     position: relative;
     width: min(340px, 84vw);
     aspect-ratio: 2 / 3;
   }
-  /* Faint deck-shadow stack behind — the single concession to depth */
-  .v2-tarot-stack::before,
-  .v2-tarot-stack::after {
+  /* One faint sheet of the deck behind, pushed well clear of the
+     card's own thick edge so the two treatments don't fight */
+  .v2-tarot-stack::before {
     content: "";
     position: absolute;
     inset: 0;
-    border: 1px solid rgba(26, 23, 20, 0.18);
-    background: ${PAPER};
+    border: 1px solid rgba(26, 23, 20, 0.1);
+    border-radius: 4px 6px 5px 7px / 6px 4px 7px 5px;
+    background: #f2f0e8;
+    transform: translate(14px, 14px);
     pointer-events: none;
   }
-  .v2-tarot-stack::before { transform: translate(7px, 7px); }
-  .v2-tarot-stack::after  { transform: translate(3.5px, 3.5px); border-color: rgba(26, 23, 20, 0.28); }
 
   .v2-tarot-card {
     position: relative;
@@ -69,16 +70,37 @@ const V2_DETAIL_STYLES = `
     display: flex;
     flex-direction: column;
     align-items: center;
-    padding: 5.5% 7% 5%;
-    border: 1px solid ${INK};
+    padding: 6% 7.5% 5.5%;
+    border: 1px solid rgba(26, 23, 20, 0.12);
+    /* Restrained deckle — a slightly uneven outer edge */
+    border-radius: 3px 5px 4px 6px / 5px 3px 6px 4px;
     background: ${PAPER};
+    /* Cardstock thickness: stacked cream edges, bottom-right */
+    box-shadow:
+      1px 1px 0 #f0ede3,
+      2px 2px 0 #ece8dc,
+      3px 3px 0 #e8e3d5,
+      4px 4px 0 #e3ddcd;
   }
-  /* Inner hairline — the double frame */
+  /* Cotton paper fibre texture */
   .v2-tarot-card::before {
     content: "";
     position: absolute;
-    inset: 8px;
-    border: 1px solid rgba(26, 23, 20, 0.3);
+    inset: 0;
+    border-radius: inherit;
+    background-image: var(--v2-noise);
+    opacity: 0.05;
+    pointer-events: none;
+  }
+  /* Debossed plate border — dark groove top-left, light groove bottom-right */
+  .v2-tarot-card::after {
+    content: "";
+    position: absolute;
+    inset: 12px;
+    border-radius: 1px;
+    box-shadow:
+      inset 1px 1px 0 rgba(26, 23, 20, 0.24),
+      inset -1px -1px 0 rgba(255, 255, 255, 0.9);
     pointer-events: none;
   }
 
@@ -87,7 +109,7 @@ const V2_DETAIL_STYLES = `
     letter-spacing: 0.4em;
     text-transform: uppercase;
     text-indent: 0.4em;
-    color: rgba(26, 23, 20, 0.65);
+    color: rgba(26, 23, 20, 0.7);
   }
   .v2-tarot-no::before,
   .v2-tarot-no::after {
@@ -97,21 +119,26 @@ const V2_DETAIL_STYLES = `
     width: 34px;
     height: 1px;
     margin: 0 14px 2px;
-    background: rgba(26, 23, 20, 0.35);
+    background: rgba(26, 23, 20, 0.3);
+    box-shadow: 0 1px 0 rgba(255, 255, 255, 0.8);
   }
 
   .v2-tarot-art {
+    position: relative;
     flex: 1;
     width: 100%;
     min-height: 0;
-    margin: 4% 0;
-    color: ${INK};
+    margin: 5% 0;
   }
 
+  /* Inked name band with a debossed rule above and below */
   .v2-tarot-name {
     width: 100%;
-    border-top: 1px solid rgba(26, 23, 20, 0.55);
-    border-bottom: 1px solid rgba(26, 23, 20, 0.22);
+    border-top: 1px solid rgba(26, 23, 20, 0.35);
+    border-bottom: 1px solid rgba(26, 23, 20, 0.18);
+    box-shadow:
+      inset 0 1px 0 rgba(255, 255, 255, 0.85),
+      0 1px 0 rgba(255, 255, 255, 0.85);
     padding: 3.4% 4%;
     text-align: center;
   }
@@ -213,9 +240,11 @@ export default async function ArcanaDetailPage({
           <div className="flex flex-col items-center lg:sticky lg:top-10">
             <div className="v2-tarot-stack">
               <div className="v2-tarot-card">
-                <span className="v2-tarot-no">No. {card.number}</span>
-                <div className="v2-tarot-art" aria-hidden="true">
-                  <ArcanaArt number={card.number} />
+                <span className="v2-tarot-no">
+                  <span style={{ color: ACCENT }}>No.</span> {card.number}
+                </span>
+                <div className="v2-tarot-art">
+                  <DebossArt number={card.number} />
                 </div>
                 <div className="v2-tarot-name">
                   <span className="v2-serif text-lg uppercase tracking-[0.18em]">
