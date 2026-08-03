@@ -6,6 +6,14 @@ import StainedGlassCard from "@/components/card-lab/stained-glass";
 import WoodcutCard from "@/components/card-lab/woodcut";
 import NeonCard from "@/components/card-lab/neon";
 import LowpolyCard from "@/components/card-lab/lowpoly";
+import UkiyoECard from "@/components/card-lab/ukiyo-e";
+import ArtDecoCard from "@/components/card-lab/art-deco";
+import SingleLineCard from "@/components/card-lab/single-line";
+import PapercutCard from "@/components/card-lab/papercut";
+import PsychedelicCard from "@/components/card-lab/psychedelic";
+import PopArtCard from "@/components/card-lab/pop-art";
+import CrossStitchCard from "@/components/card-lab/cross-stitch";
+import VaporwaveCard from "@/components/card-lab/vaporwave";
 
 const STYLES = [
   {
@@ -56,6 +64,54 @@ const STYLES = [
     note: "~46 flat facets forming figure and landscape, dusk gradient palette, no strokes.",
     tags: ["facets", "game-art", "gradient palette"],
   },
+  {
+    name: "Ukiyo-e",
+    component: UkiyoECard,
+    note: "Edo woodblock print: flat color blocks, bokashi sky, hanko seal, vertical title cartouche.",
+    tags: ["flat fills", "prussian blue", "cartouche"],
+  },
+  {
+    name: "Art Deco",
+    component: ArtDecoCard,
+    note: "Symmetric 1920s glamour: gold sunburst, ziggurat mountain, chevron robe, fan ornaments.",
+    tags: ["gold on black", "symmetry", "sunburst"],
+  },
+  {
+    name: "Single Line",
+    component: SingleLineCard,
+    note: "The whole scene as one unbroken ink stroke; the lantern glow is the only second element.",
+    tags: ["one path", "minimal", "gallery"],
+  },
+  {
+    name: "Papercut",
+    component: PapercutCard,
+    note: "Six stacked card-stock layers with real drop shadows — a shadow-box diorama in SVG.",
+    tags: ["layers", "drop shadows", "craft tones"],
+  },
+  {
+    name: "Psychedelic",
+    component: PsychedelicCard,
+    note: "1967 Fillmore poster: wavy contour rings, paisley flourishes, vibrating color pairs.",
+    tags: ["wavy rings", "saturated", "bubble border"],
+  },
+  {
+    name: "Pop Art",
+    component: PopArtCard,
+    note: "Lichtenstein comic panel: Ben-Day dots, starburst lantern, jagged caption boxes.",
+    tags: ["ben-day dots", "primaries", "thick outlines"],
+  },
+  {
+    name: "Cross-Stitch",
+    component: CrossStitchCard,
+    note: "Embroidered sampler: every pixel is an X-stitch on Aida cloth, floss palette, stitched alphabet.",
+    tags: ["X stitches", "floss colors", "sampler"],
+  },
+  {
+    name: "Vaporwave",
+    component: VaporwaveCard,
+    note: "Chrome statue hermit on a perspective grid, striped retro sun, palm and broken column.",
+    tags: ["chrome", "retro sun", "pink/cyan"],
+  },
 ];
 
 export const metadata = {
@@ -73,7 +129,7 @@ export default function CardLab() {
           Tarot Card Style Lab
         </h1>
         <p className="mt-3 max-w-2xl text-neutral-400">
-          One subject — The Hermit (IX) — drawn eight completely different
+          One subject — The Hermit (IX) — drawn sixteen completely different
           ways. Every card is bespoke inline SVG/CSS: no shared art, no
           images, no fonts.
         </p>
