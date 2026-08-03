@@ -58,6 +58,24 @@ export default function Home() {
             </Link>
           </li>
         ))}
+        <li>
+          <Link
+            href="/card-lab"
+            className="block rounded-xl border border-dashed border-neutral-300 p-5 transition hover:border-neutral-900 dark:border-neutral-700 dark:hover:border-neutral-100"
+          >
+            <div className="flex items-baseline justify-between">
+              <span className="text-lg font-semibold">Card Style Lab</span>
+              <span className="text-xs uppercase tracking-wider text-neutral-400">
+                /card-lab
+              </span>
+            </div>
+            <p className="mt-1 text-sm text-neutral-600 dark:text-neutral-400">
+              The Hermit drawn 8 completely different ways — pixel art, art
+              nouveau, bauhaus, blueprint, stained glass, woodcut, neon, low
+              poly.
+            </p>
+          </Link>
+        </li>
       </ul>
     </main>
   );
