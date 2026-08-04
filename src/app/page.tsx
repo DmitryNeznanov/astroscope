@@ -355,6 +355,25 @@ export default function Home() {
           </Link>
           .
         </p>
+        <p className="mt-3 text-center text-xs text-neutral-600">
+          Landing concepts:{" "}
+          {[
+            ["astra-console", "Astra Console"],
+            ["solar-path", "Solar Path"],
+            ["arcana-wheel", "Arcana Wheel"],
+            ["circuit-arcana", "Circuit Arcana"],
+          ].map(([slug, label], i) => (
+            <span key={slug}>
+              {i > 0 && " · "}
+              <Link
+                href={`/lab/${slug}`}
+                className="underline underline-offset-4 transition hover:text-neutral-300"
+              >
+                {label}
+              </Link>
+            </span>
+          ))}
+        </p>
       </div>
     </main>
   );
