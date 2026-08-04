@@ -4,7 +4,9 @@ import { useState } from "react";
 
 // TAROT / LOVE THREE-CARD — a working TOOL page, not a landing: compact
 // header, tarot cross-nav tabs, and the spread itself immediately usable at
-// the top. Explainer and FAQ are condensed below. Palette is PRODUCTION
+// the top, with two entry plates (YOU / THEM — first names required,
+// birth dates optional) gating the cast; slots and the tide verdict
+// personalize with the names. Explainer and FAQ are condensed below. Palette is PRODUCTION
 // (lab/remix-v2): deep violet-ink #0a0912, text #e9e6f2/#b7b1cc, gold
 // #f3c77a/#e39a4c/#ffdd9c, deep gold #c9a227, violet #a25adf/#b794f6.
 // Broken + magic stays: twin-ring vesica and dashed arc fields bleed off
@@ -359,8 +361,31 @@ export default function LoveThreeCardPage() {
   const [draw, setDraw] = useState<number[] | null>(null);
   const [revealed, setRevealed] = useState<boolean[]>([false, false, false]);
   const [dealKey, setDealKey] = useState(0);
+  const [nameYou, setNameYou] = useState("");
+  const [nameThem, setNameThem] = useState("");
+  const [dateYou, setDateYou] = useState("");
+  const [dateThem, setDateThem] = useState("");
+  const [hint, setHint] = useState<string | null>(null);
+
+  const you = nameYou.trim();
+  const them = nameThem.trim();
+  // Title Case for prose, tracked caps for readouts
+  const disp = (s: string) => s.charAt(0).toUpperCase() + s.slice(1);
+  const caps = (s: string) => s.toUpperCase();
 
   const cast = () => {
+    const missing = [!you, !them];
+    if (missing[0] || missing[1]) {
+      setHint(
+        missing[0] && missing[1]
+          ? "THE ENGINE ASKS FOR TWO NAMES — PLATES A AND B"
+          : missing[0]
+            ? "PLATE A IS EMPTY — NAME YOURSELF FIRST"
+            : "PLATE B IS EMPTY — WHO IS THE OTHER SHORE?",
+      );
+      return;
+    }
+    setHint(null);
     setDraw(drawThree());
     setRevealed([false, false, false]);
     setDealKey((k) => k + 1);
@@ -373,6 +398,18 @@ export default function LoveThreeCardPage() {
   const allRevealed = draw !== null && revealedCount === 3;
   const tide = draw ? draw.reduce((acc, c) => acc + (c + 1) * 37.7, 0) % 100 : 0;
   const verdict = VERDICTS[Math.floor(tide / 25) % VERDICTS.length];
+
+  // slot captions personalize once a cast has been made
+  const slotTitle = (i: number) => {
+    if (!draw) return POSITIONS[i].name;
+    if (i === 0) return `${caps(you)} — you`;
+    if (i === 1) return `${caps(them)} — them`;
+    return `The tide between ${disp(you)} & ${disp(them)}`;
+  };
+  const slotMicro = (i: number) => {
+    if (draw && i === 2) return `WHAT ${caps(you)} & ${caps(them)} MAKE TOGETHER`;
+    return POSITIONS[i].q;
+  };
 
   return (
     <main className="llv-root relative min-h-screen overflow-x-clip font-sans antialiased" style={{ backgroundColor: INK, color: TEXT_HI }}>
@@ -531,6 +568,108 @@ export default function LoveThreeCardPage() {
             </p>
           </div>
 
+          {/* two entry plates — name both hearts before the cast; broken
+              offsets, a dashed thread and a lens chip between them */}
+          <div className="relative mt-9 flex flex-col items-stretch gap-5 md:flex-row md:items-center md:gap-0">
+            <div className={`llv-panel relative -rotate-[0.5deg] p-4 sm:p-5 md:w-[42%] ${hint && !you ? "llv-hint" : ""}`}>
+              <span className="llv-chip llv-mono absolute -top-2.5 left-4 z-10 px-2 py-0.5 text-[7px] tracking-[0.22em]" style={{ color: GOLD_MID }}>
+                PLATE A · QUESITENT
+              </span>
+              <label className="block">
+                <span className="llv-mono text-[7px] tracking-[0.28em] uppercase" style={{ color: GOLD_MID }}>
+                  You — first name *
+                </span>
+                <span className="llv-field mt-1.5 block">
+                  <input
+                    value={nameYou}
+                    onChange={(e) => {
+                      setNameYou(e.target.value);
+                      if (hint) setHint(null);
+                    }}
+                    placeholder="Alex"
+                    maxLength={24}
+                    autoComplete="off"
+                    aria-label="Your first name"
+                    className="llv-input llv-mono w-full px-3 py-2.5 text-[13px] tracking-[0.12em]"
+                    style={{ color: TEXT_HI }}
+                  />
+                </span>
+              </label>
+              <label className="mt-3 block">
+                <span className="llv-mono text-[7px] tracking-[0.28em] uppercase" style={{ color: GOLD_MID }}>
+                  Birth date — optional
+                </span>
+                <span className="llv-field mt-1.5 block">
+                  <input
+                    type="date"
+                    value={dateYou}
+                    onChange={(e) => setDateYou(e.target.value)}
+                    aria-label="Your birth date (optional)"
+                    className="llv-input llv-mono w-full px-3 py-2 text-[11px] tracking-[0.12em]"
+                    style={{ color: dateYou ? TEXT_HI : TEXT_LO }}
+                  />
+                </span>
+              </label>
+            </div>
+
+            {/* lens chip on the thread between the plates */}
+            <span className="llv-chip llv-mono relative z-10 mx-auto flex h-9 w-9 shrink-0 items-center justify-center rounded-full md:mx-[-6px]" style={{ color: GOLD }} aria-hidden>
+              <svg viewBox="0 0 20 20" width="15" height="15" fill="none" stroke={GOLD} strokeWidth="0.9">
+                <circle cx="7.5" cy="10" r="5" />
+                <circle cx="12.5" cy="10" r="5" stroke={VIOLET_SOFT} />
+              </svg>
+            </span>
+            <span className="llv-thread top-1/2 right-[42%] left-[42%] hidden md:block" aria-hidden />
+
+            <div className={`llv-panel relative rotate-[0.6deg] p-4 sm:p-5 md:ml-auto md:w-[42%] md:translate-y-4 ${hint && you && !them ? "llv-hint" : ""}`}>
+              <span className="llv-chip llv-mono absolute -top-2.5 right-4 z-10 px-2 py-0.5 text-[7px] tracking-[0.22em]" style={{ color: GOLD_MID }}>
+                PLATE B · THE OTHER SHORE
+              </span>
+              <label className="block">
+                <span className="llv-mono text-[7px] tracking-[0.28em] uppercase" style={{ color: GOLD_MID }}>
+                  Them — first name *
+                </span>
+                <span className="llv-field mt-1.5 block">
+                  <input
+                    value={nameThem}
+                    onChange={(e) => {
+                      setNameThem(e.target.value);
+                      if (hint) setHint(null);
+                    }}
+                    placeholder="Sam"
+                    maxLength={24}
+                    autoComplete="off"
+                    aria-label="Their first name"
+                    className="llv-input llv-mono w-full px-3 py-2.5 text-[13px] tracking-[0.12em]"
+                    style={{ color: TEXT_HI }}
+                  />
+                </span>
+              </label>
+              <label className="mt-3 block">
+                <span className="llv-mono text-[7px] tracking-[0.28em] uppercase" style={{ color: GOLD_MID }}>
+                  Birth date — optional
+                </span>
+                <span className="llv-field mt-1.5 block">
+                  <input
+                    type="date"
+                    value={dateThem}
+                    onChange={(e) => setDateThem(e.target.value)}
+                    aria-label="Their birth date (optional)"
+                    className="llv-input llv-mono w-full px-3 py-2 text-[11px] tracking-[0.12em]"
+                    style={{ color: dateThem ? TEXT_HI : TEXT_LO }}
+                  />
+                </span>
+              </label>
+            </div>
+          </div>
+
+          {/* gentle hint when a cast is attempted without both names */}
+          {hint && (
+            <p role="alert" className="llv-mono mt-4 text-center text-[7.5px] tracking-[0.26em] uppercase" style={{ color: GOLD_HI }}>
+              ✦ {hint}
+            </p>
+          )}
+
           <div className="relative mt-7">
             {/* giant faint Venus behind the board */}
             <span className="llv-glyph pointer-events-none absolute -top-20 -right-4 hidden text-[200px] leading-none opacity-[0.05] select-none lg:block" style={{ color: VIOLET_SOFT }} aria-hidden>
@@ -546,7 +685,9 @@ export default function LoveThreeCardPage() {
                 <span style={{ color: GOLD }}>SPREAD OF THREE — LOVE DIVISION</span>
                 <span className="llv-panel-h-line" aria-hidden />
                 <span className="llv-mono text-[7.5px] tracking-[0.2em]" style={{ color: GOLD_MID }}>
-                  {draw ? `DEALT Nº ${String(dealKey).padStart(3, "0")} · ${revealedCount}/3 FACE-UP` : "AWAITING CAST"}
+                  {draw
+                    ? `${caps(you)} × ${caps(them)} · DEALT Nº ${String(dealKey).padStart(3, "0")} · ${revealedCount}/3 FACE-UP`
+                    : "AWAITING CAST"}
                 </span>
               </header>
 
@@ -613,11 +754,11 @@ export default function LoveThreeCardPage() {
                           </div>
                         )}
 
-                        <p className="llv-serif mt-5 text-[14px]" style={{ color: GOLD_HI }}>
-                          {pos.name}
+                        <p className="llv-serif mt-5 max-w-[190px] text-center text-[14px] leading-snug" style={{ color: GOLD_HI }}>
+                          {slotTitle(i)}
                         </p>
                         <p className="llv-mono mt-1 max-w-[170px] text-center text-[6.5px] leading-relaxed tracking-[0.2em]" style={{ color: GOLD_MID }}>
-                          {pos.q}
+                          {slotMicro(i)}
                         </p>
                       </div>
                     );
@@ -629,7 +770,9 @@ export default function LoveThreeCardPage() {
               <footer className="llv-mono flex flex-wrap items-center justify-between gap-x-6 gap-y-1.5 border-t px-3 py-2 text-[7px] tracking-[0.18em] uppercase" style={{ borderColor: "rgba(243,199,122,0.14)", color: GOLD_MID }}>
                 <span>POSITIONS 03 · YOU / THEM / TIDE</span>
                 <span className="tabular-nums" style={{ color: allRevealed ? GOLD_HI : GOLD_MID }}>
-                  {allRevealed ? `TIDE INDEX +${tide.toFixed(1)} · ${verdict}` : `REVEAL ALL THREE TO READ THE TIDE · ${revealedCount}/3`}
+                  {allRevealed
+                    ? `THE TIDE BETWEEN ${caps(you)} & ${caps(them)} · INDEX +${tide.toFixed(1)} · ${verdict}`
+                    : `REVEAL ALL THREE TO READ THE TIDE · ${revealedCount}/3`}
                 </span>
               </footer>
             </div>
@@ -912,6 +1055,18 @@ const LLV_CSS = `
   background: rgba(243,199,122,.03);
   box-shadow: inset 0 0 14px rgba(0,0,0,.5);
 }
+/* entry-plate input fields (dark, gold-traced, dark calendar picker) */
+.llv-field {
+  border: 1px solid rgba(243,199,122,.28);
+  background: rgba(10,9,18,.7);
+  transition: border-color .25s ease, box-shadow .25s ease;
+}
+.llv-field:focus-within { border-color: rgba(243,199,122,.6); box-shadow: 0 0 12px rgba(243,199,122,.12); }
+.llv-input { background: transparent; outline: none; color-scheme: dark; }
+.llv-input::placeholder { color: rgba(233,230,242,.18); }
+.llv-input::selection { background: rgba(243,199,122,.3); }
+/* plate asking for a missing name */
+.llv-hint { border-color: rgba(243,199,122,.6); box-shadow: 0 0 18px rgba(243,199,122,.16); }
 /* 3D flip */
 .llv-flip { perspective: 1100px; background: none; border: 0; padding: 0; cursor: pointer; }
 .llv-flip:focus-visible { outline: 1px solid rgba(255,221,156,.7); outline-offset: 4px; }

@@ -432,7 +432,7 @@ export default function PastPresentFuturePage() {
   const allUp = draw !== null && (autoReveal || revealed.every(Boolean));
 
   return (
-    <main className="lpp-root lpp-mono min-h-screen overflow-x-clip font-sans antialiased">
+    <main className="lpp-root lpp-mono min-h-screen overflow-clip font-sans antialiased">
       <style>{LPP_CSS}</style>
 
       {/* shared gradients */}
@@ -667,10 +667,10 @@ export default function PastPresentFuturePage() {
       <div className="pointer-events-none relative z-0 left-[-4vw] h-px w-[108vw] -rotate-[0.5deg] bg-gradient-to-r from-transparent via-[#f3c77a]/25 to-transparent" aria-hidden="true" />
 
       {/* ===================== READING THE THREE POSITIONS ===================== */}
-      <section className="lpp-panel lpp-tilt-b relative z-20 -mt-2 max-w-[1120px] lg:ml-auto lg:mr-[4%]">
+      <section className="lpp-panel lpp-tilt-b relative z-20 mx-auto mt-10 max-w-[1180px]">
         <span className="lpp-chip absolute -top-3 left-8 rotate-[0.6deg]" style={{ borderColor: "rgba(162,90,223,0.5)", color: "#b794f6" }}>Section 02</span>
         <PHead title="Reading the Three Positions" right="STATIONS I–III" />
-        <div className="grid grid-cols-1 gap-px bg-[rgba(233,230,242,0.08)] lg:grid-cols-3">
+        <div className="grid grid-cols-1 gap-px bg-[rgba(233,230,242,0.08)] pb-3 lg:grid-cols-3">
           {POSITIONS.map((p, i) => (
             <article key={p.n} className={`lpp-plate relative bg-[#0d0a18]/80 p-4 ${i === 1 ? "lg:translate-y-3" : ""} ${i === 2 ? "lg:-translate-y-1" : ""}`}>
               <div className="flex items-center gap-2">
@@ -701,17 +701,17 @@ export default function PastPresentFuturePage() {
       </section>
 
       {/* ============================ FAQ — CONDENSED ============================ */}
-      <TideDivider phase={1.4} />
-      <section className="lpp-panel lpp-tilt-a relative z-20 max-w-[1100px] lg:ml-[6%]">
+      <section className="lpp-panel lpp-tilt-a relative z-20 mx-auto mt-10 max-w-[1180px]">
         <PHead title="Analysis Notes — Frequently Logged Queries" right="3 ENTRIES" />
-        <div className="grid grid-cols-1 gap-x-8 px-5 pb-2 sm:grid-cols-3 sm:px-6">
+        <div className="grid grid-cols-1 gap-px bg-[rgba(233,230,242,0.08)] sm:grid-cols-3">
           {FAQ.map((f) => (
-            <div key={f.n} className="border-b border-[rgba(233,230,242,0.08)] py-3 last:border-b-0 sm:border-b-0">
+            <div key={f.n} className="lpp-plate bg-[#0d0a18]/80 p-4">
               <div className="flex items-baseline gap-2">
                 <span className="lpp-mono shrink-0 text-[7px] text-[#c9a227]">{f.n}</span>
                 <span className="lpp-caps text-[8px] leading-relaxed lpp-hi">{f.q}</span>
               </div>
-              <p className="mt-1.5 text-[9px] leading-[1.65] lpp-mid">{f.a}</p>
+              <span className="lpp-hair mt-2 block w-12" />
+              <p className="mt-2 text-[9px] leading-[1.65] lpp-mid">{f.a}</p>
             </div>
           ))}
         </div>
@@ -721,9 +721,9 @@ export default function PastPresentFuturePage() {
       </section>
 
       {/* ============================ NEXT SPREADS — SLIM CTA ============================ */}
-      <section className="relative z-10 -mt-4 overflow-hidden border-b border-[rgba(243,199,122,0.15)] bg-[#151126]/50 py-10 backdrop-blur-[3px] sm:py-12">
-        <div className="pointer-events-none absolute inset-x-[-2vw] top-3 h-px rotate-[0.3deg] bg-gradient-to-r from-transparent via-[#a25adf]/35 to-transparent" aria-hidden="true" />
-        <div className="pointer-events-none absolute inset-x-[-2vw] bottom-3 h-px -rotate-[0.25deg] bg-gradient-to-r from-transparent via-[#f3c77a]/30 to-transparent" aria-hidden="true" />
+      <section className="relative z-10 mx-auto mt-10 max-w-[1180px] overflow-hidden border border-[rgba(243,199,122,0.15)] bg-[#151126]/50 py-8 backdrop-blur-[3px]">
+        <div className="pointer-events-none absolute inset-x-[-2vw] top-2.5 h-px rotate-[0.3deg] bg-gradient-to-r from-transparent via-[#a25adf]/35 to-transparent" aria-hidden="true" />
+        <div className="pointer-events-none absolute inset-x-[-2vw] bottom-2.5 h-px -rotate-[0.25deg] bg-gradient-to-r from-transparent via-[#f3c77a]/30 to-transparent" aria-hidden="true" />
         <div className="relative mx-auto flex max-w-[1100px] flex-wrap items-center gap-x-8 gap-y-4 px-5">
           <div className="min-w-[240px] flex-1">
             <div className="lpp-caps text-[7.5px] lpp-dim">— Keep Pulling —</div>
@@ -746,20 +746,24 @@ export default function PastPresentFuturePage() {
       </section>
 
       {/* =============================== FOOTER =============================== */}
-      <footer className="relative z-10 mx-auto flex max-w-[1240px] flex-wrap items-center gap-x-5 gap-y-1 px-4 py-3">
-        <span className="flex items-center gap-1.5">
-          <span className="lpp-glyph text-[11px] text-[#f3c77a]">{MOON_G}</span>
-          <span className="lpp-serif text-[11px] tracking-wide lpp-hi">Astro Scope</span>
-        </span>
-        <span className="lpp-mono text-[6.5px] lpp-dim">TAROT INSTRUMENT · SPREAD N·03 · PLATE REV K</span>
-        <span className="flex-1" />
-        {TABS.filter((t) => !t.active).slice(0, 4).map((t) => (
-          <a key={t.href} href={t.href} className="lpp-caps lpp-link text-[6.5px] lpp-dim">
-            {t.label}
-          </a>
-        ))}
-        <span className="lpp-mono text-[6.5px] lpp-dim">© 2026 · READINGS FOR ENTERTAINMENT + REFLECTION</span>
+      <footer className="lpp-panel relative z-10 mx-auto mt-10 max-w-[1180px] px-4 py-2.5">
+        <div className="flex flex-wrap items-center gap-x-5 gap-y-1">
+          <span className="flex items-center gap-1.5">
+            <span className="lpp-glyph text-[11px] text-[#f3c77a]">{MOON_G}</span>
+            <span className="lpp-serif text-[11px] tracking-wide lpp-hi">Astro Scope</span>
+          </span>
+          <span className="lpp-mono text-[6.5px] lpp-dim">TAROT INSTRUMENT · SPREAD N·03 · PLATE REV K</span>
+          <span className="flex-1" />
+          {TABS.filter((t) => !t.active).slice(0, 4).map((t) => (
+            <a key={t.href} href={t.href} className="lpp-caps lpp-link text-[6.5px] lpp-dim">
+              {t.label}
+            </a>
+          ))}
+          <span className="lpp-mono text-[6.5px] lpp-dim">© 2026 · READINGS FOR ENTERTAINMENT + REFLECTION</span>
+        </div>
       </footer>
+      {/* bottom tide rule closing the page */}
+      <TideDivider phase={2.6} />
     </main>
   );
 }
@@ -767,6 +771,9 @@ export default function PastPresentFuturePage() {
 /* ============================ SCOPED STYLES =============================== */
 
 const LPP_CSS = `
+/* keep the page dark edge to edge — the global stylesheet paints body white
+   in light color-scheme, and decorative layers must never expose it */
+html,body{ background:#0a0912; }
 .lpp-root{
   position:relative;
   background:#0a0912;

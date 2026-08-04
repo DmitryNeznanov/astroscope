@@ -204,6 +204,10 @@ const LYN_STYLES = `
   .lyn-seal-btn:active { transform: rotate(2deg) scale(.96); }
   .lyn-seal-btn:disabled { cursor: wait; }
 
+  .lyn-input { background: transparent; outline: none; }
+  .lyn-input:focus { background: rgba(243,199,122,0.06); }
+  .lyn-input::selection { background: rgba(243,199,122,0.3); }
+
   @media (prefers-reduced-motion: reduce) {
     .lyn-wheel, .lyn-wheel-rev, .lyn-wheel-slow, .lyn-twinkle,
     .lyn-float-a, .lyn-float-b, .lyn-nebula, .lyn-beam,
@@ -453,25 +457,41 @@ export default function YesNoOraclePage() {
   const [phase, setPhase] = useState<Phase>("idle");
   const [verdict, setVerdict] = useState<Verdict | null>(null);
   const [tally, setTally] = useState({ YES: 0, NO: 0, AGAIN: 0 });
+  const [question, setQuestion] = useState("");
+  const [asked, setAsked] = useState(""); // the question as sealed, echoed on the verdict plate
+  const [hint, setHint] = useState(false); // gentle nudge when the seal is pressed with no question
   const count = useRef(0);
   const timer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const consult = useCallback(() => {
+    const q = question.trim();
+    if (!q) {
+      setHint(true);
+      return;
+    }
     if (timer.current) clearTimeout(timer.current);
+    setHint(false);
     setPhase("working");
     timer.current = setTimeout(() => {
       const v = drawVerdict();
       count.current += 1;
       setVerdict(v);
+      setAsked(q);
       setTally((t) => ({ ...t, [v.key]: t[v.key] + 1 }));
       setPhase("revealed");
     }, 1500);
-  }, []);
+  }, [question]);
 
   const reset = useCallback(() => {
     if (timer.current) clearTimeout(timer.current);
+    setHint(false);
     setPhase("idle");
   }, []);
+
+  const press = useCallback(() => {
+    if (phase === "revealed") reset();
+    else if (phase === "idle") consult();
+  }, [phase, reset, consult]);
 
   const respNo = String(count.current).padStart(3, "0");
 
@@ -578,26 +598,68 @@ export default function YesNoOraclePage() {
                     RESP. Nº {respNo}
                   </span>
 
-                  <div className="flex flex-col items-center gap-6 pt-2 sm:flex-row sm:items-center sm:gap-8">
-                    {/* seal button */}
-                    <div className="flex shrink-0 flex-col items-center">
-                      <button
-                        type="button"
-                        onClick={phase === "revealed" ? reset : consult}
-                        disabled={phase === "working"}
-                        aria-label={phase === "revealed" ? "Seal another question" : "Press the seal to consult the oracle"}
-                        className="lyn-seal-btn relative h-40 w-40 rounded-full focus:outline-none focus-visible:ring-2 focus-visible:ring-[#f3c77a]/70 sm:h-44 sm:w-44"
-                      >
-                        <SealSigil working={phase === "working"} />
-                      </button>
-                      <span className="mt-2 text-center font-mono text-[7px] tracking-[0.3em] text-[#b7b1cc]/50">
-                        {phase === "working"
-                          ? "WEIGHING…"
-                          : phase === "revealed"
-                            ? "PRESS TO SEAL ANOTHER"
-                            : "HOLD THE QUESTION · PRESS"}
+                  <form
+                    onSubmit={(e) => {
+                      e.preventDefault();
+                      press();
+                    }}
+                    className="pt-2"
+                  >
+                    {/* question entry plate — the instrument's input */}
+                    <label className="block -rotate-[0.3deg]">
+                      <span className="mb-1.5 flex items-baseline justify-between">
+                        <span className="text-[9px] uppercase tracking-[0.24em] text-[#f3c77a]/80">
+                          Write your question
+                        </span>
+                        <span className="font-mono text-[7px] tracking-[0.2em] text-[#b7b1cc]/40">
+                          QVAESTIO · {question.trim().length > 0 ? `${question.trim().length} CH.` : "EMPTY"}
+                        </span>
                       </span>
-                    </div>
+                      <span
+                        className={`block border bg-[#0a0912]/70 transition-colors focus-within:border-[#f3c77a]/60 ${
+                          hint ? "border-[#e39a4c]/60" : "border-[#f3c77a]/30"
+                        }`}
+                      >
+                        <input
+                          value={question}
+                          onChange={(ev) => {
+                            setQuestion(ev.target.value);
+                            if (hint) setHint(false);
+                          }}
+                          placeholder="Should I take the job?"
+                          autoComplete="off"
+                          maxLength={140}
+                          aria-label="Your yes or no question"
+                          className="lyn-input w-full px-3 py-2.5 font-mono text-[15px] tracking-[0.04em] text-[#e9e6f2] placeholder:text-[#e9e6f2]/20"
+                        />
+                      </span>
+                    </label>
+
+                    {hint ? (
+                      <p className="mt-3 border border-[#e39a4c]/50 bg-[#e39a4c]/10 px-3 py-2 font-mono text-[9px] tracking-[0.18em] text-[#ffdd9c]">
+                        THE SEAL NEEDS A QUESTION — WRITE IT ABOVE, THEN PRESS
+                      </p>
+                    ) : null}
+
+                    <div className="mt-5 flex flex-col items-center gap-6 sm:flex-row sm:items-center sm:gap-8">
+                      {/* seal button */}
+                      <div className="flex shrink-0 flex-col items-center">
+                        <button
+                          type="submit"
+                          disabled={phase === "working"}
+                          aria-label={phase === "revealed" ? "Seal another question" : "Press the seal to consult the oracle"}
+                          className="lyn-seal-btn relative h-40 w-40 rounded-full focus:outline-none focus-visible:ring-2 focus-visible:ring-[#f3c77a]/70 sm:h-44 sm:w-44"
+                        >
+                          <SealSigil working={phase === "working"} />
+                        </button>
+                        <span className="mt-2 text-center font-mono text-[7px] tracking-[0.3em] text-[#b7b1cc]/50">
+                          {phase === "working"
+                            ? "WEIGHING…"
+                            : phase === "revealed"
+                              ? "PRESS TO SEAL ANOTHER"
+                              : "HOLD THE QUESTION · PRESS"}
+                        </span>
+                      </div>
 
                     {/* verdict area */}
                     <div className="min-h-[196px] w-full min-w-0 flex-1">
@@ -656,14 +718,22 @@ export default function YesNoOraclePage() {
                               </p>
                             </div>
                           </div>
-                          <div className="mt-4 flex items-center justify-between border-t border-white/[0.08] pt-3 font-mono text-[6px] tracking-[0.25em] text-[#b7b1cc]/35">
+                          {/* the sealed question, echoed back */}
+                          <p className="mt-4 border-t border-white/[0.08] pt-3 text-[12px] leading-relaxed text-[#b7b1cc]/70">
+                            <span className="font-mono text-[7px] uppercase tracking-[0.25em] text-[#f3c77a]/70">
+                              Your question:{" "}
+                            </span>
+                            <span className="italic">{asked}</span>
+                          </p>
+                          <div className="mt-3 flex items-center justify-between font-mono text-[6px] tracking-[0.25em] text-[#b7b1cc]/35">
                             <span>RESP. Nº {respNo}</span>
                             <span>THE FIRST ANSWER STANDS</span>
                           </div>
                         </div>
                       )}
                     </div>
-                  </div>
+                    </div>
+                  </form>
 
                   {/* tally strip */}
                   <div className="mt-6 flex flex-wrap items-center justify-center gap-x-6 gap-y-1 border-t border-white/[0.07] pt-3 font-mono text-[7px] tracking-[0.25em] text-[#b7b1cc]/40">

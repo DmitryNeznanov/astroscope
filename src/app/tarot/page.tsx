@@ -704,106 +704,55 @@ export default function TarotPage() {
           </nav>
         </header>
 
-        {/* ============================== TOOL DECK ==========================
-            hero is a workbench: compact headline left, apparatus bleeding off
-            the right edge, and the two working tools pulled up over its foot */}
-        <section className="relative left-1/2 mt-8 w-screen -translate-x-1/2 lg:mt-10 lg:min-h-[560px]">
-          <div className="mx-auto max-w-[1200px] px-4 sm:px-6">
-            {/* left editorial column, with a vertical tick ruler */}
-            <div className="relative max-w-lg pl-6 sm:pl-8">
-              <span className="ltr-ruler" aria-hidden />
-              <p className="ltr-mono text-[8.5px] tracking-[0.4em] uppercase" style={{ color: GOLD }}>
-                78 Plates · Free Readings · No Account
-              </p>
-              <h1 className="ltr-serif ltr-glow mt-4 max-w-lg text-[30px] leading-[1.08] sm:text-[40px]" style={{ color: GOLD_HI }}>
-                Seventy-eight doors. Ask, and one opens.
-              </h1>
-              <p className="mt-4 max-w-md text-[11.5px] leading-relaxed" style={{ color: TEXT_LO }}>
-                A full deck shuffled by entropy — daily cards, verdicts, three-card geometries, birth arcanas. Pull below, or pick an instrument from the index.
-              </p>
-              {/* hero stat strip */}
-              <dl className="ltr-mono mt-6 grid max-w-md grid-cols-3 border-t text-[7.5px] tracking-[0.16em] uppercase" style={{ borderColor: "rgba(243,199,122,0.18)" }}>
-                {[
-                  ["Deck", "78 cards"],
-                  ["Spreads", "5 plates"],
-                  ["Cost", "Free"],
-                ].map(([k, v], i) => (
-                  <div key={k} className={`py-2.5 ${i > 0 ? "border-l pl-3" : ""}`} style={{ borderColor: "rgba(243,199,122,0.18)" }}>
-                    <dt style={{ color: GOLD_DEEP }}>{k}</dt>
-                    <dd className="mt-1 text-[11.5px] tabular-nums" style={{ color: GOLD_HI }}>
-                      {v}
-                    </dd>
-                  </div>
-                ))}
-              </dl>
-            </div>
-          </div>
+        {/* ========================= THE INSTRUMENTS ==========================
+            the working tools ARE the page: an engraved, glow-haloed frame
+            directly under the header, elevated above all other content; the
+            apparatus is demoted to a backdrop bleeding off the right edge;
+            the headline shrinks to a compact masthead strip below */}
+        <section className="relative left-1/2 mt-6 w-screen -translate-x-1/2 lg:mt-8">
+          <div className="relative mx-auto max-w-[1200px] px-4 sm:px-6">
+            {/* soft gold/violet halo behind the frame */}
+            <span className="ltr-halo" aria-hidden />
 
-          {/* the apparatus card, bleeding off the right viewport edge */}
-          <div className="relative mx-auto mt-10 max-w-[520px] px-4 sm:px-6 lg:absolute lg:top-[46%] lg:right-[-8vw] lg:mt-0 lg:w-[min(44vw,600px)] lg:max-w-none lg:-translate-y-1/2 lg:px-0">
-            <div className="ltr-panel relative lg:rotate-[0.6deg]">
-              <header className="ltr-panel-h">
-                <span className="ltr-mono text-[7.5px] tracking-[0.2em]" style={{ color: GOLD_DEEP }}>
-                  FIG. 01 — DRAWING ENGINE
+            {/* the engraved frame holding both tools */}
+            <div className="ltr-frame relative z-10 lg:max-w-[880px] lg:rotate-[-0.25deg]">
+              <span className="ltr-corner ltr-corner-tl" aria-hidden />
+              <span className="ltr-corner ltr-corner-tr" aria-hidden />
+              <span className="ltr-corner ltr-corner-bl" aria-hidden />
+              <span className="ltr-corner ltr-corner-br" aria-hidden />
+              <header className="flex items-center gap-3 px-4 pt-3.5 sm:px-5">
+                <span className="ltr-panel-h-line" aria-hidden />
+                <span className="ltr-serif ltr-glow text-[12px] tracking-[0.4em] whitespace-nowrap sm:text-[13px]" style={{ color: GOLD_HI }}>
+                  ✶ THE INSTRUMENTS ✶
                 </span>
                 <span className="ltr-panel-h-line" aria-hidden />
-                <span className="ltr-serif text-[10px] tracking-[0.36em]" style={{ color: GOLD_HI }}>
-                  ✶ THE DECK ✶
-                </span>
-                <span className="ltr-panel-h-line" aria-hidden />
-                <span className="ltr-mono text-[7.5px] tracking-[0.2em]" style={{ color: VIOLET_SOFT }}>
-                  SHUFFLED
+                <span className="ltr-mono hidden text-[7px] tracking-[0.22em] sm:inline" style={{ color: GOLD_DEEP }}>
+                  2 TOOLS · LIVE
                 </span>
               </header>
-              <div className="relative p-2 sm:p-3">
-                <Apparatus />
-                <span className="ltr-smudge ltr-smudge-a" aria-hidden />
-                <span className="ltr-smudge ltr-smudge-b" aria-hidden />
-              </div>
-              <footer className="ltr-mono flex items-center justify-between border-t px-3 py-1.5 text-[7px] tracking-[0.16em] uppercase" style={{ borderColor: "rgba(243,199,122,0.14)", color: GOLD_DEEP }}>
-                <span>RIDER–WAITE ORDER</span>
-                <span className="hidden sm:inline">22 MAJOR · 56 MINOR</span>
-                <span>CUT: LEFT HAND</span>
-              </footer>
-            </div>
-            {/* readout chips floating around the apparatus */}
-            <span className="ltr-chip ltr-mono absolute -top-3 left-6 z-10 flex items-center gap-1.5 px-2 py-1 text-[8px] tracking-[0.14em] sm:left-10">
-              <span style={{ color: TEXT_HI }}>MAJOR</span>
-              <span className="tabular-nums" style={{ color: GOLD_HI }}>XXII</span>
-            </span>
-            <span className="ltr-chip ltr-mono absolute top-1/3 left-2 z-10 flex items-center gap-1.5 px-2 py-1 text-[8px] tracking-[0.14em] sm:-left-5">
-              <span style={{ color: TEXT_HI }}>MINOR</span>
-              <span className="tabular-nums" style={{ color: GOLD_HI }}>LVI</span>
-            </span>
-            <span className="ltr-chip ltr-mono absolute -bottom-3 left-[38%] z-10 flex items-center gap-1.5 px-2 py-1 text-[8px] tracking-[0.14em]">
-              <span style={{ color: TEXT_HI }}>SUITS</span>
-              <span className="tabular-nums" style={{ color: VIOLET_SOFT }}>IV</span>
-            </span>
-          </div>
+              <div className="grid grid-cols-1 gap-3 p-3 sm:grid-cols-2 sm:gap-4 sm:p-5">
 
-          {/* the working tools, pulled up over the apparatus' foot */}
-          <div className="relative z-20 mx-auto mt-8 max-w-[1200px] px-4 sm:px-6 lg:-mt-6">
-            <div className="grid max-w-[780px] grid-cols-1 gap-3 sm:grid-cols-2">
+          {/* the two tools fill the frame grid below */}
               {/* TOOL 1 — quick pull */}
-              <div className="ltr-panel lg:rotate-[-1.2deg]">
+              <div className="ltr-tool lg:rotate-[-0.4deg]">
                 <header className="ltr-panel-h">
-                  <span style={{ color: GOLD }}>TOOL 01 — QUICK PULL</span>
+                  <span style={{ color: GOLD_HI }}>TOOL 01 — QUICK PULL</span>
                   <span className="ltr-panel-h-line" aria-hidden />
                   <span className="ltr-mono text-[7px] tracking-[0.2em]" style={{ color: GOLD_DEEP }}>
-                    MAJORS ONLY
+                    MAJORS ONLY · LIVE
                   </span>
                 </header>
-                <div className="p-3.5">
+                <div className="p-4 sm:p-5">
                   {pull ? (
                     <div key={pull.count} className="ltr-draw flex items-center gap-3">
-                      <span className="ltr-inset flex h-[74px] w-[52px] shrink-0 items-center justify-center" style={pull.reversed ? { transform: "rotate(180deg)" } : undefined}>
+                      <span className="ltr-inset flex h-[94px] w-[66px] shrink-0 items-center justify-center" style={pull.reversed ? { transform: "rotate(180deg)" } : undefined}>
                         <TarotCard roman={ROMAN[pull.idx]} name="" sigil={pull.idx} compact />
                       </span>
                       <span className="min-w-0">
-                        <span className="ltr-serif block text-[13px]" style={{ color: GOLD_HI }}>
+                        <span className="ltr-serif block text-[15px]" style={{ color: GOLD_HI }}>
                           {ROMAN[pull.idx]} — {MAJORS[pull.idx].name}
                         </span>
-                        <span className="ltr-mono mt-1 block text-[7px] tracking-[0.18em]" style={{ color: TEXT_HI }}>
+                        <span className="ltr-mono mt-1 block text-[7.5px] tracking-[0.18em]" style={{ color: TEXT_HI }}>
                           {MAJORS[pull.idx].keys}
                         </span>
                         <span className="ltr-mono mt-0.5 block text-[6.5px] tracking-[0.18em]" style={{ color: pull.reversed ? VIOLET_SOFT : GOLD_DEEP }}>
@@ -812,28 +761,28 @@ export default function TarotPage() {
                       </span>
                     </div>
                   ) : (
-                    <p className="text-[9.5px] leading-relaxed" style={{ color: TEXT_LO }}>
+                    <p className="text-[10.5px] leading-relaxed" style={{ color: TEXT_LO }}>
                       No stakes, no question. Pull one of the twenty-two Majors and see which door opens.
                     </p>
                   )}
-                  <button type="button" onClick={drawCard} className="ltr-btn ltr-mono mt-3 w-full px-4 py-2.5 text-[8.5px] tracking-[0.26em] uppercase">
+                  <button type="button" onClick={drawCard} className="ltr-btn ltr-mono mt-4 w-full px-4 py-3 text-[9.5px] tracking-[0.26em] uppercase">
                     {pull ? "Shuffle & draw again" : "Draw one card"}
                   </button>
                 </div>
               </div>
 
               {/* TOOL 2 — birth arcana arithmetic */}
-              <div className="ltr-panel sm:translate-y-3 lg:rotate-[0.8deg]">
+              <div className="ltr-tool sm:translate-y-4 lg:rotate-[0.4deg]">
                 <header className="ltr-panel-h">
-                  <span style={{ color: GOLD }}>TOOL 02 — BIRTH ARCANA</span>
+                  <span style={{ color: GOLD_HI }}>TOOL 02 — BIRTH ARCANA</span>
                   <span className="ltr-panel-h-line" aria-hidden />
                   <span className="ltr-mono text-[7px] tracking-[0.2em]" style={{ color: VIOLET_SOFT }}>
-                    DIGIT-SUM
+                    DIGIT-SUM · LIVE
                   </span>
                 </header>
-                <div className="flex items-center gap-3 p-3.5">
+                <div className="flex items-center gap-4 p-4 sm:p-5">
                   {/* mini 22-path wheel */}
-                  <svg viewBox="0 0 64 64" className="h-16 w-16 shrink-0" fill="none" stroke={GOLD} aria-hidden>
+                  <svg viewBox="0 0 64 64" className="h-20 w-20 shrink-0" fill="none" stroke={GOLD} aria-hidden>
                     <circle cx="32" cy="32" r="29" strokeWidth="0.6" opacity="0.5" />
                     <g className="ltr-spin-c">
                       {Array.from({ length: 22 }, (_, k) => {
@@ -845,10 +794,10 @@ export default function TarotPage() {
                     <circle cx="32" cy="32" r="2" fill={GOLD_HI} stroke="none" className="ltr-pulse" />
                   </svg>
                   <div className="min-w-0 flex-1">
-                    <p className="text-[9px] leading-relaxed" style={{ color: TEXT_LO }}>
+                    <p className="text-[10px] leading-relaxed" style={{ color: TEXT_LO }}>
                       Your birth date folds to one lifelong Major. Try the arithmetic:
                     </p>
-                    <div className="mt-2 flex items-center gap-2">
+                    <div className="mt-2.5 flex items-center gap-2">
                       <input
                         type="text"
                         inputMode="numeric"
@@ -858,15 +807,15 @@ export default function TarotPage() {
                           setBirthInput(e.target.value);
                           setBirthResult(null);
                         }}
-                        className="ltr-input ltr-mono w-[118px] px-2.5 py-1.5 text-[9px] tracking-[0.18em]"
+                        className="ltr-input ltr-mono w-[132px] px-3 py-2 text-[10px] tracking-[0.18em]"
                         aria-label="Birth date, eight digits"
                       />
-                      <button type="button" onClick={computeBirthArcana} className="ltr-btn-ghost ltr-mono px-3 py-1.5 text-[8px] tracking-[0.22em] uppercase">
+                      <button type="button" onClick={computeBirthArcana} className="ltr-btn ltr-mono px-3.5 py-2 text-[9px] tracking-[0.24em] uppercase">
                         Reduce
                       </button>
                     </div>
                     {birthResult && (
-                      <p className="ltr-draw ltr-mono mt-2 text-[7.5px] tracking-[0.16em] uppercase" style={{ color: birthResult.ok ? GOLD_HI : VIOLET_SOFT }} aria-live="polite">
+                      <p className="ltr-draw ltr-mono mt-2.5 text-[8px] tracking-[0.16em] uppercase" style={{ color: birthResult.ok ? GOLD_HI : VIOLET_SOFT }} aria-live="polite">
                         {birthResult.ok
                           ? `YOUR ARCANA: ${ROMAN[birthResult.idx]} — ${MAJORS[birthResult.idx].name}`
                           : "EIGHT DIGITS, PLEASE — DD.MM.YYYY"}
@@ -881,6 +830,66 @@ export default function TarotPage() {
                   <span style={{ color: GOLD_DEEP }}>22 PATHS</span>
                 </footer>
               </div>
+              </div>
+              <footer className="ltr-mono flex items-center justify-between px-4 pb-3.5 text-[6.5px] tracking-[0.22em] uppercase sm:px-5" style={{ color: GOLD_DEEP }}>
+                <span>ENTROPY-SHUFFLED · PLAIN-LANGUAGE OUTPUT</span>
+                <span className="hidden sm:inline">NO ACCOUNT · NO CARD REQUIRED</span>
+              </footer>
+            </div>
+
+            {/* the apparatus, demoted to a backdrop bleeding off the right edge */}
+            <div className="relative z-0 mx-auto mt-8 max-w-[480px] lg:absolute lg:top-1/2 lg:right-[-11vw] lg:mt-0 lg:w-[min(42vw,560px)] lg:max-w-none lg:-translate-y-1/2 lg:px-0" aria-hidden>
+              <div className="ltr-panel relative lg:rotate-[0.6deg]">
+                <header className="ltr-panel-h">
+                  <span className="ltr-mono text-[7.5px] tracking-[0.2em]" style={{ color: GOLD_DEEP }}>
+                    FIG. 01 — DRAWING ENGINE
+                  </span>
+                  <span className="ltr-panel-h-line" aria-hidden />
+                  <span className="ltr-serif text-[10px] tracking-[0.36em]" style={{ color: GOLD_HI }}>
+                    ✶ THE DECK ✶
+                  </span>
+                  <span className="ltr-panel-h-line" aria-hidden />
+                  <span className="ltr-mono text-[7.5px] tracking-[0.2em]" style={{ color: VIOLET_SOFT }}>
+                    SHUFFLED
+                  </span>
+                </header>
+                <div className="relative p-2 sm:p-3">
+                  <Apparatus />
+                  <span className="ltr-smudge ltr-smudge-a" aria-hidden />
+                  <span className="ltr-smudge ltr-smudge-b" aria-hidden />
+                </div>
+                <footer className="ltr-mono flex items-center justify-between border-t px-3 py-1.5 text-[7px] tracking-[0.16em] uppercase" style={{ borderColor: "rgba(243,199,122,0.14)", color: GOLD_DEEP }}>
+                  <span>RIDER–WAITE ORDER</span>
+                  <span className="hidden sm:inline">22 MAJOR · 56 MINOR</span>
+                  <span>CUT: LEFT HAND</span>
+                </footer>
+              </div>
+              {/* readout chips floating around the apparatus */}
+              <span className="ltr-chip ltr-mono absolute -top-3 left-6 z-10 flex items-center gap-1.5 px-2 py-1 text-[8px] tracking-[0.14em] sm:left-10">
+                <span style={{ color: TEXT_HI }}>MAJOR</span>
+                <span className="tabular-nums" style={{ color: GOLD_HI }}>XXII</span>
+              </span>
+              <span className="ltr-chip ltr-mono absolute top-1/3 left-2 z-10 flex items-center gap-1.5 px-2 py-1 text-[8px] tracking-[0.14em] sm:-left-5">
+                <span style={{ color: TEXT_HI }}>MINOR</span>
+                <span className="tabular-nums" style={{ color: GOLD_HI }}>LVI</span>
+              </span>
+              <span className="ltr-chip ltr-mono absolute -bottom-3 left-[38%] z-10 flex items-center gap-1.5 px-2 py-1 text-[8px] tracking-[0.14em]">
+                <span style={{ color: TEXT_HI }}>SUITS</span>
+                <span className="tabular-nums" style={{ color: VIOLET_SOFT }}>IV</span>
+              </span>
+            </div>
+
+            {/* compact masthead strip — the demoted headline */}
+            <div className="relative z-10 mt-8 flex flex-wrap items-center gap-x-6 gap-y-2 border-y py-3 lg:max-w-[880px] lg:rotate-[0.15deg]" style={{ borderColor: "rgba(243,199,122,0.18)" }}>
+              <span className="ltr-mono text-[7.5px] tracking-[0.34em] uppercase" style={{ color: GOLD }}>
+                78 Plates · Free · No Account
+              </span>
+              <h1 className="ltr-serif text-[18px] leading-tight sm:text-[22px]" style={{ color: GOLD_HI }}>
+                Seventy-eight doors. Ask, and one opens.
+              </h1>
+              <span className="ltr-mono ml-auto hidden text-[7px] tracking-[0.2em] uppercase md:inline" style={{ color: GOLD_DEEP }}>
+                DECK 78 · SPREADS 5 · COST FREE
+              </span>
             </div>
           </div>
         </section>
@@ -1202,11 +1211,11 @@ const LTR_CSS = `
   color: #0a0912;
   background: linear-gradient(180deg, #ffdd9c, #f3c77a 55%, ${GOLD_MID});
   border: 1px solid #ffdd9c;
-  box-shadow: 0 0 18px rgba(243,199,122,.3), inset 0 1px 0 rgba(255,244,214,.6);
+  box-shadow: 0 0 24px rgba(243,199,122,.42), inset 0 1px 0 rgba(255,244,214,.6);
   transition: box-shadow .3s ease;
   cursor: pointer;
 }
-.ltr-btn:hover { box-shadow: 0 0 26px rgba(243,199,122,.5), inset 0 1px 0 rgba(255,244,214,.7); }
+.ltr-btn:hover { box-shadow: 0 0 34px rgba(243,199,122,.62), inset 0 1px 0 rgba(255,244,214,.7); }
 .ltr-btn-ghost {
   display: inline-block;
   color: #f3c77a;
@@ -1269,14 +1278,60 @@ const LTR_CSS = `
   box-shadow: 0 14px 30px rgba(0,0,0,.7), 0 0 20px rgba(243,199,122,.22);
 }
 
-/* vertical tick ruler on the hero's left edge */
-.ltr-ruler {
-  position: absolute; left: 0; top: 2px; bottom: 2px; width: 10px;
-  border-left: 1px solid rgba(243,199,122,.3);
-  background-image: repeating-linear-gradient(180deg, rgba(243,199,122,.45) 0 1px, transparent 1px 11px);
-  background-size: 6px 100%;
-  background-repeat: no-repeat;
-  opacity: .8;
+/* the instruments frame — the centerpiece: brighter border, glow, elevation */
+.ltr-frame {
+  position: relative;
+  border: 1px solid rgba(255,221,156,.42);
+  background: linear-gradient(165deg, rgba(30,24,52,.9), rgba(13,10,24,.94));
+  backdrop-filter: blur(4px);
+  box-shadow:
+    0 0 0 1px rgba(0,0,0,.55),
+    0 0 48px rgba(243,199,122,.2),
+    0 26px 70px rgba(0,0,0,.6),
+    inset 0 0 28px rgba(243,199,122,.05);
+}
+.ltr-frame::after {
+  content: "";
+  position: absolute; inset: 5px;
+  border: 1px solid rgba(243,199,122,.16);
+  pointer-events: none;
+}
+
+/* engraved corner ticks straddling the frame corners */
+.ltr-corner {
+  position: absolute;
+  width: 15px; height: 15px;
+  border: 0 solid #f3c77a;
+  z-index: 20;
+  pointer-events: none;
+}
+.ltr-corner-tl { top: -6px; left: -6px; border-top-width: 1.5px; border-left-width: 1.5px; }
+.ltr-corner-tr { top: -6px; right: -6px; border-top-width: 1.5px; border-right-width: 1.5px; }
+.ltr-corner-bl { bottom: -6px; left: -6px; border-bottom-width: 1.5px; border-left-width: 1.5px; }
+.ltr-corner-br { bottom: -6px; right: -6px; border-bottom-width: 1.5px; border-right-width: 1.5px; }
+
+/* a working tool plate inside the frame — brighter than any other panel */
+.ltr-tool {
+  position: relative;
+  border: 1px solid rgba(255,221,156,.38);
+  background: linear-gradient(170deg, rgba(42,33,68,.72), rgba(17,13,32,.88));
+  box-shadow:
+    0 0 26px rgba(243,199,122,.14),
+    inset 0 1px 0 rgba(255,221,156,.14),
+    inset 0 0 18px rgba(162,90,223,.06);
+}
+@media (min-width: 640px) { .ltr-tool { min-height: 240px; } }
+
+/* the halo glowing from behind the instruments frame */
+.ltr-halo {
+  position: absolute;
+  top: -14%; left: -8%;
+  width: 82%; height: 128%;
+  background:
+    radial-gradient(closest-side, rgba(243,199,122,.17), rgba(243,199,122,.05) 55%, transparent 75%),
+    radial-gradient(60% 60% at 70% 40%, rgba(162,90,223,.13), transparent 70%);
+  filter: blur(18px);
+  pointer-events: none;
 }
 
 /* engraved rail connecting the how-it-works medallions */
