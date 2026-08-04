@@ -504,9 +504,30 @@ export default function Home() {
           </div>
         </nav>
 
-        <p className="mt-14 text-center text-xs text-neutral-600">
-          Astro Scope — design explorations for the Birth Arcana Calculator.
-        </p>
+        <footer className="mt-14 flex flex-wrap items-center justify-center gap-x-5 gap-y-2 border-t border-neutral-800 pt-6 text-xs text-neutral-500">
+          <span>Astro Scope — design explorations</span>
+          <Link href="/tarot" className="transition hover:text-amber-200">
+            Tarot
+          </Link>
+          <Link href="/gallery/orrery" className="transition hover:text-amber-200">
+            Decks
+          </Link>
+          <Link href="/landing/orrery" className="transition hover:text-amber-200">
+            Landings
+          </Link>
+          <Link href="/lab/aurum" className="transition hover:text-amber-200">
+            Lab
+          </Link>
+          <Link href="/lab/tabs" className="transition hover:text-amber-200">
+            Tab Instruments
+          </Link>
+          <Link
+            href="/reference/card-lab"
+            className="transition hover:text-amber-200"
+          >
+            Archive
+          </Link>
+        </footer>
       </div>
     </main>
   );
