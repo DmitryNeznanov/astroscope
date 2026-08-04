@@ -25,6 +25,41 @@ import PlanetaryHoursCard from "@/components/cards/planetary-hours";
 import GoldMedallionCard from "@/components/cards/gold-medallion";
 import VolvelleCard from "@/components/cards/volvelle";
 import CelestialSextantCard from "@/components/cards/celestial-sextant";
+import PixelCard from "@/components/card-lab/pixel";
+import ArtNouveauCard from "@/components/card-lab/art-nouveau";
+import BauhausCard from "@/components/card-lab/bauhaus";
+import BlueprintCard from "@/components/card-lab/blueprint";
+import StainedGlassCard from "@/components/card-lab/stained-glass";
+import WoodcutCard from "@/components/card-lab/woodcut";
+import NeonCard from "@/components/card-lab/neon";
+import LowpolyCard from "@/components/card-lab/lowpoly";
+import UkiyoECard from "@/components/card-lab/ukiyo-e";
+import ArtDecoCard from "@/components/card-lab/art-deco";
+import SingleLineCard from "@/components/card-lab/single-line";
+import PapercutCard from "@/components/card-lab/papercut";
+import PsychedelicCard from "@/components/card-lab/psychedelic";
+import PopArtCard from "@/components/card-lab/pop-art";
+import CrossStitchCard from "@/components/card-lab/cross-stitch";
+import VaporwaveCard from "@/components/card-lab/vaporwave";
+
+const LAB_STYLES = [
+  { name: "Pixel / 8-bit", slug: "pixel", component: PixelCard },
+  { name: "Art Nouveau", slug: "art-nouveau", component: ArtNouveauCard },
+  { name: "Bauhaus", slug: "bauhaus", component: BauhausCard },
+  { name: "Blueprint", slug: "blueprint", component: BlueprintCard },
+  { name: "Stained Glass", slug: "stained-glass", component: StainedGlassCard },
+  { name: "Woodcut", slug: "woodcut", component: WoodcutCard },
+  { name: "Neon Sign", slug: "neon", component: NeonCard },
+  { name: "Low Poly", slug: "lowpoly", component: LowpolyCard },
+  { name: "Ukiyo-e", slug: "ukiyo-e", component: UkiyoECard },
+  { name: "Art Deco", slug: "art-deco", component: ArtDecoCard },
+  { name: "Single Line", slug: "single-line", component: SingleLineCard },
+  { name: "Papercut", slug: "papercut", component: PapercutCard },
+  { name: "Psychedelic", slug: "psychedelic", component: PsychedelicCard },
+  { name: "Pop Art", slug: "pop-art", component: PopArtCard },
+  { name: "Cross-Stitch", slug: "cross-stitch", component: CrossStitchCard },
+  { name: "Vaporwave", slug: "vaporwave", component: VaporwaveCard },
+];
 
 const INSTRUMENT_STYLES = [
   {
@@ -273,6 +308,38 @@ export default function Home() {
                 <p className="mt-1 text-sm leading-relaxed text-neutral-500">
                   {s.note}
                 </p>
+              </div>
+            );
+          })}
+        </div>
+
+        <h2 className="mt-24 text-center font-serif text-3xl text-neutral-100">
+          Tarot Card Style Lab
+        </h2>
+        <p className="mx-auto mt-4 max-w-xl text-center text-sm leading-relaxed text-neutral-400">
+          Earlier explorations — the Hermit drawn sixteen playful ways. Each
+          style has a full deck in the archive.
+        </p>
+
+        <div className="mt-14 grid grid-cols-2 gap-6 sm:grid-cols-4 lg:grid-cols-8">
+          {LAB_STYLES.map((s) => {
+            const Card = s.component;
+            return (
+              <div key={s.name}>
+                <div className="overflow-hidden rounded-lg shadow-xl shadow-black/50">
+                  <Replayable>
+                    <Card />
+                  </Replayable>
+                </div>
+                <div className="mt-2 flex items-baseline justify-between gap-1">
+                  <span className="text-xs text-neutral-400">{s.name}</span>
+                  <Link
+                    href={`/reference/card-lab/${s.slug}`}
+                    className="shrink-0 text-[11px] text-neutral-500 underline underline-offset-2 transition hover:text-neutral-200"
+                  >
+                    Deck →
+                  </Link>
+                </div>
               </div>
             );
           })}
