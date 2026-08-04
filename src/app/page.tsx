@@ -352,6 +352,31 @@ export default function Home() {
           <div className="mt-10 grid grid-cols-2 gap-10 sm:grid-cols-3 lg:grid-cols-5">
             <div>
               <h3 className="text-xs uppercase tracking-[0.25em] text-neutral-500">
+                Tarot
+              </h3>
+              <ul className="mt-4 space-y-2 text-sm">
+                {[
+                  ["/tarot", "Tarot hub"],
+                  ["/tarot/spreads/daily-card", "Daily Card"],
+                  ["/tarot/spreads/yes-no", "Yes / No"],
+                  ["/tarot/spreads/past-present-future", "Past · Present · Future"],
+                  ["/tarot/spreads/love-three-card", "Love Three-Card"],
+                  ["/tarot/birth-arcana", "Birth Arcana"],
+                  ["/tarot/cards", "Cards cabinet"],
+                ].map(([href, label]) => (
+                  <li key={href}>
+                    <Link
+                      href={href}
+                      className="text-neutral-400 transition hover:text-amber-200"
+                    >
+                      {label}
+                    </Link>
+                  </li>
+                ))}
+              </ul>
+            </div>
+            <div>
+              <h3 className="text-xs uppercase tracking-[0.25em] text-neutral-500">
                 Card decks
               </h3>
               <ul className="mt-4 space-y-2 text-sm">
