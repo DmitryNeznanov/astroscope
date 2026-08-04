@@ -85,6 +85,82 @@ const MEGA_GLYPHS = ZODIAC.map((g, k) => {
   return { g, x: +(500 + 424 * Math.cos(t)).toFixed(1), y: +(500 + 424 * Math.sin(t)).toFixed(1) };
 });
 
+// point on the natal wheel (120×120), angle measured clockwise from the top
+const wheelPt = (a: number, r: number): [number, number] => {
+  const t = (a - 90) * DEG;
+  return [+(60 + r * Math.cos(t)).toFixed(1), +(60 + r * Math.sin(t)).toFixed(1)];
+};
+
+// seven wanderers seated at their degrees — every glyph carries U+FE0E
+const PLANETS = [
+  { g: "☉︎", a: 12 }, // Sun
+  { g: "☽︎", a: 84 }, // Moon
+  { g: "☿︎", a: 38 }, // Mercury
+  { g: "♀︎", a: 155 }, // Venus
+  { g: "♂︎", a: 200 }, // Mars
+  { g: "♃︎", a: 262 }, // Jupiter
+  { g: "♄︎", a: 318 }, // Saturn
+];
+const ASPECTS = [
+  [0, 4],
+  [1, 5],
+  [2, 6],
+  [0, 3],
+].map(([i, j]) => {
+  const [x1, y1] = wheelPt(PLANETS[i].a, 32);
+  const [x2, y2] = wheelPt(PLANETS[j].a, 32);
+  return { x1, y1, x2, y2 };
+});
+
+// subtle alternating tilt of the instrument panels (degrees)
+const TILTS = [-0.7, 0.5, -0.4, 0.8, -0.6, 0.4];
+
+/* ======================== DESTINY MATRIX DATA ========================== */
+
+const OCT_C = 160;
+const OCT_R = 128;
+const OCT_PTS = Array.from({ length: 8 }, (_, k) => {
+  const t = (k * 45 - 90) * DEG;
+  return { x: +(OCT_C + OCT_R * Math.cos(t)).toFixed(1), y: +(OCT_C + OCT_R * Math.sin(t)).toFixed(1) };
+});
+const OCT_SQUARE_A = [0, 2, 4, 6].map((k) => OCT_PTS[k]);
+const OCT_SQUARE_B = [1, 3, 5, 7].map((k) => OCT_PTS[k]);
+const OCT_NODES = [
+  { label: "DESTINY", n: "22" },
+  { label: "PURPOSE", n: "7" },
+  { label: "LOVE", n: "15" },
+  { label: "MONEY", n: "9" },
+  { label: "TALENT", n: "13" },
+  { label: "KARMA", n: "4" },
+  { label: "HEALTH", n: "18" },
+  { label: "SPIRIT", n: "11" },
+];
+
+/* ================================ FAQ ================================== */
+
+const FAQS = [
+  {
+    n: "I",
+    q: "What can I do on Astro Scope for free?",
+    a: "Cast a free birth chart, read daily horoscopes for all twelve signs, pull tarot spreads, run compatibility, and explore the psychology tests — no account required.",
+  },
+  {
+    n: "II",
+    q: "How do I get my free birth chart?",
+    a: "Open the calculator, enter your birth date, time and place, and generate — your wheel, planets and houses appear in seconds.",
+  },
+  {
+    n: "III",
+    q: "Where are daily horoscopes?",
+    a: "Pick your sign from the homepage zodiac band, or open the Horoscopes hub — every sign, every day.",
+  },
+  {
+    n: "IV",
+    q: "What is the Destiny Matrix?",
+    a: "An optional birth-date octagram that maps purpose, love, money and age themes from your birth date — a numerological companion to the natal chart.",
+  },
+];
+
 /* ============================== HERO ORRERY ============================== */
 
 const H = 230; // hero axis (viewBox 0 0 460 460)
@@ -244,6 +320,33 @@ function MechBirthChart() {
       ))}
       <circle cx="60" cy="60" r="20" fill="none" stroke="url(#lo-g-metal)" strokeWidth="1.1" />
       <circle cx="60" cy="60" r="2.6" fill={PALE} />
+      {/* aspect lines across the hub, pulsing slowly in turn */}
+      {ASPECTS.map((l, i) => (
+        <line
+          key={i}
+          className="lo-shimmer"
+          style={{ "--t": "15s", "--d": `${i * 3.75}s` } as CSSProperties}
+          x1={l.x1}
+          y1={l.y1}
+          x2={l.x2}
+          y2={l.y2}
+          stroke="rgba(232,200,122,.45)"
+          strokeWidth="0.7"
+        />
+      ))}
+      {/* planet glyphs seated at their degrees */}
+      {PLANETS.map((p) => {
+        const [x, y] = wheelPt(p.a, 32);
+        const [dx, dy] = wheelPt(p.a, 38.5);
+        return (
+          <g key={p.a}>
+            <circle cx={dx} cy={dy} r="1" fill={BRIGHT} opacity="0.9" />
+            <text x={x} y={y + 2.8} textAnchor="middle" fontFamily={GLYPH_FONT} fontSize="8" fill={PALE}>
+              {p.g}
+            </text>
+          </g>
+        );
+      })}
       <g className="lo-cw" style={{ "--t": "60s" } as CSSProperties}>
         {dividers.map((t, i) => (
           <line key={i} x1={t.x1} y1={t.y1} x2={t.x2} y2={t.y2} stroke={DIM} strokeWidth="0.7" />
@@ -428,6 +531,52 @@ function MechPassport() {
   );
 }
 
+/* ====================== DESTINY MATRIX OCTAGRAM ======================== */
+
+function DestinyOctagram() {
+  return (
+    <svg
+      viewBox="0 0 320 320"
+      className="h-auto w-full"
+      role="img"
+      aria-label="An engraved octagram of the Destiny Matrix with eight labeled destiny nodes"
+    >
+      {/* slow gleam traveling the outer halo */}
+      <g className="lo-cw" style={{ "--o": "160px 160px", "--t": "90s" } as CSSProperties}>
+        <circle cx="160" cy="160" r="150" fill="none" stroke="rgba(232,200,122,.22)" strokeWidth="1" strokeDasharray="26 916" strokeLinecap="round" />
+      </g>
+      <circle cx="160" cy="160" r="140" fill="none" stroke={DIM} strokeWidth="0.6" opacity="0.7" />
+      {/* spokes from the heart to each vertex */}
+      {OCT_PTS.map((p, i) => (
+        <line key={i} x1="160" y1="160" x2={p.x} y2={p.y} stroke={DIM} strokeWidth="0.5" opacity="0.75" />
+      ))}
+      {/* the octagram itself: two overlaid squares */}
+      <polygon points={OCT_SQUARE_A.map((p) => `${p.x},${p.y}`).join(" ")} fill="none" stroke={MID} strokeWidth="1" />
+      <polygon points={OCT_SQUARE_B.map((p) => `${p.x},${p.y}`).join(" ")} fill="none" stroke={MID} strokeWidth="1" opacity="0.85" />
+      {/* glowing heart of the matrix */}
+      <circle className="lo-breathe" style={{ "--t": "12s" } as CSSProperties} cx="160" cy="160" r="20" fill="url(#lo-g-lantern)" />
+      <circle cx="160" cy="160" r="4.5" fill="url(#lo-g-bulb)" stroke={BRIGHT} strokeWidth="0.9" />
+      {/* vertex seals with arcana numbers, lighting up in sequence */}
+      {OCT_PTS.map((p, i) => {
+        const t = (i * 45 - 90) * DEG;
+        const lx = 160 + (OCT_R + 24) * Math.cos(t);
+        const ly = 160 + (OCT_R + 24) * Math.sin(t);
+        return (
+          <g key={i} className="lo-node" style={{ "--d": `${i * 1.1}s` } as CSSProperties}>
+            <circle cx={p.x} cy={p.y} r="9" fill="#0d0a06" stroke="url(#lo-g-frame)" strokeWidth="1.2" />
+            <text x={p.x} y={p.y + 2.6} textAnchor="middle" fontFamily="Georgia, 'Times New Roman', serif" fontWeight="700" fontSize="8" fill={BRIGHT}>
+              {OCT_NODES[i].n}
+            </text>
+            <text x={lx.toFixed(1)} y={(ly + 2.5).toFixed(1)} textAnchor="middle" fontSize="7.5" letterSpacing="1.5" fill={PALE} opacity="0.9">
+              {OCT_NODES[i].label}
+            </text>
+          </g>
+        );
+      })}
+    </svg>
+  );
+}
+
 /* ================================= PAGE ================================== */
 
 const PANELS = [
@@ -511,8 +660,8 @@ export default function OrreryLanding() {
         .lo-btn-ghost:hover { border-color: rgba(232,200,122,.85); background: rgba(201,162,39,.07); }
 
         /* instrument panels */
-        .lo-panel { background: #0d0a06; border: 1px solid rgba(160,124,62,.4); box-shadow: inset 0 0 0 3px #0d0a06, inset 0 0 0 4px rgba(160,124,62,.28); transition: transform .5s cubic-bezier(.22,.7,.3,1), border-color .5s ease, box-shadow .5s ease; }
-        .lo-panel:hover { transform: translateY(-4px); border-color: rgba(232,200,122,.6); box-shadow: 0 20px 44px -20px rgba(0,0,0,.85), 0 0 34px -8px rgba(201,162,39,.16), inset 0 0 0 3px #0d0a06, inset 0 0 0 4px rgba(232,200,122,.35); }
+        .lo-panel { background: #0d0a06; border: 1px solid rgba(160,124,62,.4); box-shadow: inset 0 0 0 3px #0d0a06, inset 0 0 0 4px rgba(160,124,62,.28); transform: rotate(var(--pr, 0deg)); transition: transform .5s cubic-bezier(.22,.7,.3,1), border-color .5s ease, box-shadow .5s ease; }
+        .lo-panel:hover { transform: rotate(var(--pr, 0deg)) translateY(-4px); border-color: rgba(232,200,122,.6); box-shadow: 0 20px 44px -20px rgba(0,0,0,.85), 0 0 34px -8px rgba(201,162,39,.16), inset 0 0 0 3px #0d0a06, inset 0 0 0 4px rgba(232,200,122,.35); }
         .lo-mech { transition: filter .5s ease; }
         .lo-panel:hover .lo-mech { filter: drop-shadow(0 0 12px rgba(232,180,90,.28)); }
         .lo-rivet { position: absolute; width: 7px; height: 7px; border-radius: 9999px; border: 1px solid rgba(232,200,122,.5); background: radial-gradient(circle at 35% 30%, #f6e5b8 0%, #a07c3e 48%, #3a2a12 100%); }
@@ -579,10 +728,23 @@ export default function OrreryLanding() {
           100% { opacity: 0; transform: translate3d(-240px, 118px, 0) rotate(-26deg); }
         }
 
+        /* featured console extras */
+        .lo-chip { display: inline-flex; align-items: center; gap: .5em; border: 1px solid rgba(160,124,62,.5); background: rgba(201,162,39,.05); color: #e8c87a; box-shadow: inset 0 1px 2px rgba(0,0,0,.6); letter-spacing: .12em; }
+        .lo-field { border: 1px solid rgba(160,124,62,.4); background: #090604; box-shadow: inset 0 2px 6px rgba(0,0,0,.7); }
+
+        /* brass rail threading the workbench */
+        .lo-rail { position: absolute; left: -1.5rem; right: -1.5rem; height: 2px; background: linear-gradient(180deg, rgba(232,200,122,.4), rgba(90,66,30,.55)); box-shadow: 0 1px 0 rgba(0,0,0,.65); }
+        .lo-rail-rivet { position: absolute; top: -1.5px; width: 5px; height: 5px; border-radius: 9999px; background: radial-gradient(circle at 35% 30%, #f6e5b8 0%, #a07c3e 50%, #3a2a12 100%); }
+
+        /* destiny matrix nodes pulse in sequence around the octagram */
+        .lo-node { animation: lo-nodepulse 8.8s ease-in-out infinite; animation-delay: var(--d, 0s); }
+        @keyframes lo-nodepulse { 0%, 100% { opacity: .5; } 8% { opacity: 1; } 22% { opacity: .5; } }
+
         @media (prefers-reduced-motion: reduce) {
           .lo-rise, .lo-fade, .lo-engage, .lo-cw, .lo-ccw,
           .lo-breathe, .lo-swing, .lo-shimmer, .lo-phase,
-          .lo-tw1, .lo-tw2, .lo-tw3, .lo-tw4, .lo-neb, .lo-meteor {
+          .lo-tw1, .lo-tw2, .lo-tw3, .lo-tw4, .lo-neb, .lo-meteor,
+          .lo-node {
             animation: none;
           }
         }
@@ -800,9 +962,44 @@ export default function OrreryLanding() {
         {/* asymmetric editorial grid: Birth Chart featured 3×2, the rest in
             varied spans with a staggered vertical rhythm */}
         <div className="relative mt-12 grid gap-6 md:grid-cols-2 xl:grid-cols-6">
-          {PANELS.map((p) => (
-            <article key={p.title} className={`lo-panel relative p-7 ${p.cls}`}>
-              {RIVET_POS.map((pos) => (
+          {/* one shared mechanism: a brass rail threading between the panels,
+              riveted at the gaps and geared where it meets the ghost machinery */}
+          <div className="pointer-events-none absolute inset-0 hidden xl:block" aria-hidden="true">
+            <div className="lo-rail" style={{ top: "calc(33.333% - 5px)" }}>
+              <span className="lo-rail-rivet" style={{ left: "24%" }} />
+              <span className="lo-rail-rivet" style={{ left: "49%" }} />
+              <span className="lo-rail-rivet" style={{ left: "74%" }} />
+            </div>
+            <div className="lo-rail" style={{ top: "calc(66.666% - 5px)" }}>
+              <span className="lo-rail-rivet" style={{ left: "12%" }} />
+              <span className="lo-rail-rivet" style={{ left: "49%" }} />
+              <span className="lo-rail-rivet" style={{ left: "87%" }} />
+            </div>
+            <svg className="absolute h-7 w-7" style={{ left: "-15px", top: "calc(33.333% - 18px)" }} viewBox="0 0 28 28">
+              <g className="lo-cw" style={{ "--o": "14px 14px", "--t": "44s" } as CSSProperties}>
+                <circle cx="14" cy="14" r="8" fill="#0d0a06" stroke={MID} strokeWidth="1.2" />
+                {ringTeeth(14, 14, 8, 12, 8).map((t, i) => (
+                  <line key={i} x1={t.x1} y1={t.y1} x2={t.x2} y2={t.y2} stroke={MID} strokeWidth="1.4" />
+                ))}
+                <circle cx="14" cy="14" r="1.6" fill={BRIGHT} />
+              </g>
+            </svg>
+            <svg className="absolute h-7 w-7" style={{ right: "-15px", top: "calc(66.666% - 18px)" }} viewBox="0 0 28 28">
+              <g className="lo-ccw" style={{ "--o": "14px 14px", "--t": "38s" } as CSSProperties}>
+                <circle cx="14" cy="14" r="8" fill="#0d0a06" stroke={MID} strokeWidth="1.2" />
+                {ringTeeth(14, 14, 8, 12, 8).map((t, i) => (
+                  <line key={i} x1={t.x1} y1={t.y1} x2={t.x2} y2={t.y2} stroke={MID} strokeWidth="1.4" />
+                ))}
+                <circle cx="14" cy="14" r="1.6" fill={BRIGHT} />
+              </g>
+            </svg>
+          </div>
+          {PANELS.map((p, pi) => (
+            <article
+              key={p.title}
+              className={`lo-panel relative p-7 ${p.cls}`}
+              style={{ "--pr": `${TILTS[pi % TILTS.length]}deg` } as CSSProperties}
+            >              {RIVET_POS.map((pos) => (
                 <span key={pos} className={`lo-rivet ${pos}`} aria-hidden="true" />
               ))}
               <div className={p.featured ? "xl:flex xl:items-center xl:gap-8" : ""}>
@@ -818,11 +1015,102 @@ export default function OrreryLanding() {
                     <span className="lo-tag shrink-0 px-2 py-[3px] text-[9px] uppercase">{p.tag}</span>
                   </div>
                   <p className="mt-3 text-[13.5px] leading-relaxed text-[#f0e9d8]/60">{p.desc}</p>
+                  {p.featured && (
+                    <>
+                      {/* the three pillars, as engraved chips */}
+                      <div className="mt-5 flex flex-wrap gap-2">
+                        {[
+                          ["☉︎", "Sun — core self"],
+                          ["☽︎", "Moon — inner tide"],
+                          ["↑︎", "Rising — first mask"],
+                        ].map(([g, label]) => (
+                          <span key={label} className="lo-chip px-2.5 py-1.5 text-[10px] uppercase">
+                            <span className="text-[12px] leading-none">{g}</span>
+                            {label}
+                          </span>
+                        ))}
+                      </div>
+                      <p className="mt-4 text-[10.5px] uppercase tracking-[0.18em] text-[#f0e9d8]/45">
+                        Enter date, time, place&nbsp;&nbsp;&rarr;&nbsp;&nbsp;your wheel in seconds.
+                      </p>
+                      {/* teaser console — purely visual, no JS */}
+                      <div className="mt-3 flex flex-wrap items-stretch gap-2" aria-hidden="true">
+                        {[
+                          ["Date", "12 · 08 · 1992"],
+                          ["Time", "14 : 35"],
+                          ["Place", "Prague"],
+                        ].map(([lbl, val]) => (
+                          <div key={lbl} className="lo-field min-w-[92px] flex-1 px-3 py-2">
+                            <p className="text-[8.5px] uppercase tracking-[0.26em] text-[#a07c3e]">{lbl}</p>
+                            <p className="mt-1 text-[12px] tracking-[0.08em] text-[#f0e9d8]/40">{val}</p>
+                          </div>
+                        ))}
+                        <span className="lo-btn-primary lo-serif flex items-center px-4 py-2 text-[10px] font-bold uppercase tracking-[0.18em]">
+                          Cast&nbsp;&rarr;
+                        </span>
+                      </div>
+                    </>
+                  )}
                   <a href={p.href} className="lo-link mt-5 inline-block text-[11px] uppercase tracking-[0.26em]">
                     Explore&nbsp;&rarr;
                   </a>
                 </div>
               </div>
+            </article>
+          ))}
+        </div>
+      </section>
+
+      {/* ==================== DESTINY MATRIX ==================== */}
+      <section className="relative mx-auto max-w-6xl px-6 py-16 lg:py-24">
+        <div className="grid items-center gap-12 lg:grid-cols-2">
+          <div className="relative mx-auto w-full max-w-[400px]">
+            <DestinyOctagram />
+          </div>
+          <div>
+            <p className="text-[11px] uppercase tracking-[0.34em] text-[#a07c3e]">Birth-Date Octagram</p>
+            <h2 className="lo-serif mt-4 text-3xl text-[#f0e9d8] sm:text-4xl">The Destiny Matrix</h2>
+            <p className="mt-5 max-w-md text-[15px] leading-relaxed text-[#f0e9d8]/60">
+              An optional birth-date octagram tool. It maps purpose, love, money, and age themes from your birth date.
+            </p>
+            <div className="mt-6 flex flex-wrap gap-2">
+              {["Purpose", "Love", "Money", "Age themes"].map((c) => (
+                <span key={c} className="lo-chip px-2.5 py-1.5 text-[10px] uppercase">
+                  {c}
+                </span>
+              ))}
+            </div>
+            <a href="/destiny-matrix" className="lo-btn-ghost mt-8 px-6 py-3 text-[12px] uppercase tracking-[0.2em]">
+              Open Destiny Matrix&nbsp;&rarr;
+            </a>
+          </div>
+        </div>
+      </section>
+
+      {/* ==================== FAQ — MANUSCRIPT OF INQUIRIES ==================== */}
+      <section className="mx-auto max-w-5xl px-6 py-16 lg:py-20">
+        <p className="text-center text-[11px] uppercase tracking-[0.34em] text-[#a07c3e]">Inquiries</p>
+        <h2 className="lo-serif mt-4 text-center text-3xl text-[#f0e9d8] sm:text-4xl">Questions, answered</h2>
+        <div className="mt-12 grid gap-6 md:grid-cols-2">
+          {FAQS.map((f) => (
+            <article key={f.n} className="lo-panel relative p-7">
+              {RIVET_POS.map((pos) => (
+                <span key={pos} className={`lo-rivet ${pos}`} aria-hidden="true" />
+              ))}
+              <div className="flex items-center gap-4">
+                <span className="lo-serif flex h-9 w-9 shrink-0 items-center justify-center border border-[#a07c3e]/60 bg-[rgba(201,162,39,.06)] text-[13px] font-bold text-[#e8c87a] shadow-[inset_0_1px_2px_rgba(0,0,0,.6)]">
+                  {f.n}
+                </span>
+                <h3 className="lo-serif text-lg leading-snug text-[#f0e9d8]">{f.q}</h3>
+              </div>
+              <div className="mt-4 flex items-center gap-3" aria-hidden="true">
+                <span className="lo-rule flex-1" />
+                <svg viewBox="0 0 14 14" className="h-2.5 w-2.5">
+                  <path d="M 7 0 L 8.2 5.8 L 14 7 L 8.2 8.2 L 7 14 L 5.8 8.2 L 0 7 L 5.8 5.8 Z" fill="#c9a227" />
+                </svg>
+                <span className="lo-rule flex-1" />
+              </div>
+              <p className="mt-4 text-[13.5px] leading-relaxed text-[#f0e9d8]/60">{f.a}</p>
             </article>
           ))}
         </div>
