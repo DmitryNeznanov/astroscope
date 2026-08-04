@@ -438,6 +438,7 @@ export default function Home() {
                   ["codex", "Codex"],
                   ["selene", "Selene"],
                   ["forge", "Forge"],
+                  ["remix", "Production Remix"],
                 ].map(([slug, label]) => (
                   <li key={slug}>
                     <Link
