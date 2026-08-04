@@ -29,41 +29,49 @@ import CelestialSextantCard from "@/components/cards/celestial-sextant";
 const INSTRUMENT_STYLES = [
   {
     name: "Orrery",
+    slug: "orrery",
     component: OrreryCard,
     note: "A brass planetarium machine — geared rings, planet arms, the lantern burning where the Sun should be.",
   },
   {
     name: "Nocturlabe",
+    slug: "nocturlabe",
     component: NocturlabeCard,
     note: "Telling time by starlight: Polaris at the pivot, Ursa Major on the dial, the pointer arm swung to the hour.",
   },
   {
     name: "Lunar Mansions",
+    slug: "lunar-mansions",
     component: LunarMansionsCard,
     note: "The 28 mansions of the Moon in a medieval wheel, the ninth mansion gilded.",
   },
   {
     name: "Virgo Chart",
+    slug: "virgo-chart",
     component: VirgoChartCard,
     note: "The Maiden engraved around her true stars — Spica on the wheat, the Hermit gazing up.",
   },
   {
     name: "Planetary Hours",
+    slug: "planetary-hours",
     component: PlanetaryHoursCard,
     note: "The Star of the Magi — a heptagram of planetary rulers with dies Saturni marked in red.",
   },
   {
     name: "Gold Medallion",
+    slug: "gold-medallion",
     component: GoldMedallionCard,
     note: "A struck coin: low-relief Hermit, rim inscription, reeded edge on black velvet.",
   },
   {
     name: "Volvelle",
+    slug: "volvelle",
     component: VolvelleCard,
     note: "A medieval paper computer — rotating disc, cut-out window, brass brad.",
   },
   {
     name: "Celestial Sextant",
+    slug: "celestial-sextant",
     component: CelestialSextantCard,
     note: "Engraved brass arc with vernier, the index arm swung to its reading under a sighted star.",
   },
@@ -243,9 +251,17 @@ export default function Home() {
                     <Card />
                   </CardShell>
                 </Replayable>
-                <h2 className="mt-4 font-serif text-lg text-neutral-100">
-                  {s.name}
-                </h2>
+                <div className="mt-4 flex items-baseline justify-between gap-2">
+                  <h2 className="font-serif text-lg text-neutral-100">
+                    {s.name}
+                  </h2>
+                  <Link
+                    href={`/gallery/${s.slug}`}
+                    className="shrink-0 rounded-full border border-neutral-600 px-3 py-1 text-xs text-neutral-300 transition hover:border-neutral-300 hover:text-white"
+                  >
+                    Deck →
+                  </Link>
+                </div>
                 <p className="mt-1 text-sm leading-relaxed text-neutral-500">
                   {s.note}
                 </p>
