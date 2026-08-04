@@ -111,10 +111,10 @@ const ZODIAC = [
 ].map((z) => ({ ...z, g: z.g + GLYPH_FE0E }));
 
 const CHIPS = [
-  { g: "☉" + GLYPH_FE0E, name: "SOL", v: "+78.2", up: true, cls: "right-2 top-10 sm:-right-3" },
-  { g: "☽" + GLYPH_FE0E, name: "LUNA", v: "+66.5", up: true, cls: "left-2 top-1/3 sm:-left-3" },
-  { g: "☿" + GLYPH_FE0E, name: "MERCURIUS", v: "+22.1", up: true, cls: "right-2 bottom-16 sm:-right-2" },
-  { g: "♄" + GLYPH_FE0E, name: "SATURNUS", v: "−28.9", up: false, cls: "left-2 bottom-6 sm:-left-2" },
+  { g: "☉" + GLYPH_FE0E, name: "SOL", v: "+78.2", up: true, cls: "-top-3 left-6 sm:left-10" },
+  { g: "☽" + GLYPH_FE0E, name: "LUNA", v: "+66.5", up: true, cls: "left-2 top-1/3 sm:-left-5" },
+  { g: "☿" + GLYPH_FE0E, name: "MERCURIUS", v: "+22.1", up: true, cls: "-bottom-3 left-[38%]" },
+  { g: "♄" + GLYPH_FE0E, name: "SATURNUS", v: "−28.9", up: false, cls: "bottom-10 left-2 sm:-left-4" },
 ];
 
 const LIVE_SKY = [
@@ -221,6 +221,14 @@ const ENGINE_STARS = Array.from({ length: 56 }, () => ({
   y: +(rnd() * 420).toFixed(0),
   r: +(0.4 + rnd() * 0.8).toFixed(2),
   o: +(0.1 + rnd() * 0.35).toFixed(2),
+  g: Math.floor(rnd() * 3),
+}));
+// faint specks scattered down the whole page (behind everything)
+const PAGE_STARS = Array.from({ length: 230 }, () => ({
+  x: +(rnd() * 1600).toFixed(0),
+  y: +(rnd() * 4200).toFixed(0),
+  r: +(0.4 + rnd() * 0.9).toFixed(2),
+  o: +(0.06 + rnd() * 0.22).toFixed(2),
   g: Math.floor(rnd() * 3),
 }));
 
@@ -404,9 +412,94 @@ export default function AurumPage() {
           <circle key={i} className={`lau-tw${s.g}`} cx={s.x} cy={s.y} r={s.r} fill={IVORY} opacity={s.o} />
         ))}
       </svg>
+
+      {/* deep background machinery: page specks, a giant zodiac wheel bleeding
+          off the right edge, huge arcs lower-left, hairline construction lines */}
+      <div className="pointer-events-none absolute inset-0 overflow-hidden" aria-hidden>
+        <svg viewBox="0 0 1600 4200" className="absolute inset-0 h-full w-full" preserveAspectRatio="xMidYMin slice" fill="none">
+          {PAGE_STARS.map((s, i) => (
+            <circle key={i} className={`lau-tw${s.g}`} cx={s.x} cy={s.y} r={s.r} fill={IVORY} opacity={s.o} />
+          ))}
+        </svg>
+
+        {/* giant zodiac wheel, mostly off-screen right */}
+        <svg viewBox="0 0 600 600" className="absolute top-[4vh] -right-[46vmin] h-[140vmin] w-[140vmin] opacity-[0.06]" fill="none">
+          <circle cx="300" cy="300" r="294" stroke={GOLD} strokeWidth="0.8" />
+          <circle cx="300" cy="300" r="284" stroke={GOLD} strokeWidth="0.5" strokeDasharray="1 6" />
+          <g className="lau-spin-b">
+            {ringTicks(300, 300, 262, 280, 144).map((t, i) => (
+              <line key={`wt${i}`} x1={t.x} y1={t.y} x2={t.x2} y2={t.y2} stroke={GOLD} strokeWidth={t.major ? 1.1 : 0.4} />
+            ))}
+            {ZODIAC.map((z, i) => {
+              const p = polar(300, 300, 236, -75 + i * 30);
+              return (
+                <text key={z.name} x={p.x} y={p.y} textAnchor="middle" dominantBaseline="central" fontSize="22" fill={GOLD}>
+                  {z.g}
+                </text>
+              );
+            })}
+            <circle cx="300" cy="300" r="206" stroke={GOLD} strokeWidth="0.6" strokeDasharray="12 5 2 5" />
+            {[0, 60, 120, 180, 240, 300].map((a, i) => {
+              const p = polar(300, 300, 206, a);
+              return <circle key={`wn${i}`} cx={p.x} cy={p.y} r="4" stroke={GOLD} strokeWidth="0.8" fill={INK} />;
+            })}
+          </g>
+          <circle cx="300" cy="300" r="160" stroke={GOLD} strokeWidth="0.5" />
+          <path d="M 6 300 H 594 M 300 6 V 594" stroke={GOLD} strokeWidth="0.4" strokeDasharray="4 9" />
+        </svg>
+
+        {/* huge dashed arcs, mostly off-screen lower-left */}
+        <svg viewBox="0 0 400 400" className="absolute top-[46%] -left-[30vmin] h-[88vmin] w-[88vmin] opacity-[0.05]" fill="none">
+          <g className="lau-spin-a">
+            <circle cx="200" cy="200" r="192" stroke={GOLD} strokeWidth="0.7" strokeDasharray="2 9" />
+            <circle cx="200" cy="200" r="150" stroke={GOLD} strokeWidth="0.6" strokeDasharray="14 6 2 6" />
+            {[25, 115, 205, 295].map((a, i) => {
+              const p = polar(200, 200, 150, a);
+              return <circle key={`an${i}`} cx={p.x} cy={p.y} r="3.4" stroke={GOLD} strokeWidth="0.8" fill={INK} />;
+            })}
+          </g>
+          <circle cx="200" cy="200" r="108" stroke={GOLD} strokeWidth="0.5" />
+          {ringTicks(200, 200, 100, 108, 72).map((t, i) => (
+            <line key={`at${i}`} x1={t.x} y1={t.y} x2={t.x2} y2={t.y2} stroke={GOLD} strokeWidth="0.35" />
+          ))}
+          <path d={starPath(200, 200, 8, 84, 30)} stroke={GOLD} strokeWidth="0.5" />
+        </svg>
+
+        {/* a second faint arc field near the bottom-right */}
+        <svg viewBox="0 0 400 400" className="absolute top-[78%] -right-[24vmin] h-[64vmin] w-[64vmin] opacity-[0.045]" fill="none">
+          <circle cx="200" cy="200" r="190" stroke={GOLD} strokeWidth="0.6" />
+          <circle cx="200" cy="200" r="182" stroke={GOLD} strokeWidth="0.5" strokeDasharray="1 7" />
+          <path d={polyPath(200, 200, 160, 12)} stroke={GOLD} strokeWidth="0.5" strokeDasharray="3 6" />
+          <path d={compassPath(200, 200, 150, 40)} stroke={GOLD} strokeWidth="0.5" />
+        </svg>
+
+        {/* hairline construction lines crossing whole sections */}
+        <span className="lau-line" style={{ top: "16%", transform: "rotate(-3.5deg)" }}>
+          <b>AZ 214° · ECLIPTIC PLANE</b>
+        </span>
+        <span className="lau-line" style={{ top: "43%" }}>
+          <b>MERIDIAN 0°00&prime;</b>
+        </span>
+        <span className="lau-line" style={{ top: "71%", transform: "rotate(2.4deg)" }}>
+          <b>DECLINATION +18°26&prime;</b>
+        </span>
+        <span className="lau-line" style={{ top: "92%", transform: "rotate(-1.2deg)" }}>
+          <b>NADIR · HOUSE IV CUSP</b>
+        </span>
+      </div>
+
       <div className="lau-vignette pointer-events-none absolute inset-0" aria-hidden />
 
-      <div className="relative mx-auto max-w-[1200px] px-4 pb-8 sm:px-6">
+      {/* restrained grunge layer: candlelight, soot, grain — fixed over the page */}
+      <div className="pointer-events-none fixed inset-0 z-30" aria-hidden>
+        <span className="lau-candle absolute inset-0" />
+        <span className="lau-soot lau-soot-a" />
+        <span className="lau-soot lau-soot-b" />
+        <span className="lau-soot lau-soot-c" />
+        <span className="lau-grain absolute inset-0" />
+      </div>
+
+      <div className="relative z-10 mx-auto max-w-[1200px] px-4 pb-8 sm:px-6">
         {/* ============================ TOP BAR ============================ */}
         <header className="lau-panel mt-4 flex items-center gap-4 px-3 py-2 sm:px-4">
           <a href="#" className="flex items-center gap-2.5">
@@ -435,49 +528,53 @@ export default function AurumPage() {
           </span>
         </header>
 
-        {/* ============================== HERO ============================== */}
-        <section className="relative mt-10 grid grid-cols-1 gap-10 lg:mt-14 lg:grid-cols-[minmax(0,1.05fr)_minmax(0,0.95fr)] lg:gap-6">
-          {/* left editorial column, with a vertical degree ruler */}
-          <div className="relative pl-6 sm:pl-8">
-            <span className="lau-ruler" aria-hidden />
-            <p className="lau-mono text-[8.5px] tracking-[0.4em] uppercase" style={{ color: GOLD }}>
-              Aurum Edition · Hand-Computed Ephemeris · Plates I–XII
-            </p>
-            <h1 className="lau-serif lau-glow mt-5 max-w-xl text-[42px] leading-[1.04] sm:text-[58px]" style={{ color: GOLD_HI }}>
-              The engine of fate runs on numbers.
-            </h1>
-            <p className="mt-6 max-w-md text-[12.5px] leading-relaxed" style={{ color: `${IVORY}b8` }}>
-              Astro Scope computes your natal wheel from real ephemeris data — then reads it in plain language. Sun,
-              Moon, Rising, houses, aspects: the whole golden apparatus, free.
-            </p>
-            <div className="mt-8 flex flex-wrap items-center gap-4">
-              <a href="#" className="lau-btn lau-mono px-7 py-3.5 text-[10px] tracking-[0.26em] uppercase">
-                Cast your free birth chart
-              </a>
-              <a href="#" className="lau-btn-ghost lau-mono px-6 py-3.5 text-[10px] tracking-[0.22em] uppercase">
-                Read today&rsquo;s horoscope →
-              </a>
+        {/* ============================== HERO ==============================
+            full-bleed: the left column aligns with the content column while
+            the apparatus card bleeds off the right edge of the viewport */}
+        <section className="relative left-1/2 mt-10 w-screen -translate-x-1/2 lg:mt-16 lg:min-h-[620px]">
+          <div className="mx-auto max-w-[1200px] px-4 sm:px-6">
+            {/* left editorial column, with a vertical degree ruler */}
+            <div className="relative max-w-xl pl-6 sm:pl-8">
+              <span className="lau-ruler" aria-hidden />
+              <p className="lau-mono text-[8.5px] tracking-[0.4em] uppercase" style={{ color: GOLD }}>
+                Aurum Edition · Hand-Computed Ephemeris · Plates I–XII
+              </p>
+              <h1 className="lau-serif lau-glow mt-5 max-w-xl text-[42px] leading-[1.04] sm:text-[58px]" style={{ color: GOLD_HI }}>
+                The engine of fate runs on numbers.
+              </h1>
+              <p className="mt-6 max-w-md text-[12.5px] leading-relaxed" style={{ color: `${IVORY}b8` }}>
+                Astro Scope computes your natal wheel from real ephemeris data — then reads it in plain language. Sun,
+                Moon, Rising, houses, aspects: the whole golden apparatus, free.
+              </p>
+              <div className="mt-8 flex flex-wrap items-center gap-4">
+                <a href="#" className="lau-btn lau-mono px-7 py-3.5 text-[10px] tracking-[0.26em] uppercase">
+                  Cast your free birth chart
+                </a>
+                <a href="#" className="lau-btn-ghost lau-mono px-6 py-3.5 text-[10px] tracking-[0.22em] uppercase">
+                  Read today&rsquo;s horoscope →
+                </a>
+              </div>
+              {/* hero stat strip */}
+              <dl className="lau-mono mt-10 grid max-w-md grid-cols-3 border-t text-[7.5px] tracking-[0.16em] uppercase" style={{ borderColor: `${GOLD}2b` }}>
+                {[
+                  ["Charts cast", "214,807"],
+                  ["Precision", "±0.01°"],
+                  ["Ephemeris", "1900–2100"],
+                ].map(([k, v], i) => (
+                  <div key={k} className={`py-3 ${i > 0 ? "border-l pl-3" : ""}`} style={{ borderColor: `${GOLD}2b` }}>
+                    <dt style={{ color: GOLD_DIM }}>{k}</dt>
+                    <dd className="mt-1 text-[12px] tabular-nums" style={{ color: GOLD_HI }}>
+                      {v}
+                    </dd>
+                  </div>
+                ))}
+              </dl>
             </div>
-            {/* hero stat strip */}
-            <dl className="lau-mono mt-10 grid max-w-md grid-cols-3 border-t text-[7.5px] tracking-[0.16em] uppercase" style={{ borderColor: `${GOLD}2b` }}>
-              {[
-                ["Charts cast", "214,807"],
-                ["Precision", "±0.01°"],
-                ["Ephemeris", "1900–2100"],
-              ].map(([k, v], i) => (
-                <div key={k} className={`py-3 ${i > 0 ? "border-l pl-3" : ""}`} style={{ borderColor: `${GOLD}2b` }}>
-                  <dt style={{ color: GOLD_DIM }}>{k}</dt>
-                  <dd className="mt-1 text-[12px] tabular-nums" style={{ color: GOLD_HI }}>
-                    {v}
-                  </dd>
-                </div>
-              ))}
-            </dl>
           </div>
 
-          {/* right: the apparatus card with readout chips */}
-          <div className="relative">
-            <div className="lau-panel relative">
+          {/* the apparatus card, bleeding off the right viewport edge */}
+          <div className="relative mx-auto mt-12 max-w-[540px] px-4 sm:px-6 lg:absolute lg:top-1/2 lg:right-[-7vw] lg:mt-0 lg:w-[min(46vw,640px)] lg:max-w-none lg:-translate-y-1/2 lg:px-0">
+            <div className="lau-panel relative lg:rotate-[0.6deg]">
               <header className="lau-panel-h">
                 <span className="lau-mono text-[7.5px] tracking-[0.2em]" style={{ color: GOLD_DIM }}>
                   FIG. 01 — CORE ASSEMBLY
@@ -491,8 +588,11 @@ export default function AurumPage() {
                   SYNC 99.2%
                 </span>
               </header>
-              <div className="p-2 sm:p-3">
+              <div className="relative p-2 sm:p-3">
                 <Apparatus />
+                {/* faint handling marks on the glass: two soft smudges */}
+                <span className="lau-smudge lau-smudge-a" aria-hidden />
+                <span className="lau-smudge lau-smudge-b" aria-hidden />
               </div>
               <footer className="lau-mono flex items-center justify-between border-t px-3 py-1.5 text-[7px] tracking-[0.16em] uppercase" style={{ borderColor: `${GOLD}22`, color: GOLD_DIM }}>
                 <span>HOUSES · PLACIDUS</span>
@@ -516,8 +616,9 @@ export default function AurumPage() {
           </div>
         </section>
 
-        {/* ========================= LIVE SKY STRIP ========================= */}
-        <section className="lau-panel mt-14 lg:mt-20">
+        {/* ========================= LIVE SKY STRIP =========================
+            full-bleed instrument band, wider than the content column */}
+        <section className="lau-panel relative left-1/2 mt-14 w-screen -translate-x-1/2 lg:mt-24">
           <header className="lau-panel-h">
             <span style={{ color: GOLD }}>LIVE SKY — CURRENT CELESTIAL TELEMETRY</span>
             <span className="lau-panel-h-line" aria-hidden />
@@ -542,12 +643,20 @@ export default function AurumPage() {
               </div>
             ))}
           </div>
+          {/* readout straddling the lower border of the band */}
+          <span className="lau-chip lau-mono absolute -bottom-2.5 right-6 z-10 px-2 py-0.5 text-[7px] tracking-[0.2em] sm:right-14" style={{ color: GOLD_DIM }}>
+            Δψ 0.003 · TELEMETRY NOMINAL
+          </span>
         </section>
 
-        {/* ============================ SIGN BAND =========================== */}
-        <section className="mt-14 lg:mt-20">
+        {/* ============================ SIGN BAND ===========================
+            wider than the content column, faint giant glyph behind */}
+        <section className="relative mt-14 lg:mt-24 lg:-mx-16">
+          <span className="lau-serif pointer-events-none absolute -top-20 -right-6 hidden text-[210px] leading-none opacity-[0.05] select-none lg:block" style={{ color: GOLD }} aria-hidden>
+            {"☉" + GLYPH_FE0E}
+          </span>
           <SectionHead index="02" title="Twelve houses of the ecliptic — choose your sign" right="TROPICAL · 360° / 12 = 30° PER SIGN" />
-          <div className="grid grid-cols-2 border-t border-l sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6" style={{ borderColor: `${GOLD}2b` }}>
+          <div className="relative grid grid-cols-2 border-t border-l sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6" style={{ borderColor: `${GOLD}2b` }}>
             {ZODIAC.map((z, i) => (
               <a
                 key={z.name}
@@ -569,11 +678,15 @@ export default function AurumPage() {
                 </span>
               </a>
             ))}
+            {/* vertical edge label crossing the band's right border */}
+            <span className="lau-mono absolute top-1/2 -right-3 hidden origin-right -translate-y-1/2 rotate-90 text-[6.5px] tracking-[0.4em] uppercase lg:block" style={{ color: GOLD_DIM }} aria-hidden>
+              ECLIPTIC · 360°
+            </span>
           </div>
         </section>
 
         {/* ========================== HOW IT WORKS ========================== */}
-        <section className="mt-14 lg:mt-20">
+        <section className="mt-14 lg:mt-24 lg:ml-10">
           <SectionHead index="03" title="Operating sequence — from data to destiny" right="FOUR STAGES · NO CARD REQUIRED" />
           <div className="relative">
             {/* engraved rail behind the medallions */}
@@ -609,11 +722,18 @@ export default function AurumPage() {
         </section>
 
         {/* ======================== SIX ENGINE MODULES ====================== */}
-        <section className="mt-14 lg:mt-20">
+        <section className="relative mt-14 lg:mt-24 lg:-ml-4">
+          <span className="lau-serif pointer-events-none absolute -bottom-16 -left-10 hidden text-[240px] leading-none opacity-[0.045] select-none lg:block" style={{ color: GOLD }} aria-hidden>
+            {"♄" + GLYPH_FE0E}
+          </span>
           <SectionHead index="04" title="Engine modules — six instruments, one account" right="MODULES 06 / 06 ONLINE" />
           <div className="grid grid-cols-1 gap-2 sm:grid-cols-2 lg:grid-cols-3">
             {MODULES.map((m, i) => (
-              <a key={m.title} href="#" className="lau-panel lau-action group flex flex-col p-4">
+              <a
+                key={m.title}
+                href="#"
+                className={`lau-panel lau-action group relative flex flex-col p-4 ${i % 3 === 1 ? "lg:translate-y-5" : ""} ${i % 3 === 2 ? "lg:translate-y-2" : ""}`}
+              >
                 <span className="flex items-center gap-3">
                   <span className="lau-inset flex h-10 w-10 items-center justify-center">
                     <MiniSigil i={i} size={24} />
@@ -640,8 +760,9 @@ export default function AurumPage() {
           </div>
         </section>
 
-        {/* ========================= DESTINY MATRIX ========================= */}
-        <section className="lau-panel mt-14 lg:mt-20">
+        {/* ========================= DESTINY MATRIX =========================
+            shifted right, slightly rotated, pulled up over the module grid */}
+        <section className="lau-panel relative z-10 mt-16 lg:mr-4 lg:ml-14 lg:-mt-8 lg:rotate-[-0.45deg]">
           <header className="lau-panel-h">
             <span style={{ color: GOLD }}>DESTINY MATRIX — OPTIONAL INSTRUMENT</span>
             <span className="lau-panel-h-line" aria-hidden />
@@ -649,6 +770,10 @@ export default function AurumPage() {
               8 VERTICES · 22 ARCANA PATHS · AGE CYCLES 0–80
             </span>
           </header>
+          {/* readout straddling the top border */}
+          <span className="lau-chip lau-mono absolute -top-2.5 right-8 z-10 px-2 py-0.5 text-[7px] tracking-[0.2em]" style={{ color: GOLD_DIM }}>
+            Ω · FIG. 08 · HAND-COMPUTED
+          </span>
           <div className="flex flex-col items-center gap-6 p-6 sm:flex-row sm:gap-10 sm:p-8">
             <svg viewBox="0 0 120 120" className="h-36 w-36 shrink-0 sm:h-44 sm:w-44" fill="none" stroke={GOLD} aria-hidden>
               <circle cx="60" cy="60" r="54" strokeWidth="0.6" opacity="0.5" />
@@ -686,11 +811,11 @@ export default function AurumPage() {
         </section>
 
         {/* ============================= TODAY ROW ========================== */}
-        <section className="mt-14 lg:mt-20">
+        <section className="relative mt-16 lg:mt-24 lg:mr-8">
           <SectionHead index="05" title="Today — cycle readings" right="UPDATED 00:00 UTC" />
           <div className="grid grid-cols-1 gap-2 sm:grid-cols-3">
             {/* moon today */}
-            <div className="lau-panel flex items-center gap-4 p-4">
+            <div className="lau-panel flex items-center gap-4 p-4 lg:-rotate-[0.35deg]">
               <svg viewBox="0 0 48 48" className="h-14 w-14 shrink-0" fill="none" aria-hidden>
                 <circle cx="24" cy="24" r="21" stroke={GOLD} strokeWidth="0.7" opacity="0.6" />
                 {ringTicks(24, 24, 18, 21, 24).map((t, i) => (
@@ -715,7 +840,7 @@ export default function AurumPage() {
               </div>
             </div>
             {/* sign of the day */}
-            <div className="lau-panel flex items-center gap-4 p-4">
+            <div className="lau-panel flex items-center gap-4 p-4 lg:translate-y-3 lg:rotate-[0.3deg]">
               <span className="lau-inset flex h-14 w-14 shrink-0 items-center justify-center text-[26px]" style={{ color: GOLD_HI }}>
                 {"♌" + GLYPH_FE0E}
               </span>
@@ -764,9 +889,12 @@ export default function AurumPage() {
         </section>
 
         {/* ========================= FAQ — ARCHIVE ========================== */}
-        <section className="mt-14 lg:mt-20">
+        <section className="relative mt-16 lg:mt-24 lg:ml-[6%]">
+          <span className="lau-serif pointer-events-none absolute -top-14 -right-8 hidden text-[190px] leading-none opacity-[0.045] select-none lg:block" style={{ color: GOLD }} aria-hidden>
+            {"☽" + GLYPH_FE0E}
+          </span>
           <SectionHead index="06" title="Archive entries — frequently asked" right="4 RECORDS · PUBLIC" />
-          <div className="lau-panel">
+          <div className="lau-panel lg:rotate-[0.25deg]">
             <ul className="grid grid-cols-1 md:grid-cols-2">
               {ARCHIVE.map((e, i) => (
                 <li
@@ -791,8 +919,13 @@ export default function AurumPage() {
           </div>
         </section>
 
-        {/* ============================== CTA ============================== */}
-        <section className="lau-panel relative mt-14 px-4 py-12 text-center sm:py-16 lg:mt-20">
+        {/* ============================== CTA ==============================
+            band spills wider than the content column; readout crosses border */}
+        <section className="lau-panel relative mt-16 px-4 py-12 text-center sm:py-16 lg:mt-24 lg:-mx-10">
+          {/* vertical readout straddling the left border */}
+          <span className="lau-chip lau-mono absolute top-1/2 -left-2.5 z-10 hidden origin-top-left -rotate-90 px-2 py-0.5 text-[7px] tracking-[0.24em] lg:block" style={{ color: GOLD_DIM }}>
+            SEQ. 000 · FINAL INVOCATION
+          </span>
           <svg viewBox="0 0 120 120" className="pointer-events-none absolute top-3 left-3 h-16 w-16 opacity-40" fill="none" stroke={GOLD} strokeWidth="0.8" aria-hidden>
             <path d="M 6 60 H 60 M 60 6 V 60" />
             <path d={compassPath(60, 60, 50, 12)} opacity="0.6" />
@@ -821,8 +954,8 @@ export default function AurumPage() {
         </section>
 
         {/* ============================= FOOTER ============================= */}
-        <footer className="mt-14 lg:mt-20">
-          <div className="lau-mono flex flex-wrap items-center justify-center gap-x-6 gap-y-1.5 border-y px-3 py-3 text-[8px] tracking-[0.26em] uppercase" style={{ borderColor: `${GOLD}2b`, color: GOLD }}>
+        <footer className="mt-16 lg:mt-24">
+          <div className="lau-mono relative left-1/2 flex w-screen -translate-x-1/2 flex-wrap items-center justify-center gap-x-6 gap-y-1.5 border-y px-3 py-3 text-[8px] tracking-[0.26em] uppercase" style={{ borderColor: `${GOLD}2b`, color: GOLD }}>
             <span>22 Major Arcana</span>
             <span style={{ color: GOLD_FAINT }}>·</span>
             <span>12 Signs</span>
@@ -947,15 +1080,99 @@ const LAU_CSS = `
     radial-gradient(900px 600px at 8% 4%, rgba(212,168,44,.05), transparent 55%);
 }
 
+/* hairline construction lines crossing whole sections (drafting-style) */
+.lau-line {
+  position: absolute; left: -6vw; right: -6vw; height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(212,168,44,.16) 10%, rgba(212,168,44,.16) 90%, transparent);
+}
+.lau-line::after {
+  content: "+";
+  position: absolute; left: 10vw; top: -7px;
+  color: rgba(212,168,44,.4);
+  font: 11px ui-monospace, Menlo, monospace;
+}
+.lau-line > b {
+  position: absolute; right: 7vw; top: -4px;
+  padding: 0 7px;
+  background: #0a0705;
+  font-family: ui-monospace, 'SF Mono', Menlo, Consolas, monospace;
+  font-size: 7px; font-weight: 400; letter-spacing: .26em;
+  color: rgba(138,109,31,.9);
+}
+
 .lau-glow { text-shadow: 0 0 16px rgba(212,168,44,.45), 0 0 46px rgba(212,168,44,.2); }
 
 ::selection { background: rgba(212,168,44,.35); color: #fff6dd; }
+
+/* ---------- restrained age & handling: aged, not destroyed ---------- */
+/* fine scratches + tarnish blotches on every gold-framed panel */
+.lau-panel::before {
+  content: "";
+  position: absolute; inset: 0;
+  pointer-events: none;
+  background:
+    /* two hairline scratches, different angles */
+    linear-gradient(114deg, transparent 0 46%, rgba(0,0,0,.18) 46.15%, rgba(240,207,107,.05) 46.3%, transparent 46.5%),
+    linear-gradient(61deg, transparent 0 79%, rgba(0,0,0,.13) 79.15%, transparent 79.4%),
+    /* tarnish blotches, dull brown-gold */
+    radial-gradient(150px 90px at 86% 10%, rgba(84,67,15,.16), transparent 70%),
+    radial-gradient(190px 130px at 5% 90%, rgba(60,45,10,.13), transparent 70%),
+    radial-gradient(90px 70px at 55% 105%, rgba(84,67,15,.1), transparent 70%);
+}
+
+/* dust / paper grain over the whole page (inline feTurbulence) */
+.lau-grain {
+  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='180' height='180'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2' stitchTiles='stitch'/><feColorMatrix type='saturate' values='0'/></filter><rect width='100%25' height='100%25' filter='url(%23n)' opacity='0.6'/></svg>");
+  background-size: 180px 180px;
+  opacity: .055;
+}
+
+/* warm candlelight breathing in from the lower-left */
+.lau-candle {
+  background:
+    radial-gradient(820px 640px at -8% 108%, rgba(201,113,63,.13), transparent 62%),
+    radial-gradient(1250px 820px at -4% 104%, rgba(212,168,44,.07), transparent 55%);
+}
+
+/* soot/smoke smudges in the corners */
+.lau-soot {
+  position: absolute;
+  border-radius: 9999px;
+  background: radial-gradient(closest-side, rgba(0,0,0,.5), rgba(0,0,0,.18) 55%, transparent 72%);
+  filter: blur(28px);
+}
+.lau-soot-a { width: 44vmax; height: 34vmax; top: -14vmax; right: -12vmax; }
+.lau-soot-b { width: 38vmax; height: 30vmax; bottom: -12vmax; left: -10vmax; opacity: .85; }
+.lau-soot-c { width: 26vmax; height: 20vmax; top: -8vmax; left: -6vmax; opacity: .55; }
+
+/* fingerprint-ish smears on the apparatus glass */
+.lau-smudge {
+  position: absolute;
+  pointer-events: none;
+  border-radius: 9999px;
+  background: radial-gradient(ellipse at center, rgba(233,223,200,.07), rgba(233,223,200,.02) 45%, transparent 68%);
+  filter: blur(5px);
+}
+.lau-smudge-a { width: 34%; height: 22%; top: 16%; right: 6%; transform: rotate(-24deg); }
+.lau-smudge-b { width: 26%; height: 17%; bottom: 12%; left: 9%; transform: rotate(31deg); }
 
 /* ---------- slow, CSS-only motion (15–180s), reduced-motion guarded ------- */
 @keyframes lauSpin { to { transform: rotate(360deg); } }
 @keyframes lauSpinRev { to { transform: rotate(-360deg); } }
 @keyframes lauPulse { 0%, 100% { opacity: .55; } 50% { opacity: 1; } }
 @keyframes lauTw { 0%, 100% { opacity: .15; } 50% { opacity: .8; } }
+/* irregular, very subtle candle flicker */
+@keyframes lauFlicker {
+  0%, 100% { opacity: 1; }
+  23% { opacity: .86; }
+  41% { opacity: .95; }
+  57% { opacity: .78; }
+  74% { opacity: .92; }
+  89% { opacity: .84; }
+}
+/* soot drift — barely perceptible */
+@keyframes lauSootA { 0%, 100% { transform: translate(0, 0) scale(1); } 50% { transform: translate(-4%, 5%) scale(1.1); } }
+@keyframes lauSootB { 0%, 100% { transform: translate(0, 0) scale(1.06); } 50% { transform: translate(5%, -4%) scale(0.95); } }
 
 .lau-spin-a, .lau-spin-b, .lau-spin-c { transform-box: view-box; transform-origin: center; }
 
@@ -968,5 +1185,8 @@ const LAU_CSS = `
   .lau-tw0 { animation: lauTw 23s ease-in-out infinite; }
   .lau-tw1 { animation: lauTw 31s ease-in-out infinite 7s; }
   .lau-tw2 { animation: lauTw 27s ease-in-out infinite 13s; }
+  .lau-candle { animation: lauFlicker 13s ease-in-out infinite; }
+  .lau-soot-a { animation: lauSootA 165s ease-in-out infinite; }
+  .lau-soot-b { animation: lauSootB 145s ease-in-out infinite 9s; }
 }
 `;

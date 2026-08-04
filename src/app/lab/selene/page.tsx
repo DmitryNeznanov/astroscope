@@ -333,6 +333,69 @@ function PlateDiagram({ kind }: { kind: (typeof PLATES)[number]["dia"] }) {
   );
 }
 
+/* ============================ BACKGROUND ART ============================== */
+
+// constellation figures: star points + connecting lines in a 200×140 box
+const CONSTELLATIONS: Array<{ name: string; pts: Array<[number, number]>; lines: Array<[number, number]> }> = [
+  {
+    name: "URSA MINOR",
+    pts: [[20, 110], [52, 96], [84, 104], [112, 84], [140, 60], [158, 38], [176, 20]],
+    lines: [[0, 1], [1, 2], [2, 3], [3, 4], [4, 5], [5, 6]],
+  },
+  {
+    name: "LYRA",
+    pts: [[30, 40], [62, 30], [80, 58], [58, 86], [30, 72]],
+    lines: [[0, 1], [1, 2], [2, 3], [3, 4], [4, 0]],
+  },
+  {
+    name: "SCORPIUS",
+    pts: [[16, 30], [44, 44], [70, 66], [92, 92], [118, 104], [146, 96], [168, 76], [172, 52], [160, 34]],
+    lines: [[0, 1], [1, 2], [2, 3], [3, 4], [4, 5], [5, 6], [6, 7], [7, 8]],
+  },
+];
+
+// faint constellation figure with a tiny engraved label
+function Constellation({ data, className }: { data: (typeof CONSTELLATIONS)[number]; className: string }) {
+  return (
+    <svg width="220" height="154" viewBox="0 0 200 140" className={className} aria-hidden="true">
+      {data.lines.map(([a, b], i) => (
+        <line
+          key={i}
+          x1={data.pts[a][0]} y1={data.pts[a][1]}
+          x2={data.pts[b][0]} y2={data.pts[b][1]}
+          stroke={STEEL} strokeWidth="0.5" opacity="0.45" strokeDasharray="3 2"
+        />
+      ))}
+      {data.pts.map(([x, y], i) => (
+        <g key={i}>
+          <circle cx={x} cy={y} r={i === 0 ? 1.9 : 1.1} fill={SILVER} opacity="0.7" />
+          <circle cx={x} cy={y} r={i === 0 ? 4 : 2.8} fill="none" stroke={STEEL} strokeWidth="0.3" opacity="0.4" />
+        </g>
+      ))}
+      <text x={data.pts[0][0]} y={data.pts[0][1] + 13} fontSize="5.5" fill={DIM} letterSpacing="1.5">
+        {data.name}
+      </text>
+    </svg>
+  );
+}
+
+// full-bleed tide hairline used between sections — crosses panel borders
+function TideDivider({ phase }: { phase: number }) {
+  const a = sinePath(0, 1600, 20, 10, 2.5, phase);
+  const b = sinePath(0, 1600, 20, 7, 2.5, phase + 1.1);
+  return (
+    <div className="relative z-0 mx-auto -my-px h-[40px] w-full" aria-hidden="true">
+      <svg viewBox="0 0 1600 40" preserveAspectRatio="none" className="block h-full w-full">
+        <path d={b} fill="none" stroke={DIM} strokeWidth="0.5" opacity="0.55" />
+        <path d={a} fill="none" stroke={STEEL} strokeWidth="0.6" opacity="0.6" />
+        {Array.from({ length: 26 }, (_, i) => (
+          <line key={i} x1={i * 64} y1="33" x2={i * 64} y2={i % 5 === 0 ? "27" : "30.5"} stroke={STEEL} strokeWidth="0.5" opacity="0.5" />
+        ))}
+      </svg>
+    </div>
+  );
+}
+
 /* ================================ PAGE ==================================== */
 
 export default function SelenePage() {
@@ -367,6 +430,92 @@ export default function SelenePage() {
         </defs>
       </svg>
 
+      {/* ======== DEEP BACKGROUND — orbit charts, phase ring, tides, stars ======== */}
+      <div className="pointer-events-none absolute inset-0 z-0" aria-hidden="true">
+        {/* huge off-screen orbit chart, upper left */}
+        <svg className="absolute -left-[340px] -top-[300px] opacity-50" width="1150" height="1150" viewBox="0 0 1150 1150">
+          <circle cx="575" cy="575" r="380" fill="none" stroke={STEEL} strokeWidth="0.6" strokeDasharray="1 5" opacity="0.55" className="lse-rot-b" />
+          <circle cx="575" cy="575" r="470" fill="none" stroke={STEEL} strokeWidth="0.5" opacity="0.4" />
+          <circle cx="575" cy="575" r="560" fill="none" stroke={STEEL} strokeWidth="0.4" strokeDasharray="2 6" opacity="0.35" className="lse-rot-a" />
+          {ringTicks(575, 575, 540, 548, 60, 5).map((t, i) => (
+            <line key={i} x1={t.x1} y1={t.y1} x2={t.x2} y2={t.y2} stroke={STEEL} strokeWidth="0.4" opacity="0.45" />
+          ))}
+          <circle cx={onCircle(575, 575, 380, 40).x} cy={onCircle(575, 575, 380, 40).y} r="9" fill="#aebfd9" opacity="0.7" />
+          <circle cx={onCircle(575, 575, 470, 205).x} cy={onCircle(575, 575, 470, 205).y} r="6" fill={INK} stroke={STEEL} strokeWidth="0.6" opacity="0.8" />
+          <circle cx={onCircle(575, 575, 560, 322).x} cy={onCircle(575, 575, 560, 322).y} r="12" fill="none" stroke={STEEL} strokeWidth="0.5" opacity="0.6" />
+          <text x={onCircle(575, 575, 470, 90).x} y={onCircle(575, 575, 470, 90).y} textAnchor="middle" fontSize="7" fill={DIM} letterSpacing="2">ORB·II</text>
+        </svg>
+
+        {/* colossal moon-phase ring bleeding off the right edge, behind the plates */}
+        <svg className="absolute -right-[430px] top-[880px] opacity-60" width="1500" height="1500" viewBox="0 0 1500 1500">
+          <circle cx="750" cy="750" r="640" fill="none" stroke={STEEL} strokeWidth="0.6" strokeDasharray="1 6" opacity="0.5" className="lse-rot-b" />
+          <circle cx="750" cy="750" r="560" fill="none" stroke={STEEL} strokeWidth="0.5" opacity="0.4" />
+          <circle cx="750" cy="750" r="420" fill="none" stroke={STEEL} strokeWidth="0.4" strokeDasharray="2 5" opacity="0.3" className="lse-rot-a" />
+          {ringTicks(750, 750, 610, 622, 96, 8).map((t, i) => (
+            <line key={i} x1={t.x1} y1={t.y1} x2={t.x2} y2={t.y2} stroke={t.major ? SILVER : STEEL} strokeWidth="0.5" opacity={t.major ? 0.55 : 0.35} />
+          ))}
+          {[-0.9, -0.55, -0.2, 0.15, 0.5, 0.85, 0.35, -0.35].map((k, i) => {
+            const p = onCircle(750, 750, 600, i * 45);
+            return (
+              <g key={i}>
+                <circle cx={p.x} cy={p.y} r="17" fill="#aebfd9" opacity="0.75" />
+                <ellipse cx={p.x + k * 17} cy={p.y} rx="17" ry="17.4" fill={INK} opacity="0.9" />
+                <circle cx={p.x} cy={p.y} r="17" fill="none" stroke={STEEL} strokeWidth="0.5" opacity="0.7" />
+              </g>
+            );
+          })}
+          <text x="750" y="120" textAnchor="middle" fontSize="8" fill={DIM} letterSpacing="3">LUNAR CYCLE · 29.53 D</text>
+        </svg>
+
+        {/* orbit arcs bleeding off the lower left */}
+        <svg className="absolute -left-[260px] bottom-[240px] opacity-40" width="900" height="900" viewBox="0 0 900 900">
+          <circle cx="450" cy="450" r="330" fill="none" stroke={STEEL} strokeWidth="0.5" strokeDasharray="1 5" opacity="0.6" className="lse-rot-a" />
+          <circle cx="450" cy="450" r="420" fill="none" stroke={STEEL} strokeWidth="0.4" opacity="0.5" />
+          {ringTicks(450, 450, 400, 406, 48, 6).map((t, i) => (
+            <line key={i} x1={t.x1} y1={t.y1} x2={t.x2} y2={t.y2} stroke={STEEL} strokeWidth="0.4" opacity="0.5" />
+          ))}
+        </svg>
+
+        {/* tide hairlines crossing the whole page, through every panel */}
+        <svg className="absolute inset-0 h-full w-full opacity-70" viewBox="0 0 1200 3000" preserveAspectRatio="none">
+          <path d={sinePath(0, 1200, 620, 26, 1.75, 0.3)} fill="none" stroke={STEEL} strokeWidth="0.5" opacity="0.4" />
+          <path d={sinePath(0, 1200, 620, 20, 1.75, 1.4)} fill="none" stroke={DIM} strokeWidth="0.4" opacity="0.4" />
+          <path d={sinePath(0, 1200, 1620, 30, 2.25, 0.9)} fill="none" stroke={STEEL} strokeWidth="0.5" opacity="0.35" />
+          <path d={sinePath(0, 1200, 2540, 24, 1.5, 2.1)} fill="none" stroke={STEEL} strokeWidth="0.5" opacity="0.4" />
+          <line x1="120" y1="0" x2="120" y2="3000" stroke={STEEL} strokeWidth="0.3" strokeDasharray="1 8" opacity="0.35" />
+          <line x1="1080" y1="0" x2="1080" y2="3000" stroke={STEEL} strokeWidth="0.3" strokeDasharray="1 8" opacity="0.35" />
+        </svg>
+
+        {/* star specks over the whole scroll */}
+        <svg className="absolute inset-0 h-full w-full" viewBox="0 0 1200 3000" preserveAspectRatio="none">
+          {Array.from({ length: 80 }, (_, i) => (
+            <circle
+              key={i}
+              cx={(i * 173 + 41) % 1200}
+              cy={(i * 389 + 97) % 3000}
+              r={0.5 + (i % 3) * 0.35}
+              fill={SILVER}
+              opacity={0.1 + (i % 5) * 0.05}
+            />
+          ))}
+        </svg>
+
+        {/* faint constellation figures behind panels */}
+        <Constellation data={CONSTELLATIONS[0]} className="absolute left-[1.5%] top-[1240px] opacity-60" />
+        <Constellation data={CONSTELLATIONS[2]} className="absolute right-[2%] top-[2240px] opacity-50" />
+        <Constellation data={CONSTELLATIONS[1]} className="absolute bottom-[430px] left-[5%] opacity-50" />
+      </div>
+
+      {/* ======== WEATHERING — night atmosphere, dust, mist, vignette ======== */}
+      {/* cold uneven moonlight vignette, like uneven silvering on old glass */}
+      <div className="lse-vignette pointer-events-none fixed inset-0 z-30" aria-hidden="true" />
+      {/* dust / emulsion noise (feTurbulence) + faint diagonal wipe scratches */}
+      <div className="lse-dust pointer-events-none fixed inset-0 z-30" aria-hidden="true" />
+      {/* condensation patches drifting very slowly across the instrument */}
+      <div className="lse-mist lse-mist-a pointer-events-none absolute z-20" aria-hidden="true" />
+      <div className="lse-mist lse-mist-b pointer-events-none absolute z-20" aria-hidden="true" />
+      <div className="lse-mist lse-mist-c pointer-events-none absolute z-20" aria-hidden="true" />
+
       {/* ============================== TOP BAR ============================== */}
       <header className="lse-panel relative z-20 mx-auto flex max-w-[1240px] flex-wrap items-center gap-x-5 gap-y-1 border-x border-b px-4 py-2">
         <Link href="/" className="flex items-center gap-2">
@@ -388,7 +537,7 @@ export default function SelenePage() {
       </header>
 
       {/* ================================ HERO =============================== */}
-      <section className="lse-panel relative z-10 mx-auto max-w-[1240px] overflow-hidden border-x border-b">
+      <section className="lse-panel relative z-10 overflow-hidden border-b">
         {/* the rising moon */}
         <svg
           viewBox="0 0 1200 640"
@@ -398,7 +547,7 @@ export default function SelenePage() {
         >
           {/* moon assembly — shifted bottom-right so the disc rises clear of
               the headline column and only kisses its right edge */}
-          <g transform="translate(260 100)">
+          <g transform="translate(380 90)">
           {/* halo */}
           <circle cx="600" cy="470" r="360" fill="url(#lse-halo)" className="lse-pulse" />
           {/* orbit rings */}
@@ -456,7 +605,7 @@ export default function SelenePage() {
         <div className="lse-hero-scrim pointer-events-none absolute inset-0" aria-hidden="true" />
 
         {/* hero copy */}
-        <div className="relative grid grid-cols-1 gap-6 px-5 pb-24 pt-14 sm:px-8 sm:pt-20 lg:grid-cols-12">
+        <div className="relative mx-auto grid max-w-[1240px] grid-cols-1 gap-6 px-5 pb-24 pt-14 sm:px-8 sm:pt-20 lg:grid-cols-12">
           {/* left micro-column */}
           <div className="hidden flex-col gap-2 self-start border-l border-[rgba(125,148,184,0.25)] pl-3 lg:col-span-2 lg:flex">
             <span className="lse-caps text-[7px] lse-dim">Observation Log</span>
@@ -516,6 +665,14 @@ export default function SelenePage() {
 
         {/* tidal wave chart along the hero's bottom edge */}
         <div className="absolute inset-x-0 bottom-0">
+          <div className="lse-mono flex justify-between px-4 pb-1 text-[6px] lse-dim">
+            <span>TIDE GAUGE · HARMONIC M2</span>
+            <span>00:00</span>
+            <span>06:00</span>
+            <span>12:00</span>
+            <span>18:00</span>
+            <span>24:00 UTC</span>
+          </div>
           <svg viewBox="0 0 1200 60" preserveAspectRatio="none" className="block h-[60px] w-full" aria-hidden="true">
             <path d={tideFaint} fill="none" stroke={DIM} strokeWidth="0.5" opacity="0.6" />
             <path d={tideSoft} fill="none" stroke={STEEL} strokeWidth="0.6" opacity="0.7" />
@@ -525,19 +682,12 @@ export default function SelenePage() {
               <line key={i} x1={i * 50} y1="54" x2={i * 50} y2={i % 6 === 0 ? "46" : "50"} stroke={STEEL} strokeWidth="0.5" opacity="0.6" />
             ))}
           </svg>
-          <div className="lse-mono flex justify-between px-4 pb-1 text-[6px] lse-dim">
-            <span>TIDE GAUGE · HARMONIC M2</span>
-            <span>00:00</span>
-            <span>06:00</span>
-            <span>12:00</span>
-            <span>18:00</span>
-            <span>24:00 UTC</span>
-          </div>
         </div>
       </section>
 
       {/* ========================== LUNAR STATUS STRIP ========================== */}
-      <section className="lse-panel relative z-10 mx-auto grid max-w-[1240px] grid-cols-2 border-x border-b sm:grid-cols-3 lg:grid-cols-6">
+      <section className="lse-panel lse-tilt-a relative z-20 mx-auto -mt-7 grid max-w-[1240px] grid-cols-2 border-x border-b sm:grid-cols-3 lg:-translate-x-3 lg:grid-cols-6">
+        <span className="lse-stain lse-stain-a" aria-hidden="true" />
         {[
           { label: "Illumination", value: "68.2", unit: "%", foot: "−1.2% / DAY" },
           { label: "Moon Age", value: "20.6", unit: "d", foot: "SYNODIC 29.53 D" },
@@ -558,7 +708,8 @@ export default function SelenePage() {
       </section>
 
       {/* ============================ SIGN BAND ============================ */}
-      <section className="lse-panel relative z-10 mx-auto max-w-[1240px] border-x border-b">
+      <section className="lse-panel lse-tilt-b relative z-10 mx-auto max-w-[1240px] border-x border-b lg:translate-x-8">
+        <span className="lse-stain lse-stain-b" aria-hidden="true" />
         <PHead title="Twelve Houses of the Night" right="ECLIPTIC 360° · PLATES 12" />
         <div className="grid grid-cols-3 gap-px bg-[rgba(125,148,184,0.14)] px-0 pb-0 sm:grid-cols-4 lg:grid-cols-6">
           {SIGNS.map(([glyph, name, dates], i) => (
@@ -586,7 +737,7 @@ export default function SelenePage() {
       </section>
 
       {/* ========================= OBSERVATION PLATES ========================= */}
-      <section className="lse-panel relative z-10 mx-auto max-w-[1240px] border-x border-b">
+      <section className="lse-panel relative z-10 mx-auto max-w-[1180px] border-x border-b lg:-translate-x-5">
         <PHead title="Observation Plates — Six Instruments" right="SECTION 02 · ALL CHANNELS OPEN" />
         <div className="grid grid-cols-1 gap-px bg-[rgba(125,148,184,0.14)] md:grid-cols-2">
           {PLATES.map((p) => (
@@ -621,9 +772,11 @@ export default function SelenePage() {
       </section>
 
       {/* ========================== DESTINY MATRIX BAND ========================== */}
-      <section className="lse-panel relative z-10 mx-auto max-w-[1240px] border-x border-b">
+      <TideDivider phase={0.7} />
+      <section className="lse-panel lse-tilt-c relative z-10 max-w-[1120px] border-x border-b lg:ml-auto lg:mr-[5%]">
+        <span className="lse-stain lse-stain-c" aria-hidden="true" />
         <PHead title="Destiny Matrix — Optional Instrument" right="BIRTH-DATE OCTAGRAM" />
-        <div className="grid grid-cols-1 items-center gap-6 px-5 pb-5 pt-1 sm:px-8 lg:grid-cols-12">
+        <div className="grid grid-cols-1 items-center gap-6 px-5 pb-9 pt-1 sm:px-8 lg:grid-cols-12">
           <div className="flex justify-center lg:col-span-3">
             <svg width="170" height="170" viewBox="0 0 170 170" aria-label="Birth-date octagram">
               <circle cx="85" cy="85" r="76" fill="none" stroke={STEEL} strokeWidth="0.5" opacity="0.7" />
@@ -675,7 +828,7 @@ export default function SelenePage() {
       </section>
 
       {/* ===================== RITUAL WINDOW + TODAY ROW ===================== */}
-      <section className="lse-panel relative z-10 mx-auto max-w-[1240px] border-x border-b">
+      <section className="lse-panel relative z-20 mx-auto -mt-8 max-w-[1240px] border-x border-b lg:-translate-x-6">
         <PHead title="Ritual Window — Tonight" right="LOCAL MEAN TIME" />
         <div className="grid grid-cols-1 gap-px bg-[rgba(125,148,184,0.14)] lg:grid-cols-12">
           {/* ritual window card */}
@@ -732,7 +885,8 @@ export default function SelenePage() {
       </section>
 
       {/* ============================ ANALYSIS NOTES ============================ */}
-      <section className="lse-panel relative z-10 mx-auto max-w-[1240px] border-x border-b">
+      <TideDivider phase={2.1} />
+      <section className="lse-panel lse-tilt-b relative z-20 max-w-[1100px] border-x border-b lg:ml-[6%]">
         <PHead title="Analysis Notes — Frequently Logged Queries" right="4 ENTRIES" />
         <div className="grid grid-cols-1 gap-x-6 px-5 pb-3 sm:grid-cols-2 sm:px-8">
           {FAQ.map((f) => (
@@ -751,7 +905,7 @@ export default function SelenePage() {
       </section>
 
       {/* ================================ CTA ================================ */}
-      <section className="lse-panel relative z-10 mx-auto max-w-[1240px] overflow-hidden border-x border-b px-5 py-12 text-center sm:py-16">
+      <section className="lse-panel relative z-10 -mt-5 overflow-hidden border-b px-5 py-12 text-center sm:py-16">
         <svg className="pointer-events-none absolute inset-0 h-full w-full opacity-40" aria-hidden="true" preserveAspectRatio="xMidYMid slice" viewBox="0 0 1200 220">
           <circle cx="600" cy="110" r="90" fill="url(#lse-halo)" className="lse-pulse" />
           <circle cx="600" cy="110" r="80" fill="none" stroke={STEEL} strokeWidth="0.4" strokeDasharray="2 4" className="lse-rot-a" />
@@ -778,6 +932,7 @@ export default function SelenePage() {
 
       {/* =============================== FOOTER =============================== */}
       <footer className="lse-panel relative z-10 mx-auto mb-0 flex max-w-[1240px] flex-wrap items-center gap-x-5 gap-y-1 border-x border-b px-4 py-2.5">
+        <span className="lse-stain lse-stain-d" aria-hidden="true" />
         <span className="flex items-center gap-1.5">
           <span className="lse-hi text-[10px]">☽︎</span>
           <span className="lse-caps lse-serif text-[9px] lse-hi tracking-[0.24em]">Astro Scope</span>
@@ -805,6 +960,8 @@ export default function SelenePage() {
 
 const LSE_CSS = `
 .lse-root{
+  position:relative;
+  overflow:hidden;
   background:#060a12;
   color:#c8d6ec;
   font-size:11px;
@@ -834,7 +991,12 @@ const LSE_CSS = `
   box-shadow: inset 0 0 0 1px rgba(200,214,236,.045), inset 0 0 40px rgba(10,16,30,.45);
   border-style:solid; border-width:0 1px 1px 1px;
 }
-.lse-hair{ height:1px; background:linear-gradient(90deg, transparent, rgba(125,148,184,.45) 20%, rgba(125,148,184,.45) 80%, transparent); }
+.lse-hair{
+  height:1px;
+  background:
+    repeating-linear-gradient(90deg, transparent 0 13px, rgba(6,10,18,.85) 13px 13.7px, transparent 13.7px 29px, rgba(6,10,18,.55) 29px 29.4px, transparent 29.4px 47px),
+    linear-gradient(90deg, transparent, rgba(125,148,184,.45) 20%, rgba(125,148,184,.45) 80%, transparent);
+}
 .lse-vhair{ width:1px; height:14px; background:rgba(125,148,184,.35); }
 .lse-btn{
   border:1px solid rgba(200,214,236,.55);
@@ -857,10 +1019,53 @@ const LSE_CSS = `
     linear-gradient(90deg, rgba(6,10,18,.94) 0%, rgba(6,10,18,.82) 28%, rgba(6,10,18,.45) 50%, rgba(6,10,18,0) 70%),
     linear-gradient(0deg, rgba(6,10,18,.55) 0%, rgba(6,10,18,0) 26%);
 }
+/* slight panel rotations — hand-set plates, not laser-aligned */
+.lse-tilt-a{ rotate: -0.45deg; }
+.lse-tilt-b{ rotate: 0.3deg; }
+.lse-tilt-c{ rotate: -0.35deg; }
+
+/* ---------------- weathering ---------------- */
+.lse-vignette{
+  background:
+    radial-gradient(ellipse 70% 55% at 72% 10%, rgba(170,198,236,.07), transparent 60%),
+    radial-gradient(ellipse 130% 95% at 46% 42%, transparent 52%, rgba(2,4,9,.58) 100%),
+    linear-gradient(180deg, rgba(10,16,30,.14), transparent 28%, transparent 68%, rgba(2,4,9,.38));
+}
+.lse-dust{
+  opacity:.05;
+  mix-blend-mode:screen;
+  background-image:
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='240' height='240'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='240' height='240' filter='url(%23n)'/%3E%3C/svg%3E"),
+    repeating-linear-gradient(103deg, transparent 0 46px, rgba(200,214,236,.5) 46px 46.4px, transparent 46.4px 97px);
+}
+.lse-mist{
+  border-radius:50%;
+  filter:blur(18px);
+  background:radial-gradient(ellipse at center, rgba(160,185,220,.10), rgba(160,185,220,.04) 45%, transparent 70%);
+}
+.lse-mist-a{ width:55vw; height:34vh; top:5%; left:-10%; }
+.lse-mist-b{ width:48vw; height:30vh; top:46%; right:-14%; }
+.lse-mist-c{ width:62vw; height:26vh; bottom:3%; left:10%; }
+.lse-stain{
+  position:absolute;
+  pointer-events:none;
+  border-radius:50%;
+  background:
+    radial-gradient(circle at 50% 50%, transparent 56%, rgba(190,205,228,.10) 61%, rgba(190,205,228,.03) 65%, transparent 69%),
+    radial-gradient(circle at 50% 50%, transparent 70%, rgba(190,205,228,.07) 74%, transparent 78%),
+    radial-gradient(circle at 38% 42%, rgba(190,205,228,.05), transparent 34%);
+}
+.lse-stain-a{ width:190px; height:130px; top:-30px; right:8%; transform:rotate(-8deg); }
+.lse-stain-b{ width:240px; height:150px; bottom:-34px; left:4%; transform:rotate(5deg); }
+.lse-stain-c{ width:170px; height:170px; top:6px; right:22%; transform:rotate(14deg); }
+.lse-stain-d{ width:120px; height:80px; top:-16px; left:36%; transform:rotate(-4deg); }
 
 @keyframes lse-rot{ to{ transform: rotate(360deg); } }
 @keyframes lse-pulse{ 0%,100%{ opacity:.55; } 50%{ opacity:1; } }
 @keyframes lse-drift{ 0%,100%{ transform: translateY(0); } 50%{ transform: translateY(-6px); } }
+@keyframes lse-mist-a{ 0%,100%{ transform: translate(0,0); } 50%{ transform: translate(7vw,2.5vh); } }
+@keyframes lse-mist-b{ 0%,100%{ transform: translate(0,0); } 50%{ transform: translate(-6vw,-2vh); } }
+@keyframes lse-mist-c{ 0%,100%{ transform: translate(0,0); } 50%{ transform: translate(5vw,-1.5vh); } }
 
 @media (prefers-reduced-motion: no-preference){
   .lse-rot-a{ animation: lse-rot 180s linear infinite; transform-box: view-box; transform-origin: center; }
@@ -868,8 +1073,11 @@ const LSE_CSS = `
   .lse-rot-c{ animation: lse-rot 90s linear infinite; transform-box: view-box; transform-origin: center; }
   .lse-pulse{ animation: lse-pulse 16s ease-in-out infinite; }
   .lse-drift{ animation: lse-drift 60s ease-in-out infinite; }
+  .lse-mist-a{ animation: lse-mist-a 170s ease-in-out infinite; }
+  .lse-mist-b{ animation: lse-mist-b 190s ease-in-out infinite; }
+  .lse-mist-c{ animation: lse-mist-c 150s ease-in-out infinite; }
 }
 @media (prefers-reduced-motion: reduce){
-  .lse-rot-a,.lse-rot-b,.lse-rot-c,.lse-pulse,.lse-drift{ animation: none; }
+  .lse-rot-a,.lse-rot-b,.lse-rot-c,.lse-pulse,.lse-drift,.lse-mist-a,.lse-mist-b,.lse-mist-c{ animation: none; }
 }
 `;

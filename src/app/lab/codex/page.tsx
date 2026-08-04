@@ -164,24 +164,211 @@ const FAQ = [
 ];
 
 /* ------------------------------------------------------------------ */
+/* Vellum fibre noise (feTurbulence data URI)                          */
+/* ------------------------------------------------------------------ */
+const NOISE_URI =
+  "url(\"data:image/svg+xml;utf8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='220' height='220'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix type='matrix' values='0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0.55 0'/%3E%3C/filter%3E%3Crect width='220' height='220' filter='url(%23n)'/%3E%3C/svg%3E\")";
+
+/* ------------------------------------------------------------------ */
 /* Scoped styles (lcx- prefix)                                         */
 /* ------------------------------------------------------------------ */
 const LCX_STYLES = `
   .lcx-rot-90   { animation: lcx-spin 90s  linear infinite; }
   .lcx-rot-120r { animation: lcx-spin-rev 120s linear infinite; }
   .lcx-rot-180  { animation: lcx-spin 180s linear infinite; }
+  .lcx-rot-240  { animation: lcx-spin 240s linear infinite; }
   .lcx-pulse    { animation: lcx-pulse 9s ease-in-out infinite; }
   .lcx-pulse-2  { animation: lcx-pulse 15s ease-in-out infinite; }
   .lcx-flicker  { animation: lcx-flicker 11s ease-in-out infinite; }
+  .lcx-candle   { animation: lcx-candle 9s ease-in-out infinite; }
   @keyframes lcx-spin     { to { transform: rotate(360deg); } }
   @keyframes lcx-spin-rev { to { transform: rotate(-360deg); } }
   @keyframes lcx-pulse    { 0%,100% { opacity: .4; } 50% { opacity: 1; } }
   @keyframes lcx-flicker  { 0%,100% { opacity: .9; } 47% { opacity: .5; } 53% { opacity: .8; } }
+  @keyframes lcx-candle   { 0%,100% { opacity: .55; } 37% { opacity: .85; } 52% { opacity: .6; } 71% { opacity: .95; } }
+  /* --- age layer --- */
+  .lcx-vellum { background-image: ${NOISE_URI}; background-size: 220px 220px; }
+  .lcx-gilt { position: relative; }
+  .lcx-gilt::after {
+    content: ""; position: absolute; inset: 0; pointer-events: none;
+    background-image: ${NOISE_URI}; background-size: 160px 160px;
+    opacity: .22; mix-blend-mode: multiply;
+  }
+  .lcx-mottle { position: relative; }
+  .lcx-mottle::before {
+    content: ""; position: absolute; inset: 0; pointer-events: none;
+    background:
+      radial-gradient(ellipse 60% 45% at 18% 12%, rgba(230,224,200,0.05), transparent 60%),
+      radial-gradient(ellipse 50% 40% at 84% 88%, rgba(120,95,40,0.07), transparent 60%),
+      radial-gradient(ellipse 40% 35% at 70% 20%, rgba(63,163,124,0.05), transparent 65%);
+  }
+  .lcx-bleed {
+    box-shadow: 0 0 1.5px rgba(12,9,3,0.9), 0 0 3px rgba(201,176,55,0.25);
+  }
   @media (prefers-reduced-motion: reduce) {
-    .lcx-rot-90, .lcx-rot-120r, .lcx-rot-180,
-    .lcx-pulse, .lcx-pulse-2, .lcx-flicker { animation: none !important; }
+    .lcx-rot-90, .lcx-rot-120r, .lcx-rot-180, .lcx-rot-240,
+    .lcx-pulse, .lcx-pulse-2, .lcx-flicker, .lcx-candle { animation: none !important; }
   }
 `;
+
+/* ------------------------------------------------------------------ */
+/* Background graphic layers (behind everything)                       */
+/* ------------------------------------------------------------------ */
+const BIG_GLYPHS = [
+  { g: "☉︎", top: "9%", left: "33%", size: 250, o: 0.05 },
+  { g: "☽︎", top: "34%", left: "81%", size: 190, o: 0.06 },
+  { g: "✶", top: "56%", left: "6%", size: 220, o: 0.05 },
+  { g: "♄︎", top: "78%", left: "58%", size: 200, o: 0.05 },
+  { g: "♃︎", top: "92%", left: "18%", size: 170, o: 0.045 },
+];
+
+const SPECKS = Array.from({ length: 42 }, (_, i) => ({
+  top: `${(i * 53 + 7) % 100}%`,
+  left: `${(i * 37 + 11) % 100}%`,
+  s: 1 + ((i * 7) % 3) * 0.7,
+  o: 0.15 + ((i * 11) % 10) / 40,
+}));
+
+function Backdrop() {
+  return (
+    <div aria-hidden className="pointer-events-none absolute inset-0 -z-10 overflow-hidden">
+      {/* hairline construction circles & chords crossing the whole leaf */}
+      <svg
+        viewBox="0 0 1600 3200"
+        preserveAspectRatio="xMidYMid slice"
+        className="absolute inset-0 h-full w-full"
+      >
+        <g fill="none" stroke={VERDI} strokeOpacity="0.09" strokeWidth="1">
+          <circle cx="800" cy="500" r="620" />
+          <circle cx="800" cy="500" r="430" />
+          <circle cx="180" cy="1700" r="520" />
+          <circle cx="1420" cy="1700" r="520" />
+          <circle cx="800" cy="2750" r="660" />
+        </g>
+        <g fill="none" stroke={GOLD} strokeOpacity="0.08" strokeWidth="1">
+          <polygon points={apoly(430, 3, -90, 800, 500)} />
+          <polygon points={apoly(430, 3, 90, 800, 500)} />
+          <polygon points={apoly(660, 6, -90, 800, 2750)} />
+          <polygon points={apoly(660, 6, -60, 800, 2750)} />
+          <line x1="-100" y1="1120" x2="1700" y2="880" />
+          <line x1="-100" y1="2250" x2="1700" y2="2480" />
+          <line x1="320" y1="-50" x2="520" y2="3250" />
+          <line x1="1280" y1="-50" x2="1080" y2="3250" />
+        </g>
+        <g fill="none" stroke={GOLD} strokeOpacity="0.1" strokeWidth="0.6" strokeDasharray="2 5">
+          <circle cx="800" cy="500" r="240" />
+          <circle cx="800" cy="2750" r="380" />
+        </g>
+      </svg>
+
+      {/* giant mandala, mostly off the upper-left corner */}
+      <svg
+        viewBox="0 0 600 600"
+        className="lcx-rot-180 absolute -left-72 -top-72 h-[900px] w-[900px] opacity-[0.08]"
+      >
+        <g fill="none" stroke={GOLD} strokeWidth="1">
+          <circle cx="300" cy="300" r="292" strokeOpacity="0.8" />
+          <circle cx="300" cy="300" r="284" strokeOpacity="0.3" strokeWidth="0.5" />
+          <circle cx="300" cy="300" r="240" strokeOpacity="0.5" />
+          <polygon points={apoly(240, 4, -90, 300, 300)} strokeOpacity="0.6" />
+          <polygon points={apoly(240, 4, -45, 300, 300)} strokeOpacity="0.6" />
+          <polygon points={apoly(150, 3, -90, 300, 300)} stroke={VERDI} strokeOpacity="0.5" />
+          <polygon points={apoly(150, 3, 90, 300, 300)} stroke={VERDI} strokeOpacity="0.5" />
+          <circle cx="300" cy="300" r="62" strokeOpacity="0.7" />
+        </g>
+        {Array.from({ length: 72 }, (_, i) => {
+          const p1 = apt(i % 6 === 0 ? 264 : 274, i * 5, 300, 300);
+          const p2 = apt(284, i * 5, 300, 300);
+          return (
+            <line key={i} x1={p1.x} y1={p1.y} x2={p2.x} y2={p2.y} stroke={GOLD} strokeOpacity="0.5" strokeWidth="0.6" />
+          );
+        })}
+      </svg>
+
+      {/* slowly-turning zodiac ring, half off the right edge */}
+      <svg
+        viewBox="0 0 600 600"
+        className="lcx-rot-240 absolute -right-[320px] top-[22%] h-[780px] w-[780px] opacity-[0.1]"
+      >
+        <circle cx="300" cy="300" r="288" fill="none" stroke={GOLD} strokeOpacity="0.7" strokeWidth="1" />
+        <circle cx="300" cy="300" r="212" fill="none" stroke={VERDI} strokeOpacity="0.4" strokeWidth="0.6" strokeDasharray="2 4" />
+        {Array.from({ length: 60 }, (_, i) => {
+          const p1 = apt(i % 5 === 0 ? 270 : 278, i * 6, 300, 300);
+          const p2 = apt(288, i * 6, 300, 300);
+          return (
+            <line key={i} x1={p1.x} y1={p1.y} x2={p2.x} y2={p2.y} stroke={GOLD} strokeOpacity="0.6" strokeWidth="0.7" />
+          );
+        })}
+        {ZODIAC.map((z, i) => {
+          const p = apt(240, i * 30 - 90, 300, 300);
+          return (
+            <g key={z.name}>
+              <circle cx={p.x} cy={p.y} r="24" fill={GROUND} fillOpacity="0.6" stroke={GOLD} strokeOpacity="0.6" strokeWidth="0.8" />
+              <text x={p.x} y={p.y + 8} textAnchor="middle" fontSize="22" fill={GOLD}>
+                {z.glyph}
+              </text>
+            </g>
+          );
+        })}
+        <polygon points={apoly(150, 3, -90, 300, 300)} fill="none" stroke={GOLD} strokeOpacity="0.4" strokeWidth="0.7" />
+        <polygon points={apoly(150, 4, -45, 300, 300)} fill="none" stroke={VERDI} strokeOpacity="0.35" strokeWidth="0.7" />
+      </svg>
+
+      {/* faint colossal glyphs looming behind the panels */}
+      {BIG_GLYPHS.map((b, i) => (
+        <span
+          key={i}
+          className="absolute select-none"
+          style={{ top: b.top, left: b.left, fontSize: b.size, lineHeight: 1, color: CREAM, opacity: b.o }}
+        >
+          {b.g}
+        </span>
+      ))}
+
+      {/* ink specks spattered across the leaf */}
+      {SPECKS.map((s, i) => (
+        <span
+          key={i}
+          className="absolute rounded-full"
+          style={{ top: s.top, left: s.left, width: s.s, height: s.s, backgroundColor: "#000", opacity: s.o }}
+        />
+      ))}
+    </div>
+  );
+}
+
+/* ------------------------------------------------------------------ */
+/* Age layer data (deterministic)                                      */
+/* ------------------------------------------------------------------ */
+const FOXING = [
+  { top: "2.5%", left: "5%", s: 80, o: 0.12 },
+  { top: "4%", left: "88%", s: 60, o: 0.1 },
+  { top: "14%", left: "94%", s: 46, o: 0.12 },
+  { top: "27%", left: "2%", s: 64, o: 0.09 },
+  { top: "43%", left: "96%", s: 52, o: 0.11 },
+  { top: "58%", left: "1.5%", s: 72, o: 0.1 },
+  { top: "71%", left: "93%", s: 58, o: 0.09 },
+  { top: "86%", left: "4%", s: 66, o: 0.12 },
+  { top: "93%", left: "82%", s: 54, o: 0.1 },
+  { top: "96%", left: "30%", s: 44, o: 0.08 },
+];
+
+const STAINS = [
+  { top: "6%", right: "-40px", s: 220, o: 1 },
+  { bottom: "9%", left: "-50px", s: 260, o: 0.8 },
+];
+
+const SMUDGES = [
+  { top: "22%", right: "3%", w: 70, h: 44, rot: 24, o: 0.16 },
+  { top: "55%", left: "3.5%", w: 60, h: 38, rot: -18, o: 0.13 },
+  { top: "80%", right: "6%", w: 80, h: 50, rot: 12, o: 0.12 },
+];
+
+const WORMHOLES = Array.from({ length: 16 }, (_, i) => ({
+  top: `${9 + i * 5.3}%`,
+  left: `${14 + ((i * 37) % 14)}px`,
+  s: 2 + ((i * 13) % 3),
+}));
 
 /* ------------------------------------------------------------------ */
 /* Small building blocks                                               */
@@ -201,7 +388,7 @@ function Corners() {
 function Hairline({ label }: { label: string }) {
   return (
     <div className="flex items-center gap-3">
-      <span className="h-px flex-1 bg-[#c9b037]/30" />
+      <span className="lcx-bleed h-px flex-1 bg-[#c9b037]/30" />
       <span aria-hidden className="text-[8px] text-[#c9b037]">
         ✦
       </span>
@@ -209,7 +396,7 @@ function Hairline({ label }: { label: string }) {
       <span aria-hidden className="text-[8px] text-[#c9b037]">
         ✦
       </span>
-      <span className="h-px flex-1 bg-[#c9b037]/30" />
+      <span className="lcx-bleed h-px flex-1 bg-[#c9b037]/30" />
     </div>
   );
 }
@@ -247,7 +434,7 @@ function HeroPlate() {
   return (
     <svg
       viewBox="0 0 1200 560"
-      className="mx-auto w-full max-w-[1240px]"
+      className="mx-auto w-full"
       role="img"
       aria-label="Engraved arch of the zodiac — codex plate"
     >
@@ -659,22 +846,117 @@ function SectionHead({ eyebrow, title, sub }: { eyebrow: string; title: string; 
 }
 
 /* ------------------------------------------------------------------ */
+/* Age layer — vellum, foxing, stains, wormholes, candlelight          */
+/* ------------------------------------------------------------------ */
+function AgeLayer() {
+  return (
+    <div aria-hidden className="pointer-events-none absolute inset-0 z-30 overflow-hidden">
+      {/* vellum fibre noise over the whole leaf */}
+      <div className="lcx-vellum absolute inset-0 opacity-[0.07]" />
+
+      {/* candle-warmth from the upper right, breathing gently */}
+      <div
+        className="lcx-candle absolute inset-0"
+        style={{
+          backgroundImage:
+            "radial-gradient(ellipse 55% 38% at 82% 3%, rgba(255,186,92,0.08), transparent 65%), radial-gradient(ellipse 42% 30% at 10% 97%, rgba(255,170,80,0.05), transparent 60%)",
+        }}
+      />
+
+      {/* foxing spots near the edges */}
+      {FOXING.map((f, i) => (
+        <span
+          key={i}
+          className="absolute rounded-full"
+          style={{
+            top: f.top,
+            left: f.left,
+            width: f.s,
+            height: Math.round(f.s * 0.8),
+            backgroundImage: `radial-gradient(ellipse at center, rgba(150,105,45,${f.o}) 0%, rgba(150,105,45,${f.o * 0.5}) 40%, transparent 70%)`,
+            filter: "blur(1.5px)",
+          }}
+        />
+      ))}
+
+      {/* water-stain rings */}
+      {STAINS.map((st, i) => (
+        <span
+          key={i}
+          className="absolute rounded-full"
+          style={{
+            top: st.top,
+            right: st.right,
+            bottom: st.bottom,
+            left: st.left,
+            width: st.s,
+            height: st.s,
+            opacity: st.o,
+            backgroundImage:
+              "radial-gradient(circle, transparent 52%, rgba(120,88,38,0.10) 58%, rgba(120,88,38,0.16) 61%, rgba(120,88,38,0.05) 66%, transparent 72%)",
+            filter: "blur(1px)",
+          }}
+        />
+      ))}
+
+      {/* thumbprints / marginal smudges */}
+      {SMUDGES.map((sm, i) => (
+        <span
+          key={i}
+          className="absolute"
+          style={{
+            top: sm.top,
+            right: sm.right,
+            left: sm.left,
+            width: sm.w,
+            height: sm.h,
+            opacity: sm.o,
+            transform: `rotate(${sm.rot}deg)`,
+            backgroundImage:
+              "radial-gradient(ellipse at center, rgba(28,20,9,0.9) 0%, rgba(28,20,9,0.4) 45%, transparent 72%)",
+            filter: "blur(3px)",
+          }}
+        />
+      ))}
+
+      {/* wormhole pinpricks along the left margin */}
+      {WORMHOLES.map((w, i) => (
+        <span
+          key={i}
+          className="absolute rounded-full"
+          style={{
+            top: w.top,
+            left: w.left,
+            width: w.s,
+            height: w.s,
+            backgroundImage:
+              "radial-gradient(circle, rgba(0,0,0,0.75) 0%, rgba(0,0,0,0.35) 45%, transparent 70%)",
+          }}
+        />
+      ))}
+    </div>
+  );
+}
+
+/* ------------------------------------------------------------------ */
 /* Page                                                                */
 /* ------------------------------------------------------------------ */
 export default function CodexPage() {
   return (
     <main
-      className="min-h-screen bg-[#06120c] text-[#e6e0c8] antialiased"
+      className="relative isolate min-h-screen overflow-x-clip bg-[#06120c] text-[#e6e0c8] antialiased"
       style={{
         backgroundImage:
           "radial-gradient(ellipse at 50% 0%, rgba(63,163,124,0.07), transparent 55%), radial-gradient(ellipse at 50% 100%, rgba(201,176,55,0.05), transparent 50%)",
       }}
     >
       <style>{LCX_STYLES}</style>
+      <Backdrop />
+      <AgeLayer />
 
       {/* ======================= 1 · CODEX HEADER BAR ======================= */}
       <header className="border-b border-[#c9b037]/25">
-        <div className="mx-auto max-w-[1240px] px-4 sm:px-6">
+        <div className="mx-auto max-w-[1400px] px-4 sm:px-6">
           <div className="flex items-center gap-4 py-3">
             <a href="#lcx-top" className="flex items-baseline gap-2">
               <span aria-hidden className="text-[11px] text-[#c9b037]">✦</span>
@@ -708,13 +990,13 @@ export default function CodexPage() {
           </div>
           {/* engraved double rule */}
           <div aria-hidden className="pb-2">
-            <div className="h-px bg-[#c9b037]/40" />
+            <div className="lcx-bleed h-px bg-[#c9b037]/40" />
             <div className="mt-[3px] flex items-center gap-2">
-              <span className="h-px flex-1 bg-[#c9b037]/15" />
+              <span className="lcx-bleed h-px flex-1 bg-[#c9b037]/15" />
               <span className="font-mono text-[6px] tracking-[0.4em] text-[#e6e0c8]/25">
                 INCIPIT LIBER PRIMVS · DE SIGNIS ET FATO
               </span>
-              <span className="h-px flex-1 bg-[#c9b037]/15" />
+              <span className="lcx-bleed h-px flex-1 bg-[#c9b037]/15" />
             </div>
           </div>
         </div>
@@ -748,7 +1030,7 @@ export default function CodexPage() {
           ALTITVDO · SOLIS
         </span>
 
-        <div className="relative mx-auto max-w-[1240px] px-4 pb-10 pt-10 sm:px-6 sm:pt-14">
+        <div className="relative mx-auto max-w-[1400px] px-4 pb-10 pt-10 sm:px-6 sm:pt-14">
           {/* eyebrow */}
           <div className="relative z-10 mb-6 flex items-center justify-center gap-3 font-mono text-[8px] tracking-[0.45em] text-[#3fa37c] sm:text-[9px]">
             <span className="h-px w-10 bg-[#3fa37c]/40 sm:w-28" />
@@ -758,7 +1040,7 @@ export default function CodexPage() {
 
           {/* the wide engraved plate */}
           <div className="relative">
-            <div className="pointer-events-none absolute inset-x-0 -top-6 opacity-70 sm:-top-10">
+            <div className="pointer-events-none absolute -inset-x-10 -top-6 opacity-70 sm:-inset-x-20 sm:-top-10 lg:-inset-x-28">
               <HeroPlate />
             </div>
 
@@ -779,7 +1061,7 @@ export default function CodexPage() {
               <div className="mt-8 flex flex-col items-center justify-center gap-4 sm:flex-row">
                 <a
                   href="#lcx-colophon"
-                  className="inline-flex items-center gap-3 border border-[#e3cd5a]/60 bg-[#c9b037] px-7 py-3 font-mono text-[10px] font-bold tracking-[0.22em] text-[#06120c] shadow-[0_0_24px_rgba(201,176,55,0.25)] transition-colors hover:bg-[#e3cd5a]"
+                  className="lcx-gilt inline-flex items-center gap-3 border border-[#e3cd5a]/60 bg-[#c9b037] px-7 py-3 font-mono text-[10px] font-bold tracking-[0.22em] text-[#06120c] shadow-[0_0_24px_rgba(201,176,55,0.25)] transition-colors hover:bg-[#e3cd5a]"
                 >
                   <span aria-hidden className="flex h-4 w-4 items-center justify-center rounded-full border border-[#06120c]/50 text-[8px]">✦</span>
                   CAST YOUR FREE BIRTH CHART
@@ -807,7 +1089,7 @@ export default function CodexPage() {
 
       {/* ======================= 3 · TABLE OF CONTENTS — INDEX SIGNORVM ======================= */}
       <section className="border-b border-[#c9b037]/25 bg-[#08160e]/70">
-        <div className="mx-auto max-w-[1240px] px-4 py-12 sm:px-6">
+        <div className="mx-auto max-w-[1400px] px-4 py-12 sm:px-6">
           <SectionHead
             eyebrow="TABVLA CAPITVM"
             title="INDEX SIGNORVM"
@@ -846,7 +1128,7 @@ export default function CodexPage() {
 
       {/* ======================= 4 · SIX CHAPTERS — MANUSCRIPT LIST ======================= */}
       <section id="lcx-chapters" className="border-b border-[#c9b037]/25">
-        <div className="mx-auto max-w-[1240px] px-4 py-14 sm:px-6">
+        <div className="mx-auto max-w-[1400px] px-4 py-14 sm:px-6">
           <SectionHead
             eyebrow="CAPITVLA · I – VI"
             title="THE SIX WORKS OF THE ART"
@@ -861,8 +1143,8 @@ export default function CodexPage() {
                   i > 0 ? "border-t border-[#c9b037]/15" : ""
                 }`}
               >
-                {/* marginal gloss (gutter) */}
-                <aside className="hidden flex-col justify-between border-r border-[#c9b037]/15 pr-4 lg:flex">
+                {/* marginal gloss — hanging outside the frame */}
+                <aside className="hidden flex-col justify-between border-r border-[#c9b037]/15 pr-4 lg:-ml-28 lg:flex lg:w-44 lg:-rotate-1">
                   <span className="font-mono text-[6px] tracking-[0.3em] text-[#3fa37c]/60">
                     {ch.glossNo}
                   </span>
@@ -874,9 +1156,13 @@ export default function CodexPage() {
                   </span>
                 </aside>
 
-                {/* big roman numeral */}
+                {/* big roman numeral — overlapping the hairline above */}
                 <div className="flex items-start gap-4 lg:block">
-                  <div className="font-serif text-6xl leading-none text-[#c9b037]/85 sm:text-7xl">
+                  <div
+                    className={`relative z-10 font-serif text-7xl leading-none text-[#c9b037]/85 sm:text-8xl ${
+                      i > 0 ? "-mt-3 lg:-mt-8 lg:-rotate-2" : ""
+                    }`}
+                  >
                     {ch.no}
                   </div>
                   <div className="mt-1 hidden font-mono text-[7px] tracking-[0.3em] text-[#e6e0c8]/30 lg:block">
@@ -910,8 +1196,19 @@ export default function CodexPage() {
                   </a>
                 </div>
 
-                {/* tiny diagram */}
-                <div className="hidden items-center justify-center lg:flex">
+                {/* tiny diagram — some bleed off the leaf edge */}
+                <div
+                  className={`hidden items-center justify-center lg:flex ${
+                    [
+                      "lg:translate-x-6 lg:rotate-3",
+                      "lg:-rotate-2",
+                      "lg:translate-x-10 lg:rotate-2",
+                      "lg:-rotate-3",
+                      "lg:translate-x-8 lg:-rotate-2",
+                      "lg:translate-x-4 lg:rotate-2",
+                    ][i]
+                  }`}
+                >
                   <ChapterDiagram kind={ch.diagram} />
                 </div>
               </article>
@@ -924,7 +1221,7 @@ export default function CodexPage() {
 
       {/* ======================= 5 · FIGURA VIII — DESTINY MATRIX ======================= */}
       <section className="border-b border-[#c9b037]/25 bg-[#08160e]/70">
-        <div className="mx-auto max-w-[1240px] px-4 py-14 sm:px-6">
+        <div className="mx-auto max-w-[1400px] px-4 py-14 sm:px-6">
           <SectionHead
             eyebrow="OPVS OPTIVVM"
             title="DESTINY MATRIX"
@@ -932,9 +1229,12 @@ export default function CodexPage() {
           />
           <div className="flex flex-col items-center gap-10 lg:flex-row lg:justify-center lg:gap-16">
             {/* illuminated plate */}
-            <figure className="relative border border-[#c9b037]/30 bg-[#0a1a12]/80 p-5">
+            <figure className="lcx-mottle relative -rotate-1 border border-[#c9b037]/30 bg-[#0a1a12]/80 p-5">
               <span aria-hidden className="pointer-events-none absolute inset-[4px] border border-[#c9b037]/15" />
               <Corners />
+              <span className="absolute -left-16 top-10 hidden -rotate-90 font-mono text-[6px] tracking-[0.3em] text-[#3fa37c]/60 lg:block">
+                NOTA · MARG. — HIC FATVM LEGITVR
+              </span>
               <figcaption className="mb-3 text-center font-mono text-[8px] tracking-[0.4em] text-[#3fa37c]">
                 FIGURA VIII — OCTAGRAMMA FATALIS
               </figcaption>
@@ -946,7 +1246,7 @@ export default function CodexPage() {
             </figure>
 
             {/* copy */}
-            <div className="max-w-md text-center lg:text-left">
+            <div className="max-w-md text-center lg:translate-y-6 lg:text-left">
               <p className="text-[13px] leading-relaxed text-[#e6e0c8]/60">
                 An optional birth-date octagram tool. It maps purpose, love, money, and age
                 themes from your birth date.
@@ -974,11 +1274,21 @@ export default function CodexPage() {
 
       {/* ======================= 6 · FORMULA STRIP ======================= */}
       <section className="border-b border-[#c9b037]/25">
-        <div className="mx-auto max-w-[1240px] px-4 py-12 sm:px-6">
+        <div className="mx-auto max-w-[1400px] px-4 py-12 sm:px-6">
           <SectionHead eyebrow="ARITHMETICA" title="FORMVLAE" sub="PLATES OF THE ART · VERIFIED BY OBSERVATION" />
           <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
-            {FORMULAE.map((f) => (
-              <div key={f.plate} className="relative border border-[#c9b037]/25 bg-[#0a1a12]/70 p-4 text-center">
+            {FORMULAE.map((f, i) => (
+              <div
+                key={f.plate}
+                className={`lcx-mottle relative border border-[#c9b037]/25 bg-[#0a1a12]/70 p-4 text-center ${
+                  [
+                    "md:-rotate-1",
+                    "md:mt-4 md:rotate-[0.8deg]",
+                    "md:-mt-2 md:-rotate-[0.6deg]",
+                    "md:mt-3 md:rotate-1",
+                  ][i]
+                }`}
+              >
                 <span aria-hidden className="pointer-events-none absolute inset-[3px] border border-[#c9b037]/10" />
                 <Corners />
                 <div className="font-mono text-[7px] tracking-[0.3em] text-[#3fa37c]">{f.plate}</div>
@@ -992,11 +1302,11 @@ export default function CodexPage() {
 
       {/* ======================= 7 · TODAY — HODIE ======================= */}
       <section id="lcx-today" className="border-b border-[#c9b037]/25 bg-[#08160e]/70">
-        <div className="mx-auto max-w-[1240px] px-4 py-12 sm:px-6">
+        <div className="mx-auto max-w-[1400px] px-4 py-12 sm:px-6">
           <SectionHead eyebrow="HODIE" title="THE PRESENT SKY" sub="REFRESHED EACH MORNING · SVB VNO CAELO" />
           <div className="grid gap-3 md:grid-cols-3">
             {/* Moon today */}
-            <div className="relative border border-[#c9b037]/25 bg-[#0a1a12]/70 p-4 text-center">
+            <div className="lcx-mottle relative -rotate-1 border border-[#c9b037]/25 bg-[#0a1a12]/70 p-4 text-center">
               <Corners />
               <div className="font-mono text-[7px] tracking-[0.35em] text-[#3fa37c]">LVNA HODIE</div>
               <div className="my-3 flex items-center justify-center gap-3">
@@ -1018,7 +1328,7 @@ export default function CodexPage() {
             </div>
 
             {/* Sign of the day */}
-            <div className="relative border border-[#c9b037]/25 bg-[#0a1a12]/70 p-4 text-center">
+            <div className="lcx-mottle relative rotate-[0.7deg] border border-[#c9b037]/25 bg-[#0a1a12]/70 p-4 text-center md:translate-y-4">
               <Corners />
               <div className="font-mono text-[7px] tracking-[0.35em] text-[#3fa37c]">SIGNVM DIEI</div>
               <div className="my-3 flex items-center justify-center gap-3">
@@ -1038,7 +1348,7 @@ export default function CodexPage() {
             </div>
 
             {/* Card of the day */}
-            <div className="relative border border-[#c9b037]/25 bg-[#0a1a12]/70 p-4 text-center">
+            <div className="lcx-mottle relative -rotate-[0.9deg] border border-[#c9b037]/25 bg-[#0a1a12]/70 p-4 text-center md:-ml-5 md:translate-y-2">
               <Corners />
               <div className="font-mono text-[7px] tracking-[0.35em] text-[#3fa37c]">CHARTA DIEI</div>
               <div className="my-3 flex items-center justify-center gap-3">
@@ -1063,13 +1373,13 @@ export default function CodexPage() {
 
       {/* ======================= 8 · QVAESTIONES ======================= */}
       <section className="border-b border-[#c9b037]/25">
-        <div className="mx-auto max-w-[1240px] px-4 py-14 sm:px-6">
+        <div className="mx-auto max-w-[1400px] px-4 py-14 sm:px-6">
           <SectionHead
             eyebrow="DVBIA · ET RESPONSA"
             title="QUAESTIONES"
             sub="GATHERED FROM THE MARGINS OF THE MANUSCRIPT"
           />
-          <dl className="mx-auto max-w-3xl">
+          <dl className="max-w-3xl lg:ml-20">
             {FAQ.map((f, i) => (
               <div key={f.q} className={`py-6 ${i > 0 ? "border-t border-[#c9b037]/15" : ""}`}>
                 <dt className="flex items-baseline gap-4">
@@ -1094,7 +1404,7 @@ export default function CodexPage() {
 
       {/* ======================= 9 · FINAL CTA ======================= */}
       <section id="lcx-colophon" className="relative overflow-hidden border-b border-[#c9b037]/25 bg-[#08160e]/70">
-        <div className="mx-auto max-w-[1240px] px-4 py-16 text-center sm:px-6">
+        <div className="mx-auto max-w-[1400px] px-4 py-16 text-center sm:px-6">
           <div className="mx-auto mb-6 flex justify-center">
             <WaxSeal />
           </div>
@@ -1107,7 +1417,7 @@ export default function CodexPage() {
           </h2>
           <a
             href="#lcx-top"
-            className="mt-8 inline-flex items-center gap-3 border border-[#e3cd5a]/60 bg-[#c9b037] px-8 py-3.5 font-mono text-[11px] font-bold tracking-[0.25em] text-[#06120c] shadow-[0_0_24px_rgba(201,176,55,0.25)] transition-colors hover:bg-[#e3cd5a]"
+            className="lcx-gilt mt-8 inline-flex items-center gap-3 border border-[#e3cd5a]/60 bg-[#c9b037] px-8 py-3.5 font-mono text-[11px] font-bold tracking-[0.25em] text-[#06120c] shadow-[0_0_24px_rgba(201,176,55,0.25)] transition-colors hover:bg-[#e3cd5a]"
           >
             GET STARTED — IT&rsquo;S FREE <span aria-hidden>→</span>
           </a>
@@ -1122,7 +1432,7 @@ export default function CodexPage() {
 
       {/* ======================= 10 · COLOPHON FOOTER ======================= */}
       <footer>
-        <div className="mx-auto max-w-[1240px] px-4 py-8 sm:px-6">
+        <div className="mx-auto max-w-[1400px] px-4 py-8 sm:px-6">
           <div className="flex flex-col items-center gap-5 md:flex-row md:justify-between">
             <div className="flex items-baseline gap-3">
               <span className="font-serif text-sm font-bold tracking-[0.3em] text-[#c9b037]">ASTRO SCOPE</span>

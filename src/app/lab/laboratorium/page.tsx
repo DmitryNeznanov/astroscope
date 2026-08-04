@@ -142,6 +142,7 @@ const CSS = `
 .llb-caps-sm { text-transform:uppercase; letter-spacing:.18em; font-size:9px; }
 .llb-panel {
   background:linear-gradient(160deg, rgba(46,14,28,.85), rgba(24,8,18,.92));
+  isolation:isolate;
   border:1px solid rgba(214,90,130,.22);
   box-shadow:inset 0 0 0 1px rgba(0,0,0,.55), inset 0 0 32px rgba(90,10,40,.25), 0 0 24px rgba(0,0,0,.5);
   position:relative;
@@ -196,6 +197,55 @@ const CSS = `
   .llb-grid3 { grid-template-columns:1fr !important; }
   .llb-hide-m { display:none; }
 }
+/* --- lab grime layer --- */
+.llb-grime { position:absolute; inset:0; pointer-events:none; overflow:hidden; z-index:-1; }
+.llb-stain { position:absolute; filter:blur(7px); }
+.llb-speck { position:absolute; border-radius:50%; }
+.llb-scratch { position:absolute; height:1px; }
+.llb-scorch {
+  position:absolute; border-radius:50%; filter:blur(12px); pointer-events:none; z-index:-1;
+  background:radial-gradient(closest-side, rgba(4,1,3,.62), rgba(12,4,9,.28) 55%, transparent 72%);
+}
+.llb-smoke {
+  position:absolute; border-radius:50%; filter:blur(16px); pointer-events:none; z-index:-1;
+  background:radial-gradient(closest-side, rgba(150,110,170,.28), rgba(90,60,110,.12) 60%, transparent 75%);
+  animation:llb-smoke linear infinite;
+}
+@keyframes llb-smoke {
+  0% { transform:translate(0,0) scale(1); opacity:0; }
+  18% { opacity:.42; }
+  55% { opacity:.22; }
+  100% { transform:translate(14px,-110px) scale(1.7); opacity:0; }
+}
+.llb-noise {
+  position:fixed; inset:0; pointer-events:none; z-index:60; opacity:.05;
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='180' height='180' filter='url(%23n)'/%3E%3C/svg%3E");
+}
+/* --- background apparatus + layout dirt --- */
+.llb-bg { position:fixed; inset:0; z-index:0; pointer-events:none; overflow:hidden; }
+.llb-rune-giant { position:absolute; line-height:1; user-select:none; }
+.llb-hair { position:absolute; height:1px; background:rgba(214,90,130,.13); }
+.llb-hair-v { position:absolute; width:1px; background:rgba(214,90,130,.11); }
+.llb-ember { position:absolute; border-radius:50%; opacity:0; }
+.llb-ember-a { animation:llb-ember-a linear infinite; }
+.llb-ember-b { animation:llb-ember-b linear infinite; }
+.llb-ember-c { animation:llb-ember-c linear infinite; }
+@keyframes llb-ember-a { 0% { transform:translate(0,0); opacity:0; } 12% { opacity:.85; } 80% { opacity:.3; } 100% { transform:translate(26px,-150px); opacity:0; } }
+@keyframes llb-ember-b { 0% { transform:translate(0,0); opacity:0; } 15% { opacity:.7; } 100% { transform:translate(-20px,-180px); opacity:0; } }
+@keyframes llb-ember-c { 0% { transform:translate(0,0) scale(.7); opacity:0; } 10% { opacity:.9; } 100% { transform:translate(42px,-120px) scale(1.1); opacity:0; } }
+.llb-tag {
+  position:absolute; z-index:5; pointer-events:none; white-space:nowrap;
+  font-family:ui-monospace,'SF Mono',Menlo,Consolas,monospace; font-size:8px; letter-spacing:.2em; text-transform:uppercase;
+  color:#ffb15c; background:rgba(24,7,16,.92); border:1px solid rgba(255,138,60,.45);
+  padding:2px 7px; box-shadow:0 0 10px rgba(0,0,0,.6);
+}
+.llb-annot {
+  position:absolute; z-index:5; pointer-events:none; white-space:nowrap;
+  font-family:ui-monospace,'SF Mono',Menlo,Consolas,monospace; font-size:8px; letter-spacing:.26em; text-transform:uppercase;
+  color:rgba(214,120,150,.75);
+}
+.llb-xspeck { position:absolute; z-index:6; pointer-events:none; border-radius:50%; }
+.llb-seam { position:relative; height:0; z-index:5; margin-top:-12px; pointer-events:none; }
 `;
 
 /* ------------------------------------------------------------------ */
@@ -562,16 +612,171 @@ function CardMotif({ motif, hue }: { motif: Card["motif"]; hue: string }) {
 }
 
 /* ------------------------------------------------------------------ */
+/* Lab grime — stains, specks, scratches, scorch, smoke (deterministic) */
+/* ------------------------------------------------------------------ */
+
+function det(seed: number, i: number): number {
+  const x = Math.sin(seed * 127.1 + i * 311.7) * 43758.5453;
+  return x - Math.floor(x);
+}
+
+const STAIN_COLORS = ["rgba(52,22,58,.5)", "rgba(64,36,20,.45)", "rgba(38,16,44,.55)"];
+const SPECK_COLORS = ["rgba(28,12,24,.8)", "rgba(96,58,28,.55)", "rgba(150,60,90,.38)", "rgba(18,8,16,.9)"];
+
+function Grime({ seed, stains = 2, specks = 10, scratches = 2 }: { seed: number; stains?: number; specks?: number; scratches?: number }) {
+  return (
+    <div className="llb-grime" aria-hidden>
+      {Array.from({ length: stains }, (_, i) => {
+        const w = 60 + det(seed, i) * 130;
+        const rx = 40 + det(seed, i + 3) * 25;
+        const ry = 45 + det(seed, i + 7) * 20;
+        return (
+          <span
+            key={`st${i}`}
+            className="llb-stain"
+            style={{
+              left: `${det(seed, i + 11) * 78}%`,
+              top: `${det(seed, i + 23) * 80}%`,
+              width: w,
+              height: w * (0.6 + det(seed, i + 31) * 0.7),
+              background: STAIN_COLORS[Math.floor(det(seed, i + 41) * STAIN_COLORS.length)],
+              borderRadius: `${rx}% ${100 - rx}% ${ry}% ${100 - ry}% / ${ry}% ${rx}% ${100 - rx}% ${100 - ry}%`,
+              transform: `rotate(${det(seed, i + 51) * 70 - 35}deg)`,
+            }}
+          />
+        );
+      })}
+      {Array.from({ length: specks }, (_, i) => {
+        const s = 1 + det(seed, i + 61) * 2.2;
+        return (
+          <span
+            key={`sp${i}`}
+            className="llb-speck"
+            style={{
+              left: `${det(seed, i + 67) * 98}%`,
+              top: `${det(seed, i + 73) * 96}%`,
+              width: s,
+              height: s,
+              background: SPECK_COLORS[Math.floor(det(seed, i + 79) * SPECK_COLORS.length)],
+            }}
+          />
+        );
+      })}
+      {Array.from({ length: scratches }, (_, i) => (
+        <span
+          key={`sc${i}`}
+          className="llb-scratch"
+          style={{
+            left: `${det(seed, i + 83) * 85}%`,
+            top: `${det(seed, i + 89) * 90}%`,
+            width: 30 + det(seed, i + 97) * 70,
+            background: "rgba(235,200,210,.06)",
+            transform: `rotate(${det(seed, i + 101) * 40 - 20}deg)`,
+          }}
+        />
+      ))}
+    </div>
+  );
+}
+
+function Scorch({ style }: { style: CSSProperties }) {
+  return <span className="llb-scorch" aria-hidden style={style} />;
+}
+
+function Smoke({ style, duration, delay = "0s" }: { style: CSSProperties; duration: string; delay?: string }) {
+  return <span className="llb-smoke" aria-hidden style={{ animationDuration: duration, animationDelay: delay, ...style }} />;
+}
+
+/* ------------------------------------------------------------------ */
+/* Background apparatus layers — behind everything                     */
+/* ------------------------------------------------------------------ */
+
+function BgLayers() {
+  const ticks = Array.from({ length: 96 }, (_, i) => {
+    const a = i * 3.75;
+    const long = i % 8 === 0;
+    const p1 = polar(410, 410, 396, a);
+    const p2 = polar(410, 410, long ? 376 : 386, a);
+    return <line key={`bt${i}`} x1={p1.x} y1={p1.y} x2={p2.x} y2={p2.y} stroke={long ? "rgba(255,138,60,.5)" : "rgba(214,90,130,.35)"} strokeWidth={long ? 1.4 : 0.8} />;
+  });
+  const ringRunes = RUNES.slice(0, 12).map((r, i) => {
+    const p = polar(410, 410, 330, i * 30);
+    return <text key={`br${i}`} x={p.x} y={p.y} textAnchor="middle" dominantBaseline="central" fontSize="26" fill="rgba(196,125,255,.6)">{r}</text>;
+  });
+  const embers = Array.from({ length: 14 }, (_, i) => {
+    const hue = ["#ffb15c", "#ff3d8a", "#c47dff"][i % 3];
+    const s = 2 + det(311, i) * 2.5;
+    return (
+      <span
+        key={`em${i}`}
+        className={`llb-ember llb-ember-${"abc"[i % 3]}`}
+        style={{
+          left: `${det(311, i + 10) * 96}%`,
+          top: `${20 + det(311, i + 20) * 80}%`,
+          width: s,
+          height: s,
+          background: hue,
+          boxShadow: `0 0 ${4 + s * 2}px ${hue}`,
+          animationDuration: `${26 + det(311, i + 30) * 42}s`,
+          animationDelay: `${-det(311, i + 40) * 60}s`,
+        }}
+      />
+    );
+  });
+  return (
+    <div className="llb-bg" aria-hidden>
+      {/* huge ring diagram bleeding off the right viewport edge */}
+      <div className="llb-anim-spin" style={{ position: "absolute", right: -270, top: "4%", width: 820, height: 820, opacity: 0.16, animationDuration: "180s" }}>
+        <svg viewBox="0 0 820 820" width="820" height="820">
+          <circle cx="410" cy="410" r="396" fill="none" stroke="rgba(214,90,130,.5)" strokeWidth="1" />
+          {ticks}
+          <circle cx="410" cy="410" r="330" fill="none" stroke="rgba(165,92,255,.4)" strokeWidth=".8" strokeDasharray="3 6" />
+          {ringRunes}
+          <circle cx="410" cy="410" r="250" fill="none" stroke="rgba(255,92,154,.35)" strokeWidth=".8" strokeDasharray="14 8" />
+          <circle cx="410" cy="410" r="150" fill="none" stroke="rgba(255,138,60,.3)" strokeWidth=".7" />
+          <polygon points="410,160 627,535 193,535" fill="none" stroke="rgba(255,138,60,.35)" strokeWidth=".8" />
+          <polygon points="410,660 193,285 627,285" fill="none" stroke="rgba(196,125,255,.3)" strokeWidth=".8" />
+        </svg>
+      </div>
+      {/* faint orbit fan, top-left off-screen */}
+      <div className="llb-anim-spinr" style={{ position: "absolute", left: -240, top: -180, width: 620, height: 620, opacity: 0.12, animationDuration: "150s" }}>
+        <svg viewBox="0 0 620 620" width="620" height="620">
+          {[280, 220, 160, 100].map((r, i) => (
+            <ellipse key={i} cx="310" cy="310" rx={r} ry={r * 0.62} transform={`rotate(${i * 22} 310 310)`} fill="none" stroke="rgba(214,90,130,.6)" strokeWidth=".9" strokeDasharray={i % 2 ? "4 7" : "none"} />
+          ))}
+          <circle cx="310" cy="310" r="6" fill="rgba(255,61,138,.7)" />
+        </svg>
+      </div>
+      {/* giant rune ghosts */}
+      <span className="llb-rune-giant" style={{ fontSize: 300, left: "2%", top: "34%", color: "rgba(165,92,255,.05)" }}>{RUNES[4]}</span>
+      <span className="llb-rune-giant" style={{ fontSize: 240, left: "44%", top: "64%", color: "rgba(255,61,138,.045)", transform: "rotate(8deg)" }}>{RUNES[11]}</span>
+      <span className="llb-rune-giant" style={{ fontSize: 260, right: "1%", top: "48%", color: "rgba(255,138,60,.05)", transform: "rotate(-6deg)" }}>{RUNES[18]}</span>
+      <span className="llb-rune-giant" style={{ fontSize: 180, left: "30%", top: "8%", color: "rgba(214,90,130,.05)" }}>{RUNES[21]}</span>
+      {/* hairline construction lines */}
+      <div className="llb-hair" style={{ left: 0, right: 0, top: "21%" }} />
+      <div className="llb-hair" style={{ left: 0, right: 0, top: "73%" }} />
+      <div className="llb-hair-v" style={{ top: 0, bottom: 0, left: "33%" }} />
+      <div className="llb-hair-v" style={{ top: 0, bottom: 0, right: "24%" }} />
+      <div className="llb-hair" style={{ left: "-10%", right: "-10%", top: "50%", transform: "rotate(-7deg)" }} />
+      <span className="llb-mono" style={{ position: "absolute", left: "33.4%", top: "19.6%", fontSize: 8, color: "rgba(214,120,150,.4)", letterSpacing: ".2em" }}>AX-33 / 0.218</span>
+      <span className="llb-mono" style={{ position: "absolute", right: "24.6%", top: "71.6%", fontSize: 8, color: "rgba(214,120,150,.4)", letterSpacing: ".2em" }}>MERIDIAN Ω</span>
+      {embers}
+    </div>
+  );
+}
+
+/* ------------------------------------------------------------------ */
 /* Page                                                                */
 /* ------------------------------------------------------------------ */
 
 export default function LaboratoriumPage() {
   return (
-    <div className="llb-root min-h-screen" style={{ backgroundImage: "radial-gradient(1200px 600px at 50% -10%, rgba(122,20,64,.28), transparent), radial-gradient(900px 500px at 90% 110%, rgba(61,17,96,.22), transparent)" }}>
+    <div className="llb-root min-h-screen relative overflow-x-clip" style={{ backgroundImage: "radial-gradient(1200px 600px at 50% -10%, rgba(122,20,64,.28), transparent), radial-gradient(900px 500px at 90% 110%, rgba(61,17,96,.22), transparent)" }}>
       <style>{CSS}</style>
+      <BgLayers />
 
       {/* ======================= TOP BAR ======================= */}
-      <header className="flex items-stretch border-b" style={{ borderColor: "rgba(214,90,130,.25)", background: "linear-gradient(180deg, rgba(40,10,24,.9), rgba(24,7,16,.9))" }}>
+      <header className="relative z-[1] flex items-stretch border-b" style={{ borderColor: "rgba(214,90,130,.25)", background: "linear-gradient(180deg, rgba(40,10,24,.9), rgba(24,7,16,.9))" }}>
         <div className="flex items-center gap-3 px-4 py-2.5 border-r" style={{ borderColor: "rgba(214,90,130,.25)" }}>
           <svg width="22" height="22" viewBox="0 0 24 24" aria-hidden>
             <path d="M12 2 L14 10 L22 12 L14 14 L12 22 L10 14 L2 12 L10 10 Z" fill="none" stroke="#ff3d8a" strokeWidth="1.1" />
@@ -614,7 +819,7 @@ export default function LaboratoriumPage() {
         </div>
       </header>
 
-      <div className="flex">
+      <div className="flex relative z-[1]">
         {/* ======================= LEFT RAIL ======================= */}
         <nav className="llb-rail flex flex-col items-center border-r py-3 gap-1" style={{ borderColor: "rgba(214,90,130,.25)", width: 86, background: "rgba(20,6,14,.6)" }} aria-label="Laboratory modules">
           {RAIL.map((r) => (
@@ -628,14 +833,18 @@ export default function LaboratoriumPage() {
         </nav>
 
         {/* ======================= MAIN ======================= */}
-        <main className="flex-1 min-w-0 p-2 md:p-3 flex flex-col gap-3">
+        <main className="flex-1 min-w-0 p-2 md:p-3 flex flex-col gap-3 relative">
           <div className="llb-grid3 grid gap-3" style={{ gridTemplateColumns: "300px minmax(0,1fr) 320px" }}>
 
             {/* ---------- LEFT COLUMN ---------- */}
-            <div className="flex flex-col gap-3 min-w-0">
+            <div className="flex flex-col gap-3 min-w-0 relative" style={{ marginTop: -6 }}>
+              <span className="llb-annot llb-hide-m" style={{ right: -8, top: 92, transform: "rotate(90deg)", transformOrigin: "top right", zIndex: 6 }}>Distillate Grade AA</span>
               {/* Essence compendium */}
-              <section className="llb-panel llb-notch">
+              <section className="llb-panel llb-notch" style={{ transform: "rotate(-0.7deg)", marginLeft: -4 }}>
                 <CornerTicks />
+                <Grime seed={11} />
+                <Scorch style={{ left: "12%", top: "4%", width: 130, height: 130 }} />
+                <Scorch style={{ left: "62%", top: "10%", width: 110, height: 110 }} />
                 <PanelHead title="Essence Compendium" right="DIST. V.4" />
                 <div className="grid grid-cols-5 gap-1 p-2">
                   {ESSENCES.map((e) => <EssenceOrb key={e.name} e={e} />)}
@@ -648,8 +857,9 @@ export default function LaboratoriumPage() {
               </section>
 
               {/* Alchemical formula */}
-              <section className="llb-panel llb-notch">
+              <section className="llb-panel llb-notch" style={{ transform: "rotate(0.35deg)", marginRight: -6 }}>
                 <CornerTicks />
+                <Grime seed={23} stains={3} />
                 <PanelHead title="Alchemical Formula" right="EQ-114" />
                 <div className="px-3 pt-2">
                   <div className="llb-caps-sm" style={{ color: "#9a5a70" }}>Active Formula</div>
@@ -675,8 +885,10 @@ export default function LaboratoriumPage() {
               </section>
 
               {/* Rune matrix */}
-              <section className="llb-panel llb-notch">
+              <div className="llb-seam"><span className="llb-tag" style={{ top: -6, left: "18%" }}>Array Active — Do Not Cross</span></div>
+              <section className="llb-panel llb-notch" style={{ transform: "rotate(0.9deg)", marginLeft: 6 }}>
                 <CornerTicks />
+                <Grime seed={37} />
                 <PanelHead title="Rune Matrix" right="8×3 ARRAY" />
                 <div className="grid grid-cols-8 gap-1 p-2">
                   {RUNES.map((r, i) => {
@@ -708,9 +920,14 @@ export default function LaboratoriumPage() {
             </div>
 
             {/* ---------- CENTER COLUMN ---------- */}
-            <div className="flex flex-col gap-3 min-w-0">
-              <section className="llb-panel llb-notch">
+            <div className="flex flex-col gap-3 min-w-0 relative">
+              <div className="llb-seam"><span className="llb-tag" style={{ top: -6, left: "38%" }}>Specimen λ-9 · Live</span></div>
+              <section className="llb-panel llb-notch" style={{ transform: "rotate(0.25deg)" }}>
                 <CornerTicks />
+                <Grime seed={41} stains={3} specks={12} />
+                <Scorch style={{ left: "50%", top: "52%", width: 340, height: 340, transform: "translate(-50%,-50%)" }} />
+                <Smoke duration="52s" style={{ right: "8%", bottom: "14%", width: 70, height: 70 }} />
+                <Smoke duration="38s" delay="-19s" style={{ right: "16%", bottom: "22%", width: 45, height: 45 }} />
                 <PanelHead title="The Calculation Chamber" right="SEED XIX-Ω-721 · RUN 0884" />
                 <div className="flex items-stretch">
                   <div className="hidden sm:flex flex-col justify-center pl-2">
@@ -731,8 +948,9 @@ export default function LaboratoriumPage() {
               </section>
 
               {/* Equation scribe */}
-              <section className="llb-panel llb-notch">
+              <section className="llb-panel llb-notch" style={{ transform: "rotate(-0.55deg)", marginLeft: 12, marginRight: -4 }}>
                 <CornerTicks />
+                <Grime seed={53} specks={14} scratches={3} />
                 <PanelHead title="Equation Scribe" right="AUTOGRAPH III" />
                 <div className="grid md:grid-cols-[1fr_150px_150px] gap-0">
                   <div className="p-3 border-r" style={{ borderColor: "rgba(214,90,130,.15)" }}>
@@ -772,9 +990,10 @@ export default function LaboratoriumPage() {
             </div>
 
             {/* ---------- RIGHT COLUMN ---------- */}
-            <div className="flex flex-col gap-3 min-w-0">
-              <section className="llb-panel llb-notch">
+            <div className="flex flex-col gap-3 min-w-0 relative" style={{ marginTop: 18 }}>
+              <section className="llb-panel llb-notch" style={{ transform: "rotate(0.6deg)" }}>
                 <CornerTicks />
+                <Grime seed={67} />
                 <PanelHead title="Planar Orbits" right="HELIOSYNC" />
                 <PlanarOrbits />
                 <div className="flex justify-between px-3 pb-2 llb-mono" style={{ fontSize: 8, color: "#7a4456" }}>
@@ -782,8 +1001,10 @@ export default function LaboratoriumPage() {
                 </div>
               </section>
 
-              <section className="llb-panel llb-notch">
+              <div className="llb-seam"><span className="llb-tag" style={{ top: -6, right: "12%" }}>ψ-Surge Logged</span></div>
+              <section className="llb-panel llb-notch" style={{ transform: "rotate(-0.45deg)", marginRight: -6 }}>
                 <CornerTicks />
+                <Grime seed={71} stains={1} specks={8} />
                 <PanelHead title="Destiny Vectors" right="6-AXIS" />
                 <div className="p-3 flex flex-col gap-2">
                   {VECTORS.map((v) => (
@@ -800,8 +1021,10 @@ export default function LaboratoriumPage() {
                 </div>
               </section>
 
-              <section className="llb-panel llb-notch">
+              <section className="llb-panel llb-notch" style={{ transform: "rotate(0.8deg)", marginTop: -14, position: "relative", zIndex: 2 }}>
                 <CornerTicks />
+                <Grime seed={83} specks={8} />
+                <Smoke duration="44s" delay="-11s" style={{ left: "4%", bottom: "8%", width: 55, height: 55 }} />
                 <PanelHead title="Arcana Cards" right="Deck Alignment: 72%" />
                 <div className="grid grid-cols-5 gap-1.5 p-2">
                   {CARDS.map((c) => (
@@ -820,8 +1043,10 @@ export default function LaboratoriumPage() {
           </div>
 
           {/* ---------- ZODIAC BAND ---------- */}
-          <section className="llb-panel llb-notch">
+          <div className="llb-seam"><span className="llb-tag" style={{ top: -6, right: "10%" }}>Ephemeris Locked</span></div>
+          <section className="llb-panel llb-notch" style={{ transform: "rotate(-0.3deg)", marginTop: -18, marginLeft: -6, marginRight: -6, position: "relative", zIndex: 3 }}>
             <CornerTicks />
+            <Grime seed={89} stains={1} specks={8} />
             <PanelHead title="Zodiac Register — Twelve Signs of the Wheel" right="EPHEMERIS 2026" />
             <div className="grid grid-cols-4 sm:grid-cols-6 lg:grid-cols-12">
               {ZODIAC.map((z, i) => (
@@ -836,8 +1061,9 @@ export default function LaboratoriumPage() {
           </section>
 
           {/* ---------- SIX APPARATUS TILES ---------- */}
-          <section id="llb-sections" className="llb-panel llb-notch">
+          <section id="llb-sections" className="llb-panel llb-notch" style={{ transform: "rotate(0.25deg)", marginLeft: 8 }}>
             <CornerTicks />
+            <Grime seed={97} stains={3} specks={12} scratches={3} />
             <PanelHead title="Instrument Registry — Six Working Apparatus" right="ALL MODULES NOMINAL" />
             <div className="grid sm:grid-cols-2 lg:grid-cols-3">
               {SECTIONS.map((s, i) => (
@@ -862,8 +1088,9 @@ export default function LaboratoriumPage() {
 
           {/* ---------- DESTINY MATRIX + FAQ ---------- */}
           <div className="grid lg:grid-cols-[340px_1fr] gap-3">
-            <section className="llb-panel llb-notch">
+            <section className="llb-panel llb-notch" style={{ transform: "rotate(-0.8deg)", marginTop: 8 }}>
               <CornerTicks />
+              <Grime seed={101} stains={2} specks={9} />
               <PanelHead title="Destiny Matrix" right="OPTIONAL MODULE" />
               <div className="p-2"><Octagram /></div>
               <p className="px-3" style={{ fontSize: 10.5, lineHeight: 1.6, color: "#a06b7c" }}>
@@ -875,8 +1102,9 @@ export default function LaboratoriumPage() {
               </div>
             </section>
 
-            <section className="llb-panel llb-notch">
+            <section className="llb-panel llb-notch" style={{ transform: "rotate(0.45deg)", marginLeft: -14, position: "relative", zIndex: 2 }}>
               <CornerTicks />
+              <Grime seed={103} stains={2} specks={9} scratches={3} />
               <PanelHead title="Experiment Notes — Frequently Consulted Entries" right="ARCHIVE 4/128" />
               <div className="grid sm:grid-cols-2">
                 {FAQ.map((f, i) => (
@@ -897,8 +1125,10 @@ export default function LaboratoriumPage() {
           </div>
 
           {/* ---------- CTA ---------- */}
-          <section id="llb-cta" className="llb-panel llb-notch" style={{ background: "linear-gradient(120deg, rgba(90,14,48,.9), rgba(40,8,26,.92) 55%, rgba(61,17,96,.7))" }}>
+          <div className="llb-seam"><span className="llb-tag" style={{ top: -6, left: "8%" }}>Final Seal — Approach Unarmed</span></div>
+          <section id="llb-cta" className="llb-panel llb-notch" style={{ background: "linear-gradient(120deg, rgba(90,14,48,.9), rgba(40,8,26,.92) 55%, rgba(61,17,96,.7))", transform: "rotate(-0.35deg)", marginLeft: -16, marginRight: -16, position: "relative", zIndex: 2 }}>
             <CornerTicks />
+            <Grime seed={107} stains={1} specks={6} scratches={1} />
             <div className="flex flex-col md:flex-row items-center gap-4 px-5 py-5">
               <svg width="52" height="52" viewBox="0 0 52 52" aria-hidden className="llb-anim-spin" style={{ animationDuration: "90s", flex: "none" }}>
                 <circle cx="26" cy="26" r="22" fill="none" stroke="rgba(255,138,60,.5)" strokeWidth=".9" strokeDasharray="4 5" />
@@ -929,11 +1159,20 @@ export default function LaboratoriumPage() {
             <span className="llb-mono">SEED XIX-Ω-721</span>
             <span className="llb-mono">© 2026 — ALL ORBITS RESERVED</span>
           </footer>
+
+          {/* stray annotations + border-crossing specks + edge-bleed rune */}
+          <span className="llb-annot llb-hide-m" style={{ left: 318, top: "13%", transform: "rotate(90deg)", transformOrigin: "left top" }}>Field Sample 07 — Unsterile</span>
+          <span className="llb-annot llb-hide-m" style={{ right: 330, top: "40%", transform: "rotate(-90deg)", transformOrigin: "right top" }}>Containment Seam B</span>
+          <span className="llb-xspeck" style={{ left: 313, top: "26%", width: 3, height: 3, background: "#ff3d8a", boxShadow: "0 0 6px #ff3d8a" }} />
+          <span className="llb-xspeck" style={{ left: 309, top: "calc(26% + 8px)", width: 2, height: 2, background: "rgba(150,60,90,.7)" }} />
+          <span className="llb-xspeck" style={{ right: 321, top: "58%", width: 3, height: 3, background: "#ffb15c", boxShadow: "0 0 6px #ffb15c" }} />
+          <span className="llb-xspeck" style={{ right: 317, top: "calc(58% + 9px)", width: 2, height: 2, background: "rgba(96,58,28,.8)" }} />
+          <span className="llb-rune-giant llb-hide-m" style={{ fontSize: 210, right: -52, top: "56%", color: "rgba(196,125,255,.08)", transform: "rotate(90deg)", zIndex: 0 }}>{RUNES[7]}</span>
         </main>
       </div>
 
       {/* ======================= BOTTOM STATUS STRIP ======================= */}
-      <div className="sticky bottom-0 flex flex-wrap items-stretch border-t llb-mono" style={{ borderColor: "rgba(214,90,130,.3)", background: "rgba(16,5,11,.96)", fontSize: 9 }}>
+      <div className="sticky bottom-0 z-30 flex flex-wrap items-stretch border-t llb-mono" style={{ borderColor: "rgba(214,90,130,.3)", background: "rgba(16,5,11,.96)", fontSize: 9 }}>
         <div className="flex items-center gap-4 px-4 py-2 border-r" style={{ borderColor: "rgba(214,90,130,.2)" }}>
           <span className="llb-caps-sm" style={{ color: "#9a5a70" }}>Lab Status</span>
           <span className="llb-glow-m llb-anim-pulse" style={{ animationDuration: "5s" }}>OPERATIONAL</span>
@@ -959,6 +1198,11 @@ export default function LaboratoriumPage() {
           <span>{"\u26A0\uFE0E"} 7</span><span>{"\u2709\uFE0E"} 12</span><span style={{ color: "#ff5c9a" }}>✦ 3</span>
         </div>
       </div>
+
+      {/* viewport-corner smoke + dust noise */}
+      <Smoke duration="60s" style={{ position: "fixed", left: 14, bottom: 60, width: 90, height: 90, zIndex: 40 }} />
+      <Smoke duration="46s" delay="-23s" style={{ position: "fixed", left: 60, bottom: 44, width: 56, height: 56, zIndex: 40 }} />
+      <div className="llb-noise" aria-hidden />
     </div>
   );
 }

@@ -228,23 +228,264 @@ const LLC_STYLES = `
   @keyframes llc-spin-rev { to { transform: rotate(-360deg); } }
   @keyframes llc-pulse    { 0%,100% { opacity: .45; } 50% { opacity: 1; } }
   @keyframes llc-flicker  { 0%,100% { opacity: .9; } 47% { opacity: .55; } 53% { opacity: .8; } }
+
+  /* ---- age layer: vellum, foxing, worn gilding, candlelight ---- */
+  .llc-aged { position: relative; }
+  .llc-aged::before {
+    content: ""; position: absolute; inset: 0; pointer-events: none;
+    background:
+      radial-gradient(7px 5px at 12% 18%, rgba(122,90,43,.20), transparent 70%),
+      radial-gradient(4px 4px at 86% 12%, rgba(110,95,50,.18), transparent 70%),
+      radial-gradient(9px 6px at 78% 84%, rgba(96,80,40,.16), transparent 70%),
+      radial-gradient(3px 3px at 30% 88%, rgba(122,90,43,.22), transparent 70%),
+      radial-gradient(5px 4px at 55% 42%, rgba(90,105,60,.10), transparent 70%);
+    filter: blur(.6px);
+  }
+  .llc-aged:nth-child(2n)::before   { transform: scaleX(-1); }
+  .llc-aged:nth-child(3n)::before   { transform: scaleY(-1); }
+  .llc-aged:nth-child(3n+1)::before { transform: scale(-1,-1); }
+  .llc-bleed {
+    box-shadow: 0 0 2.5px rgba(201,176,55,.5), 0 0 6px rgba(201,176,55,.22);
+    filter: blur(.3px);
+  }
+  .llc-worn {
+    -webkit-mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Cfilter id='w'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.09' numOctaves='3' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 1 0 0 0 0 1 0 0 0 0 1 0.35 0.35 0.35 0 0.5'/%3E%3C/filter%3E%3Crect width='180' height='180' filter='url(%23w)'/%3E%3C/svg%3E");
+    mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Cfilter id='w'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.09' numOctaves='3' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 1 0 0 0 0 1 0 0 0 0 1 0.35 0.35 0.35 0 0.5'/%3E%3C/filter%3E%3Crect width='180' height='180' filter='url(%23w)'/%3E%3C/svg%3E");
+    -webkit-mask-size: 180px 180px;
+    mask-size: 180px 180px;
+  }
+  .llc-fiber {
+    position: fixed; inset: 0; z-index: 40; pointer-events: none;
+    opacity: .055; mix-blend-mode: overlay;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='260' height='260'%3E%3Cfilter id='f'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 0.9 0 0 0 0 0.85 0 0 0 0 0.62 0 0 0 0.6 0'/%3E%3C/filter%3E%3Crect width='260' height='260' filter='url(%23f)'/%3E%3C/svg%3E");
+    background-size: 260px 260px;
+  }
+  .llc-stain {
+    border-radius: 9999px;
+    background: repeating-radial-gradient(ellipse 42% 38% at 50% 50%,
+      transparent 0 12px, rgba(120,88,44,.16) 12px 13.5px,
+      transparent 13.5px 24px, rgba(120,88,44,.11) 24px 25px,
+      transparent 25px 37px, rgba(120,88,44,.08) 37px 38.5px,
+      transparent 38.5px 120px);
+    filter: blur(.8px);
+  }
+  .llc-hole {
+    position: absolute; border-radius: 9999px;
+    background: #020a05;
+    box-shadow: 0 0 1.5px .8px rgba(120,90,50,.4), inset 0 0 1px rgba(0,0,0,.9);
+  }
+  .llc-candle {
+    position: absolute; inset: 0; pointer-events: none;
+    background:
+      radial-gradient(ellipse 55% 75% at 3% 42%, rgba(255,176,86,.07), rgba(255,176,86,.02) 45%, transparent 70%),
+      radial-gradient(ellipse 40% 55% at 98% 96%, rgba(255,190,100,.03), transparent 65%);
+    animation: llc-candle 14s ease-in-out infinite;
+  }
+  @keyframes llc-candle {
+    0%,100% { opacity: .55; } 18% { opacity: .8; } 41% { opacity: .6; }
+    63% { opacity: .95; } 82% { opacity: .7; }
+  }
+  .llc-specks {
+    background-image:
+      radial-gradient(1.3px 1.3px at 7% 14%,  rgba(230,224,200,.55), transparent 60%),
+      radial-gradient(1px 1px at 19% 63%,     rgba(230,224,200,.4),  transparent 60%),
+      radial-gradient(1.6px 1.6px at 27% 38%, rgba(201,176,55,.5),   transparent 60%),
+      radial-gradient(1px 1px at 34% 81%,     rgba(230,224,200,.35), transparent 60%),
+      radial-gradient(1.2px 1.2px at 41% 9%,  rgba(63,163,124,.55),  transparent 60%),
+      radial-gradient(1px 1px at 49% 55%,     rgba(230,224,200,.45), transparent 60%),
+      radial-gradient(1.4px 1.4px at 56% 29%, rgba(201,176,55,.4),   transparent 60%),
+      radial-gradient(1px 1px at 63% 71%,     rgba(230,224,200,.4),  transparent 60%),
+      radial-gradient(1.2px 1.2px at 70% 17%, rgba(230,224,200,.5),  transparent 60%),
+      radial-gradient(1px 1px at 77% 47%,     rgba(63,163,124,.45),  transparent 60%),
+      radial-gradient(1.5px 1.5px at 84% 88%, rgba(230,224,200,.4),  transparent 60%),
+      radial-gradient(1px 1px at 91% 33%,     rgba(201,176,55,.5),   transparent 60%),
+      radial-gradient(1.2px 1.2px at 96% 59%, rgba(230,224,200,.35), transparent 60%),
+      radial-gradient(1px 1px at 13% 91%,     rgba(230,224,200,.4),  transparent 60%),
+      radial-gradient(1.4px 1.4px at 22% 4%,  rgba(201,176,55,.35),  transparent 60%),
+      radial-gradient(1px 1px at 45% 94%,     rgba(63,163,124,.5),   transparent 60%),
+      radial-gradient(1.3px 1.3px at 66% 5%,  rgba(230,224,200,.45), transparent 60%),
+      radial-gradient(1px 1px at 88% 72%,     rgba(230,224,200,.35), transparent 60%),
+      radial-gradient(1.2px 1.2px at 3% 46%,  rgba(201,176,55,.45),  transparent 60%),
+      radial-gradient(1px 1px at 52% 42%,     rgba(230,224,200,.3),  transparent 60%);
+    opacity: .4;
+  }
   @media (prefers-reduced-motion: reduce) {
     .llc-rot-45, .llc-rot-60r, .llc-rot-90, .llc-rot-120r, .llc-rot-180,
-    .llc-pulse, .llc-pulse-2, .llc-flicker { animation: none !important; }
+    .llc-pulse, .llc-pulse-2, .llc-flicker, .llc-candle { animation: none !important; }
   }
 `;
+
+/* ------------------------------------------------------------------ */
+/* Age marks: wormhole pinpricks, water-stain rings, candle warmth     */
+/* ------------------------------------------------------------------ */
+const PINPRICKS: { l: string; t: string; s: number }[] = [
+  { l: "1.2%", t: "7%", s: 2.5 },
+  { l: "0.6%", t: "21%", s: 1.5 },
+  { l: "1.8%", t: "34%", s: 2 },
+  { l: "0.8%", t: "52%", s: 3 },
+  { l: "1.4%", t: "68%", s: 1.5 },
+  { l: "0.5%", t: "83%", s: 2.5 },
+  { l: "98.6%", t: "11%", s: 2 },
+  { l: "99.1%", t: "27%", s: 3 },
+  { l: "98.2%", t: "44%", s: 1.5 },
+  { l: "99.3%", t: "61%", s: 2.5 },
+  { l: "98.7%", t: "76%", s: 1.5 },
+  { l: "99.0%", t: "90%", s: 2 },
+  { l: "14%", t: "0.8%", s: 2 },
+  { l: "71%", t: "99.1%", s: 2.5 },
+];
+
+function AgeOverlay() {
+  return (
+    <div aria-hidden className="pointer-events-none absolute inset-0 z-[5] overflow-hidden">
+      <div className="llc-candle" />
+      <div className="llc-stain absolute -bottom-10 -right-8 h-44 w-44 opacity-70" />
+      <div className="llc-stain absolute right-24 top-[38%] hidden h-28 w-28 opacity-50 md:block" />
+      <div className="llc-stain absolute -left-6 top-[64%] hidden h-32 w-32 opacity-40 lg:block" />
+      {PINPRICKS.map((p, i) => (
+        <span
+          key={i}
+          className="llc-hole"
+          style={{ left: p.l, top: p.t, width: p.s, height: p.s }}
+        />
+      ))}
+    </div>
+  );
+}
+
+/* ------------------------------------------------------------------ */
+/* Deep background: arcs, construction circles, glyphs, geometry       */
+/* ------------------------------------------------------------------ */
+function CosmosBackdrop() {
+  const radii = Array.from({ length: 12 }, (_, i) => {
+    const a = rad(i * 30);
+    return {
+      key: i,
+      x2: Math.round((500 + 490 * Math.cos(a)) * 10) / 10,
+      y2: Math.round((500 + 490 * Math.sin(a)) * 10) / 10,
+    };
+  });
+  const fol = Array.from({ length: 6 }, (_, i) => {
+    const a = rad(i * 60);
+    return {
+      key: i,
+      cx: Math.round((200 + 60 * Math.cos(a)) * 10) / 10,
+      cy: Math.round((200 + 60 * Math.sin(a)) * 10) / 10,
+    };
+  });
+  return (
+    <div aria-hidden className="pointer-events-none absolute inset-0 -z-10 overflow-hidden">
+      {/* giant arcs spanning the page, mostly off-screen top */}
+      <svg
+        className="absolute left-1/2 top-[-55vmax] h-[140vmax] w-[140vmax] -translate-x-1/2 opacity-[0.07]"
+        viewBox="0 0 1000 1000"
+      >
+        <g fill="none" stroke={GOLD} strokeWidth="0.7">
+          <circle cx="500" cy="500" r="490" strokeOpacity="0.5" />
+          <circle cx="500" cy="500" r="430" strokeOpacity="0.35" strokeDasharray="3 6" />
+          <circle cx="500" cy="500" r="330" stroke={VERDI} strokeOpacity="0.45" />
+          <circle cx="500" cy="500" r="240" strokeOpacity="0.25" strokeDasharray="1 5" />
+          <polygon points="500,20 85,740 915,740" strokeOpacity="0.3" />
+          <polygon points="500,980 85,260 915,260" strokeOpacity="0.3" />
+          {radii.map((r) => (
+            <line key={r.key} x1="500" y1="500" x2={r.x2} y2={r.y2} strokeOpacity="0.18" />
+          ))}
+        </g>
+      </svg>
+
+      {/* hairline construction circles + chords, full page */}
+      <svg
+        className="absolute inset-0 h-full w-full opacity-[0.05]"
+        viewBox="0 0 1600 2400"
+        preserveAspectRatio="xMidYMid slice"
+      >
+        <g fill="none" strokeWidth="0.8">
+          <circle cx="180" cy="420" r="700" stroke={GOLD} strokeOpacity="0.6" />
+          <circle cx="1440" cy="880" r="820" stroke={VERDI} strokeOpacity="0.55" />
+          <circle cx="820" cy="2050" r="940" stroke={GOLD} strokeOpacity="0.5" />
+          <circle cx="1440" cy="880" r="410" stroke={GOLD} strokeOpacity="0.4" strokeDasharray="4 7" />
+          <circle cx="180" cy="420" r="350" stroke={VERDI} strokeOpacity="0.4" strokeDasharray="2 6" />
+          <line x1="-40" y1="1700" x2="1640" y2="240" stroke={GOLD} strokeOpacity="0.45" />
+          <line x1="-60" y1="640" x2="1660" y2="1520" stroke={VERDI} strokeOpacity="0.4" />
+          <line x1="330" y1="-40" x2="1180" y2="2440" stroke={GOLD} strokeOpacity="0.3" />
+          <line x1="-40" y1="1700" x2="1440" y2="880" stroke={GOLD} strokeOpacity="0.35" />
+          <line x1="180" y1="420" x2="820" y2="2050" stroke={VERDI} strokeOpacity="0.35" />
+        </g>
+      </svg>
+
+      {/* giant slowly-rotating sacred geometry, bleeding off the right edge */}
+      <svg
+        className="llc-rot-180 absolute -right-[22vmin] top-[22%] h-[80vmin] w-[80vmin] opacity-[0.08]"
+        viewBox="0 0 400 400"
+      >
+        <g fill="none" stroke={GOLD} strokeWidth="0.8">
+          <circle cx="200" cy="200" r="130" strokeOpacity="0.6" />
+          <circle cx="200" cy="200" r="60" />
+          {fol.map((c) => (
+            <circle key={c.key} cx={c.cx} cy={c.cy} r="60" strokeOpacity="0.8" />
+          ))}
+          <polygon points={poly(126, 3, -90, 200, 200)} stroke={VERDI} strokeOpacity="0.7" />
+          <polygon points={poly(126, 3, 90, 200, 200)} stroke={VERDI} strokeOpacity="0.7" />
+        </g>
+      </svg>
+
+      {/* counter-rotating octagram wheel, bleeding off the lower-left edge */}
+      <svg
+        className="llc-rot-120r absolute -left-[18vmin] bottom-[5%] h-[64vmin] w-[64vmin] opacity-[0.06]"
+        viewBox="0 0 400 400"
+      >
+        <g fill="none" stroke={VERDI} strokeWidth="0.8">
+          <circle cx="200" cy="200" r="150" />
+          <circle cx="200" cy="200" r="110" strokeDasharray="3 5" />
+          <polygon points={poly(150, 4, -90, 200, 200)} stroke={GOLD} strokeOpacity="0.8" />
+          <polygon points={poly(150, 4, -45, 200, 200)} stroke={GOLD} strokeOpacity="0.8" />
+          {Array.from({ length: 8 }, (_, i) => {
+            const a = rad(i * 45);
+            return (
+              <line
+                key={i}
+                x1={200 + 110 * Math.cos(a)}
+                y1={200 + 110 * Math.sin(a)}
+                x2={200 + 150 * Math.cos(a)}
+                y2={200 + 150 * Math.sin(a)}
+                strokeOpacity="0.7"
+              />
+            );
+          })}
+        </g>
+      </svg>
+
+      {/* huge faint glyphs behind the panels */}
+      <span className="absolute left-[5%] top-[10%] select-none text-[9rem] leading-none text-[#c9b037] opacity-[0.05] md:text-[24rem]">
+        ☉︎
+      </span>
+      <span className="absolute right-[3%] top-[48%] select-none -rotate-12 text-[8rem] leading-none text-[#3fa37c] opacity-[0.05] md:text-[20rem]">
+        ♄︎
+      </span>
+      <span className="absolute bottom-[3%] left-[36%] select-none rotate-6 text-[7rem] leading-none text-[#c9b037] opacity-[0.04] md:text-[17rem]">
+        ✦
+      </span>
+      <span className="absolute left-[46%] top-[64%] hidden select-none -rotate-6 text-[13rem] leading-none text-[#3fa37c] opacity-[0.035] lg:block">
+        ☽︎
+      </span>
+
+      {/* star specks */}
+      <div className="llc-specks absolute inset-0" />
+    </div>
+  );
+}
 
 /* ------------------------------------------------------------------ */
 /* Small building blocks                                               */
 /* ------------------------------------------------------------------ */
 function Corners() {
-  const base = "pointer-events-none absolute h-2.5 w-2.5 border-[#c9b037]/60";
+  const base = "pointer-events-none absolute h-3 w-3 border-[#c9b037]/70";
   return (
     <>
-      <span aria-hidden className={`${base} left-0 top-0 border-l border-t`} />
-      <span aria-hidden className={`${base} right-0 top-0 border-r border-t`} />
-      <span aria-hidden className={`${base} bottom-0 left-0 border-b border-l`} />
-      <span aria-hidden className={`${base} bottom-0 right-0 border-b border-r`} />
+      <span aria-hidden className={`${base} -left-[4px] -top-[4px] border-l border-t`} />
+      <span aria-hidden className={`${base} -right-[4px] -top-[4px] border-r border-t`} />
+      <span aria-hidden className={`${base} -bottom-[4px] -left-[4px] border-b border-l`} />
+      <span aria-hidden className={`${base} -bottom-[4px] -right-[4px] border-b border-r`} />
     </>
   );
 }
@@ -252,13 +493,13 @@ function Corners() {
 function PanelHeader({ title, tag }: { title: string; tag?: string }) {
   return (
     <header className="mb-2 flex items-center gap-2">
-      <span className="h-px w-3 bg-[#c9b037]/50" />
+      <span className="llc-bleed h-px w-3 bg-[#c9b037]/50" />
       <span aria-hidden className="text-[7px] text-[#c9b037]/80">◆</span>
-      <h3 className="font-mono text-[9px] font-semibold tracking-[0.35em] text-[#c9b037]">
+      <h3 className="llc-worn font-mono text-[9px] font-semibold tracking-[0.35em] text-[#c9b037]">
         {title}
       </h3>
       <span aria-hidden className="text-[7px] text-[#c9b037]/80">◆</span>
-      <span className="h-px flex-1 bg-[#c9b037]/30" />
+      <span className="llc-bleed h-px flex-1 bg-[#c9b037]/30" />
       {tag ? (
         <span className="font-mono text-[7px] tracking-[0.25em] text-[#3fa37c]/80">{tag}</span>
       ) : null}
@@ -279,7 +520,7 @@ function Panel({
 }) {
   return (
     <section
-      className={`relative border border-[#c9b037]/25 bg-[#0a1a12]/70 p-3 ${className}`}
+      className={`llc-aged relative border border-[#c9b037]/25 bg-[#0a1a12]/70 p-3 ${className}`}
     >
       <span
         aria-hidden
@@ -703,13 +944,16 @@ function Seal() {
 export default function LivingCosmosPage() {
   return (
     <main
-      className="min-h-screen bg-[#06120c] text-[#e6e0c8] antialiased"
+      className="relative isolate min-h-screen overflow-x-clip bg-[#06120c] text-[#e6e0c8] antialiased"
       style={{
         backgroundImage:
           "radial-gradient(ellipse at 50% 0%, rgba(63,163,124,0.07), transparent 55%), radial-gradient(ellipse at 50% 100%, rgba(201,176,55,0.05), transparent 50%)",
       }}
     >
       <style>{LLC_STYLES}</style>
+      <CosmosBackdrop />
+      <div aria-hidden className="llc-fiber" />
+      <AgeOverlay />
 
       {/* ======================= NAV ======================= */}
       <nav className="border-b border-[#c9b037]/25">
@@ -751,7 +995,7 @@ export default function LivingCosmosPage() {
             LIBER PRIMUS · DE COELO VIVENTE
             <span className="h-px w-10 bg-[#3fa37c]/40 sm:w-24" />
           </div>
-          <h1 className="font-serif text-3xl tracking-[0.18em] text-[#c9b037] sm:text-5xl md:text-6xl">
+          <h1 className="llc-worn font-serif text-3xl tracking-[0.18em] text-[#c9b037] sm:text-5xl md:text-6xl">
             THE LIVING COSMOS
           </h1>
           <p className="mt-3 font-mono text-[9px] tracking-[0.45em] text-[#e6e0c8]/60 sm:text-[11px]">
@@ -778,7 +1022,7 @@ export default function LivingCosmosPage() {
           <a
             id="llc-cast"
             href="#llc-operations"
-            className="inline-flex items-center gap-3 bg-[#c9b037] px-6 py-2.5 font-mono text-[10px] font-bold tracking-[0.25em] text-[#06120c] transition-colors hover:bg-[#e3cd5a]"
+            className="llc-worn inline-flex items-center gap-3 bg-[#c9b037] px-6 py-2.5 font-mono text-[10px] font-bold tracking-[0.25em] text-[#06120c] transition-colors hover:bg-[#e3cd5a]"
           >
             CAST YOUR FREE BIRTH CHART <span aria-hidden>→</span>
           </a>
@@ -789,11 +1033,23 @@ export default function LivingCosmosPage() {
       </div>
 
       {/* ======================= APPARATUS + CODEX PANELS ======================= */}
-      <section className="mx-auto max-w-[1500px] px-3 py-6 sm:px-5">
+      <section className="relative mx-auto max-w-none px-2 py-6 sm:px-4">
+        <span
+          aria-hidden
+          className="pointer-events-none absolute -left-1 top-16 hidden select-none font-mono text-[8px] tracking-[0.5em] text-[#c9b037]/40 [writing-mode:vertical-rl] xl:block"
+        >
+          MARGINALIA · OBSERVATIO NOCTIS · FOL. XII
+        </span>
+        <span
+          aria-hidden
+          className="pointer-events-none absolute -right-1 top-[46%] hidden select-none font-mono text-[8px] tracking-[0.5em] text-[#3fa37c]/40 [writing-mode:vertical-rl] xl:block"
+        >
+          ANNOTATIO PERITI · IN MARGINE · MMXXVI
+        </span>
         <div className="grid gap-3 lg:grid-cols-[260px_minmax(0,1fr)_260px]">
           {/* -------- left column -------- */}
-          <div className="flex flex-col gap-3">
-            <Panel title="ETHER CODEX" tag="CAP. I">
+          <div className="relative z-[2] flex flex-col gap-3 lg:-mr-5">
+            <Panel title="ETHER CODEX" tag="CAP. I" className="-rotate-[0.6deg]">
               <ol className="space-y-1.5">
                 {ETHER.map((e) => (
                   <li key={e.no} className="flex items-baseline gap-2 border-b border-[#c9b037]/10 pb-1.5">
@@ -807,7 +1063,7 @@ export default function LivingCosmosPage() {
               </ol>
             </Panel>
 
-            <Panel title="ELEMENTAL MATRIX" tag="TAB. II">
+            <Panel title="ELEMENTAL MATRIX" tag="TAB. II" className="rotate-[0.4deg] lg:-ml-2">
               <ul className="space-y-1">
                 {ELEMENTS.map((el) => (
                   <li key={el.latin} className="flex items-center gap-2 border-b border-[#c9b037]/10 pb-1">
@@ -833,7 +1089,7 @@ export default function LivingCosmosPage() {
               </div>
             </Panel>
 
-            <Panel title="RITUAL SEQUENCE" tag="ORDO">
+            <Panel title="RITUAL SEQUENCE" tag="ORDO" className="-rotate-[0.5deg]">
               <ol className="space-y-1.5">
                 {RITUAL.map((r) => (
                   <li key={r.no} className="flex gap-2">
@@ -849,7 +1105,7 @@ export default function LivingCosmosPage() {
               </ol>
             </Panel>
 
-            <Panel title="SACRED GEOMETRY" tag="FIG. III" className="hidden lg:block">
+            <Panel title="SACRED GEOMETRY" tag="FIG. III" className="hidden rotate-[0.6deg] lg:-ml-3 lg:block">
               <ul className="space-y-1">
                 {GEOMETRY.map((g) => (
                   <li key={g.name} className="flex items-center gap-2 border-b border-[#c9b037]/10 pb-1">
@@ -865,7 +1121,7 @@ export default function LivingCosmosPage() {
           </div>
 
           {/* -------- centre: the apparatus -------- */}
-          <div className="relative border border-[#c9b037]/25 bg-[#08160e]/60 p-2 sm:p-3">
+          <div className="llc-aged relative border border-[#c9b037]/25 bg-[#08160e]/60 p-2 sm:p-3">
             <span aria-hidden className="pointer-events-none absolute inset-[3px] border border-[#c9b037]/10" />
             <Corners />
             <div className="mb-1 flex items-center justify-between px-2 font-mono text-[7px] tracking-[0.25em] text-[#e6e0c8]/35">
@@ -875,7 +1131,7 @@ export default function LivingCosmosPage() {
             </div>
             <Mandala />
             {/* zodiacal band */}
-            <div className="mt-2 grid grid-cols-3 border border-[#c9b037]/20 sm:grid-cols-6 xl:grid-cols-12">
+            <div className="-mx-1 mt-2 grid rotate-[0.15deg] grid-cols-3 border border-[#c9b037]/20 sm:grid-cols-6 xl:grid-cols-12">
               {ZODIAC.map((z) => (
                 <div
                   key={z.name}
@@ -890,8 +1146,8 @@ export default function LivingCosmosPage() {
           </div>
 
           {/* -------- right column -------- */}
-          <div className="flex flex-col gap-3">
-            <Panel title="SOLAR ALCHEMY" tag="CAP. IV">
+          <div className="relative z-[2] flex flex-col gap-3 lg:-ml-5">
+            <Panel title="SOLAR ALCHEMY" tag="CAP. IV" className="rotate-[0.6deg]">
               <ul className="space-y-1">
                 {ALCHEMY.map((a) => (
                   <li key={a.body} className="flex items-center gap-2 border-b border-[#c9b037]/10 pb-1">
@@ -907,7 +1163,7 @@ export default function LivingCosmosPage() {
               </ul>
             </Panel>
 
-            <Panel title="LUNAR PHASES" tag="CYCL. XXIX">
+            <Panel title="LUNAR PHASES" tag="CYCL. XXIX" className="-rotate-[0.4deg] lg:-mr-2">
               <div className="grid grid-cols-4 gap-1">
                 {PHASES.map((p) => (
                   <MoonPhase key={p.name} name={p.name} shadowX={p.shadowX} half={p.half} />
@@ -919,7 +1175,7 @@ export default function LivingCosmosPage() {
               </div>
             </Panel>
 
-            <Panel title="COSMIC VEINS" tag="FLUX.">
+            <Panel title="COSMIC VEINS" tag="FLUX." className="rotate-[0.5deg]">
               <ul className="space-y-2">
                 {VEINS.map((v) => (
                   <li key={v.name}>
@@ -942,7 +1198,7 @@ export default function LivingCosmosPage() {
               </ul>
             </Panel>
 
-            <Panel title="PLANAR LAYERS" tag="ASCENS.">
+            <Panel title="PLANAR LAYERS" tag="ASCENS." className="-rotate-[0.6deg]">
               <ul className="space-y-1">
                 {LAYERS.map((l) => (
                   <li key={l.name} className="flex items-baseline gap-2 border-b border-[#c9b037]/10 pb-1">
@@ -955,7 +1211,7 @@ export default function LivingCosmosPage() {
               </ul>
             </Panel>
 
-            <Panel title="ARCANE FORMULAE" tag="ARITHM." className="hidden lg:block">
+            <Panel title="ARCANE FORMULAE" tag="ARITHM." className="hidden rotate-[0.4deg] lg:-mr-3 lg:block">
               <ul className="space-y-1.5">
                 {ARCANE.map((f) => (
                   <li key={f.f} className="border border-[#c9b037]/15 bg-[#06120c]/60 px-2 py-1">
@@ -970,7 +1226,7 @@ export default function LivingCosmosPage() {
       </section>
 
       {/* ======================= CORE FORMULAE STRIP ======================= */}
-      <section className="mx-auto max-w-[1500px] px-3 pb-6 sm:px-5">
+      <section className="mx-auto max-w-none px-2 pb-6 sm:px-4">
         <div className="mb-2 flex items-center gap-3">
           <span className="h-px flex-1 bg-[#c9b037]/30" />
           <h2 className="font-mono text-[10px] tracking-[0.4em] text-[#c9b037]">· CORE FORMULAE ·</h2>
@@ -978,7 +1234,12 @@ export default function LivingCosmosPage() {
         </div>
         <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
           {CORE_FORMULAE.map((f, i) => (
-            <div key={f.name} className="relative border border-[#c9b037]/25 bg-[#0a1a12]/70 p-3 text-center">
+            <div
+              key={f.name}
+              className={`llc-aged relative border border-[#c9b037]/25 bg-[#0a1a12]/70 p-3 text-center ${
+                i % 2 === 0 ? "-rotate-[0.4deg]" : "rotate-[0.5deg] xl:-mt-2"
+              }`}
+            >
               <Corners />
               <div className="font-mono text-[7px] tracking-[0.3em] text-[#3fa37c]">
                 PLATE {["I", "II", "III", "IV"][i]} — {f.name}
@@ -1013,7 +1274,7 @@ export default function LivingCosmosPage() {
 
       {/* ======================= TABLE OF OPERATIONS ======================= */}
       <section id="llc-operations" className="border-t border-[#c9b037]/25 bg-[#08160e]/70">
-        <div className="mx-auto max-w-[1500px] px-3 py-10 sm:px-5">
+        <div className="mx-auto max-w-none px-2 py-10 sm:px-4">
           <div className="mb-6 text-center">
             <div className="font-mono text-[8px] tracking-[0.4em] text-[#3fa37c]/80">CAPITVLVM SECVNDVM</div>
             <h2 className="mt-2 font-serif text-2xl tracking-[0.15em] text-[#c9b037] sm:text-4xl">
@@ -1024,8 +1285,17 @@ export default function LivingCosmosPage() {
             </p>
           </div>
           <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-3">
-            {SECTIONS.map((s) => (
-              <article key={s.no} className="relative border border-[#c9b037]/25 bg-[#0a1a12]/70 p-4">
+            {SECTIONS.map((s, i) => (
+              <article
+                key={s.no}
+                className={`llc-aged relative border border-[#c9b037]/25 bg-[#0a1a12]/70 p-4 ${
+                  i % 3 === 0
+                    ? "-rotate-[0.5deg]"
+                    : i % 3 === 1
+                      ? "rotate-[0.4deg] xl:translate-y-2"
+                      : "-rotate-[0.3deg] xl:-translate-y-1"
+                }`}
+              >
                 <span aria-hidden className="pointer-events-none absolute inset-[3px] border border-[#c9b037]/10" />
                 <Corners />
                 <div className="mb-2 flex items-center justify-between">
@@ -1052,7 +1322,7 @@ export default function LivingCosmosPage() {
       {/* ======================= DESTINY MATRIX ======================= */}
       <section className="border-t border-[#c9b037]/25">
         <div className="mx-auto flex max-w-[1500px] flex-col items-center gap-8 px-4 py-10 sm:px-6 lg:flex-row lg:gap-14">
-          <div className="relative border border-[#c9b037]/25 bg-[#0a1a12]/70 p-4">
+          <div className="relative -rotate-[0.7deg] border border-[#c9b037]/25 bg-[#0a1a12]/70 p-4">
             <Corners />
             <div className="mb-2 text-center font-mono text-[7px] tracking-[0.35em] text-[#3fa37c]">
               FIG. VII — OCTAGRAMMA FATALIS
@@ -1099,7 +1369,12 @@ export default function LivingCosmosPage() {
           </div>
           <dl className="grid gap-3 lg:grid-cols-2">
             {FAQ.map((f, i) => (
-              <div key={f.q} className="relative border border-[#c9b037]/20 bg-[#0a1a12]/60 p-4">
+              <div
+                key={f.q}
+                className={`llc-aged relative border border-[#c9b037]/20 bg-[#0a1a12]/60 p-4 ${
+                  i % 2 === 0 ? "-rotate-[0.35deg]" : "rotate-[0.45deg] lg:translate-y-1"
+                }`}
+              >
                 <Corners />
                 <dt className="flex items-baseline gap-3">
                   <span className="font-serif text-lg text-[#3fa37c]">
@@ -1128,7 +1403,7 @@ export default function LivingCosmosPage() {
           </h2>
           <a
             href="#llc-cast"
-            className="mt-7 inline-flex items-center gap-3 bg-[#c9b037] px-8 py-3.5 font-mono text-[11px] font-bold tracking-[0.25em] text-[#06120c] transition-colors hover:bg-[#e3cd5a]"
+            className="llc-worn mt-7 inline-flex items-center gap-3 bg-[#c9b037] px-8 py-3.5 font-mono text-[11px] font-bold tracking-[0.25em] text-[#06120c] transition-colors hover:bg-[#e3cd5a]"
           >
             GET STARTED — IT&rsquo;S FREE <span aria-hidden>→</span>
           </a>

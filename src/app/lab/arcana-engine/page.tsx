@@ -6,6 +6,12 @@
 // matrix, timeline chart, resonance radar, virtues & flaws, eclipse card —
 // plus engine output strip, module tiles, zodiac band, destiny octagram,
 // archive entries and the required landing copy woven in as small print.
+// A restrained age-and-wear layer (noise film, drifting soot smudges, scratch
+// hairlines, border tarnish, candlelight vignette) keeps it handled, not new.
+// The grid is deliberately dirtied: full-bleed bands, overlapping panels,
+// border-crossing chips and node dots, slight rotations — over a deep
+// background of giant faint apparatus rings, an edge-cropped glyph wheel,
+// construction hairlines, oversized glyphs and a second speck field.
 // Fully self-contained: inline SVG, Tailwind for layout, one scoped <style>
 // block (len- prefixed) for the rest. Server-component safe: no hooks, CSS
 // animations only (slow 9–180s cycles, reduced-motion guarded).
@@ -104,6 +110,26 @@ function lcg(seed: number) {
     s = (s * 1664525 + 1013904223) >>> 0;
     return s / 4294967296;
   };
+}
+
+// scratch hairlines: n roughly-parallel lines from (x, y), fanned by gap,
+// lengths jittered deterministically so they read as hand-worn, not machined
+function scratchLines(x: number, y: number, n: number, len: number, angle: number, gap: number) {
+  const px = Math.cos((angle + 90) * DEG);
+  const py = Math.sin((angle + 90) * DEG);
+  const dx = Math.cos(angle * DEG);
+  const dy = Math.sin(angle * DEG);
+  return Array.from({ length: n }, (_, i) => {
+    const ox = x + px * gap * i;
+    const oy = y + py * gap * i;
+    const l = len * (0.55 + ((i * 37) % 10) / 16);
+    return {
+      x1: +ox.toFixed(1),
+      y1: +oy.toFixed(1),
+      x2: +(ox + dx * l).toFixed(1),
+      y2: +(oy + dy * l).toFixed(1),
+    };
+  });
 }
 
 /* ================================= DATA =================================== */
@@ -257,8 +283,22 @@ const ENGINE_STARS = Array.from({ length: 70 }, () => ({
   g: Math.floor(rnd() * 3),
 }));
 
+// second, dimmer speck field for the deep background layer
+const SPECKS = Array.from({ length: 170 }, () => ({
+  x: +(rnd() * 1600).toFixed(0),
+  y: +(rnd() * 1000).toFixed(0),
+  r: +(0.3 + rnd() * 0.7).toFixed(2),
+  o: +(0.05 + rnd() * 0.18).toFixed(2),
+  g: Math.floor(rnd() * 3),
+}));
+
 const WAVE = wavePoints(360, 84, 96);
 const WAVE_SOFT = wavePoints(360, 84, 48);
+
+// worn-metal scratch groups (fixed overlay, viewBox 1600x1000 coordinates)
+const SCRATCH_A = scratchLines(70, 130, 9, 360, 37, 9);
+const SCRATCH_B = scratchLines(1150, 780, 7, 320, -41, 11);
+const SCRATCH_C = scratchLines(1430, 190, 5, 230, 53, 8);
 
 // timeline chart points (viewBox 320x150, plot area y 20..115)
 const TIMELINE = [
@@ -374,6 +414,111 @@ export default function ArcanaEnginePage() {
         </g>
       </svg>
 
+      {/* ---- deep background: giant faint apparatus, glyph wheel, construction lines ---- */}
+      <div aria-hidden className="pointer-events-none absolute inset-0 overflow-hidden">
+        {/* second, dimmer speck field */}
+        <svg className="absolute inset-0 h-full w-full" viewBox="0 0 1600 1000" preserveAspectRatio="xMidYMid slice">
+          {SPECKS.map((s, i) => (
+            <circle key={i} className={`len-tw${s.g}`} cx={s.x} cy={s.y} r={s.r} fill={IVORY} opacity={s.o} />
+          ))}
+        </svg>
+
+        {/* huge apparatus ring cluster bleeding off the top-right corner */}
+        <svg viewBox="0 0 800 800" className="absolute -top-72 -right-80 h-[920px] w-[920px] opacity-[0.05]" fill="none" stroke={GOLD}>
+          <g className="len-spin-a">
+            <circle cx="400" cy="400" r="392" strokeWidth="1" />
+            <circle cx="400" cy="400" r="372" strokeWidth="0.7" strokeDasharray="2 8" />
+            {ringTicks(400, 400, 372, 390, 144).map((t, i) => (
+              <line key={`u1t${i}`} x1={t.x} y1={t.y} x2={t.x2} y2={t.y2} strokeWidth={t.major ? 1 : 0.4} />
+            ))}
+            <circle cx="400" cy="400" r="320" strokeWidth="0.7" />
+            <circle cx="400" cy="400" r="300" strokeWidth="0.5" strokeDasharray="10 6 2 6" />
+            <path d={polyPath(400, 400, 260, 3)} strokeWidth="0.8" />
+            <path d={polyPath(400, 400, 260, 3, 90)} strokeWidth="0.8" opacity="0.6" />
+            {[20, 140, 260].map((a, i) => {
+              const p = polar(400, 400, 320, a);
+              return <circle key={`u1n${i}`} cx={p.x} cy={p.y} r="7" strokeWidth="0.8" />;
+            })}
+            <circle cx="400" cy="400" r="180" strokeWidth="0.5" strokeDasharray="1 6" />
+          </g>
+        </svg>
+
+        {/* giant glyph wheel cropped by the left edge */}
+        <svg viewBox="0 0 600 600" className="absolute top-[23%] -left-[310px] h-[640px] w-[640px] opacity-[0.055]" fill="none">
+          <g className="len-spin-b">
+            <circle cx="300" cy="300" r="288" stroke={GOLD} strokeWidth="1" />
+            <circle cx="300" cy="300" r="268" stroke={GOLD} strokeWidth="0.5" strokeDasharray="1 5" />
+            {ringTicks(300, 300, 268, 286, 72).map((t, i) => (
+              <line key={`u2t${i}`} x1={t.x} y1={t.y} x2={t.x2} y2={t.y2} stroke={GOLD} strokeWidth={t.major ? 1 : 0.4} />
+            ))}
+            {ZODIAC.map((z, i) => {
+              const p = polar(300, 300, 240, -90 + i * 30);
+              return (
+                <text key={z.name} x={p.x} y={p.y} textAnchor="middle" dominantBaseline="central" fontSize="26" fill={GOLD}>
+                  {z.g}
+                </text>
+              );
+            })}
+            <circle cx="300" cy="300" r="200" stroke={GOLD} strokeWidth="0.6" strokeDasharray="8 5" />
+            <path d={starPath(300, 300, 8, 190, 142)} stroke={GOLD} strokeWidth="0.7" />
+            <circle cx="300" cy="300" r="110" stroke={GOLD} strokeWidth="0.5" strokeDasharray="1 6" />
+            <path d={polyPath(300, 300, 84, 3)} stroke={GOLD} strokeWidth="0.7" />
+            <path d={polyPath(300, 300, 84, 3, 90)} stroke={GOLD} strokeWidth="0.7" opacity="0.6" />
+          </g>
+        </svg>
+
+        {/* partial arc cluster surfacing at the bottom */}
+        <svg viewBox="0 0 700 700" className="absolute -bottom-96 left-[14%] h-[820px] w-[820px] opacity-[0.04]" fill="none" stroke={GOLD}>
+          <g className="len-spin-c">
+            <circle cx="350" cy="350" r="342" strokeWidth="1" />
+            <circle cx="350" cy="350" r="308" strokeWidth="0.6" strokeDasharray="4 9" />
+            {ringTicks(350, 350, 308, 340, 108).map((t, i) => (
+              <line key={`u3t${i}`} x1={t.x} y1={t.y} x2={t.x2} y2={t.y2} strokeWidth={t.major ? 1 : 0.4} />
+            ))}
+            <path d={compassPath(350, 350, 280, 80)} strokeWidth="0.7" />
+            <circle cx="350" cy="350" r="200" strokeWidth="0.5" />
+            <circle cx="350" cy="350" r="130" strokeWidth="0.5" strokeDasharray="1 7" />
+          </g>
+        </svg>
+
+        {/* hairline construction lines crossing the whole page, with crossing marks */}
+        <svg className="absolute inset-0 h-full w-full opacity-[0.07]" viewBox="0 0 1600 1000" preserveAspectRatio="none" fill="none" stroke={GOLD}>
+          <g strokeWidth="1" strokeDasharray="6 10">
+            <line x1="300" y1="0" x2="300" y2="1000" vectorEffect="non-scaling-stroke" />
+            <line x1="1330" y1="0" x2="1330" y2="1000" vectorEffect="non-scaling-stroke" />
+            <line x1="0" y1="140" x2="1600" y2="140" vectorEffect="non-scaling-stroke" />
+            <line x1="0" y1="560" x2="1600" y2="560" vectorEffect="non-scaling-stroke" />
+            <line x1="0" y1="900" x2="1600" y2="900" vectorEffect="non-scaling-stroke" />
+            <line x1="0" y1="1000" x2="1600" y2="0" vectorEffect="non-scaling-stroke" strokeDasharray="2 12" />
+          </g>
+          <g strokeWidth="1">
+            {[
+              [300, 140],
+              [1330, 560],
+              [300, 900],
+              [1330, 140],
+              [815, 560],
+            ].map(([x, y], i) => (
+              <path key={`u4c${i}`} d={`M ${x - 7} ${y} H ${x + 7} M ${x} ${y - 7} V ${y + 7}`} vectorEffect="non-scaling-stroke" />
+            ))}
+          </g>
+        </svg>
+
+        {/* oversized faint glyphs looming behind panels */}
+        <span className="absolute top-[5%] left-[38%] text-[240px] leading-none opacity-[0.04]" style={{ color: GOLD }}>
+          {"\u2609\uFE0E"}
+        </span>
+        <span className="absolute top-[44%] right-[4%] text-[200px] leading-none opacity-[0.035]" style={{ color: GOLD }}>
+          {"\u2644\uFE0E"}
+        </span>
+        <span className="absolute bottom-[6%] left-[30%] text-[180px] leading-none opacity-[0.045]" style={{ color: GOLD }}>
+          {"\u263D\uFE0E"}
+        </span>
+        <span className="len-pulse-slow absolute top-[68%] right-[26%] text-[150px] leading-none opacity-[0.04]" style={{ color: GOLD }}>
+          {"\u2727\uFE0E"}
+        </span>
+      </div>
+
       <div className="relative mx-auto max-w-[1720px] px-2 py-2 sm:px-3">
         {/* ======================= TOP STATUS BAR ======================= */}
         <header className="len-panel flex flex-wrap items-center gap-x-5 gap-y-2 px-3 py-2">
@@ -436,7 +581,7 @@ export default function ArcanaEnginePage() {
         {/* ========================= MAIN DASHBOARD ========================= */}
         <div className="mt-2 grid grid-cols-1 gap-2 lg:grid-cols-[290px_minmax(0,1fr)] xl:grid-cols-[290px_minmax(0,1fr)_336px]">
           {/* ======================= LEFT COLUMN ======================= */}
-          <div className="flex min-w-0 flex-col gap-2">
+          <div className="relative z-10 flex min-w-0 flex-col gap-2 lg:-mr-5">
             {/* CURRENT ALIGNMENT */}
             <Panel title="CURRENT ALIGNMENT" right="SEQ. 114-A">
               <div className="flex items-start gap-3">
@@ -489,7 +634,7 @@ export default function ArcanaEnginePage() {
             </Panel>
 
             {/* ARCANA RESERVOIR */}
-            <Panel title="ARCANA RESERVOIR" right="CAP. 5/5">
+            <Panel title="ARCANA RESERVOIR" right="CAP. 5/5" className="-rotate-[0.5deg]">
               <ul className="space-y-2.5">
                 {RESERVOIR.map((r) => (
                   <li key={r.name}>
@@ -510,8 +655,16 @@ export default function ArcanaEnginePage() {
               </p>
             </Panel>
 
+            {/* chip straddling the rules of the two neighboring panels */}
+            <p
+              className="len-mono relative z-20 -my-2 mr-10 self-end border px-2 py-0.5 text-[7px] tracking-[0.24em]"
+              style={{ borderColor: `${GOLD}40`, color: GOLD_DIM, background: INK }}
+            >
+              FLOW LOCKED ↓ 0.42 TU/S
+            </p>
+
             {/* RITUAL QUEUE */}
-            <Panel title="RITUAL QUEUE" right="3 / 6">
+            <Panel title="RITUAL QUEUE" right="3 / 6" className="rotate-[0.6deg]">
               <ul className="space-y-2">
                 {RITUALS.map((r, i) => (
                   <li key={r.name} className="len-inset flex items-center gap-2.5 px-2 py-1.5">
@@ -534,7 +687,7 @@ export default function ArcanaEnginePage() {
             </Panel>
 
             {/* SYSTEM STATUS */}
-            <Panel title="SYSTEM STATUS" bodyClass="p-0" className="mt-auto">
+            <Panel title="SYSTEM STATUS" bodyClass="p-0" className="mt-auto -rotate-[0.4deg]">
               <div className="grid grid-cols-5">
                 {SYSSTATUS.map((s, i) => (
                   <div
@@ -576,7 +729,7 @@ export default function ArcanaEnginePage() {
               <span className="len-mono text-[8px] tracking-[0.28em] uppercase" style={{ color: GOLD_DIM }}>
                 Primary Directive
               </span>
-              <a href="#" className="len-btn len-mono px-4 py-1.5 text-[9.5px] tracking-[0.24em] uppercase">
+              <a href="#" className="len-btn len-mono inline-block -rotate-[0.8deg] px-4 py-1.5 text-[9.5px] tracking-[0.24em] uppercase">
                 Cast your free birth chart
               </a>
               <span className="len-mono ml-auto hidden text-[7.5px] tracking-[0.18em] md:inline" style={{ color: GOLD_DIM }}>
@@ -632,6 +785,17 @@ export default function ArcanaEnginePage() {
 
               {/* the apparatus */}
               <div className="relative flex items-center justify-center p-1">
+                {/* node dots sitting ON the vertical rule of the side column */}
+                <span
+                  aria-hidden
+                  className="absolute top-[30%] -left-[5px] z-20 hidden h-[9px] w-[9px] rounded-full border md:block"
+                  style={{ borderColor: GOLD, background: INK, boxShadow: "0 0 6px rgba(212,168,44,.5)" }}
+                />
+                <span
+                  aria-hidden
+                  className="absolute top-[72%] -left-[4px] z-20 hidden h-[7px] w-[7px] rounded-full md:block"
+                  style={{ background: GOLD_HI, boxShadow: "0 0 5px rgba(240,207,107,.6)" }}
+                />
                 <svg viewBox="0 0 640 640" className="h-auto w-full max-w-[640px]" fill="none" aria-hidden>
                   {/* engine starfield */}
                   {ENGINE_STARS.map((s, i) => (
@@ -789,7 +953,8 @@ export default function ArcanaEnginePage() {
           </div>
 
           {/* ======================= RIGHT COLUMN ======================= */}
-          <div className="flex min-w-0 flex-col gap-2 lg:col-span-2 xl:col-span-1">
+          {/* ======================= RIGHT COLUMN ======================= */}
+          <div className="relative z-10 flex min-w-0 flex-col gap-2 lg:col-span-2 xl:col-span-1 xl:-ml-8">
             {/* PATH OF BECOMING */}
             <Panel title="PATH OF BECOMING" right="TIMELINE PROJECTION">
               <svg viewBox="0 0 320 150" className="h-auto w-full" fill="none" aria-hidden>
@@ -820,7 +985,7 @@ export default function ArcanaEnginePage() {
             </Panel>
 
             {/* RESONANCE CHART + VIRTUES & FLAWS side by side */}
-            <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
+            <div className="relative z-10 -mt-3 grid rotate-[0.4deg] grid-cols-1 gap-2 sm:grid-cols-2">
               <Panel title="RESONANCE CHART" bodyClass="p-1.5">
                 <svg viewBox="0 0 220 178" className="h-auto w-full" fill="none" aria-hidden>
                   {[0.25, 0.5, 0.75, 1].map((f) => (
@@ -867,7 +1032,7 @@ export default function ArcanaEnginePage() {
             </div>
 
             {/* ACTIVE READINGS — eclipse card */}
-            <Panel title="ACTIVE READINGS" right="1 RUNNING">
+            <Panel title="ACTIVE READINGS" right="1 RUNNING" className="relative z-10 -mt-1 -rotate-[0.35deg] xl:-ml-5">
               <div className="flex gap-3">
                 <svg viewBox="0 0 84 84" className="h-[76px] w-[76px] shrink-0" fill="none" aria-hidden>
                   <circle cx="42" cy="42" r="34" stroke={GOLD} strokeWidth="0.5" strokeDasharray="1 4" opacity="0.5" />
@@ -945,7 +1110,7 @@ export default function ArcanaEnginePage() {
             </div>
           </Panel>
 
-          <Panel title="CALIBRATION" bodyClass="p-1">
+          <Panel title="CALIBRATION" bodyClass="p-1" className="relative z-10 rotate-[0.8deg] xl:-mt-4">
             <svg viewBox="0 0 140 96" className="mx-auto h-auto w-full max-w-[150px]" fill="none" aria-hidden>
               <path d={`M ${gaugeStart.x} ${gaugeStart.y} A ${GAUGE_R} ${GAUGE_R} 0 1 1 ${gaugeEnd.x} ${gaugeEnd.y}`} stroke={GOLD_FAINT} strokeWidth="4" />
               <path d={`M ${gaugeStart.x} ${gaugeStart.y} A ${GAUGE_R} ${GAUGE_R} 0 1 1 ${gaugeValEnd.x} ${gaugeValEnd.y}`} stroke={GOLD} strokeWidth="4" />
@@ -970,7 +1135,13 @@ export default function ArcanaEnginePage() {
               { n: "CONJURE", s: "Shape Reality", i: 2 },
               { n: "BANISH", s: "Sever the Unwanted", i: 4 },
             ].map((a) => (
-              <a key={a.n} href="#" className="len-panel len-action flex flex-col items-center justify-center gap-1.5 px-1 py-3 text-center">
+              <a
+                key={a.n}
+                href="#"
+                className={`len-panel len-action flex flex-col items-center justify-center gap-1.5 px-1 py-3 text-center ${
+                  a.n === "CONJURE" ? "translate-y-1 -rotate-[0.6deg]" : a.n === "BANISH" ? "-translate-y-0.5 rotate-[0.3deg]" : ""
+                }`}
+              >
                 <MiniSigil i={a.i} size={26} />
                 <span className="len-mono text-[8.5px] tracking-[0.24em]" style={{ color: GOLD_HI }}>
                   {a.n}
@@ -992,7 +1163,13 @@ export default function ArcanaEnginePage() {
           </div>
           <div className="grid grid-cols-1 gap-2 sm:grid-cols-2 xl:grid-cols-6">
             {MODULES.map((m, i) => (
-              <a key={m.title} href="#" className="len-panel len-action group flex flex-col p-2.5">
+              <a
+                key={m.title}
+                href="#"
+                className={`len-panel len-action group flex flex-col p-2.5 ${
+                  i % 3 === 1 ? "rotate-[0.55deg] xl:-translate-y-2" : i % 3 === 2 ? "-rotate-[0.45deg] xl:translate-y-1.5" : ""
+                }`}
+              >
                 <span className="len-mono flex items-center justify-between text-[7.5px] tracking-[0.26em]" style={{ color: GOLD }}>
                   {m.tag}
                   <span style={{ color: GOLD_FAINT }}>M-{String(i + 1).padStart(2, "0")}</span>
@@ -1013,7 +1190,7 @@ export default function ArcanaEnginePage() {
         </div>
 
         {/* ========================= ZODIAC BAND ========================= */}
-        <div className="len-panel mt-2">
+        <div className="len-panel len-bleed relative z-10 mt-2 -rotate-[0.25deg] xl:-mt-4">
           <header className="len-panel-h">
             <span style={{ color: GOLD }}>ZODIACAL BAND — TWELVE HOUSES OF THE ECLIPTIC</span>
             <span className="len-panel-h-line" aria-hidden />
@@ -1044,9 +1221,16 @@ export default function ArcanaEnginePage() {
         </div>
 
         {/* ========================= DESTINY MATRIX + ARCHIVE ========================= */}
-        <div className="mt-2 grid grid-cols-1 gap-2 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.4fr)]">
+        <div className="relative mt-2 grid grid-cols-1 gap-2 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.4fr)]">
+          {/* chip straddling the junction of the two panels */}
+          <span
+            className="len-mono absolute -top-2 left-[39%] z-20 hidden border px-2 py-0.5 text-[7px] tracking-[0.24em] lg:block"
+            style={{ borderColor: `${GOLD}40`, color: GOLD_DIM, background: INK }}
+          >
+            ARC-Δ // VERIFIED
+          </span>
           {/* destiny matrix octagram */}
-          <Panel title="DESTINY MATRIX" right="OPTIONAL INSTRUMENT">
+          <Panel title="DESTINY MATRIX" right="OPTIONAL INSTRUMENT" className="relative z-10 rotate-[0.4deg] lg:-mt-5">
             <div className="flex items-center gap-4">
               <svg viewBox="0 0 120 120" className="h-28 w-28 shrink-0" fill="none" stroke={GOLD} aria-hidden>
                 <circle cx="60" cy="60" r="54" strokeWidth="0.6" opacity="0.5" />
@@ -1083,7 +1267,7 @@ export default function ArcanaEnginePage() {
           </Panel>
 
           {/* FAQ as archive entries */}
-          <Panel title="ARCHIVE ENTRIES" right="4 RECORDS · PUBLIC">
+          <Panel title="ARCHIVE ENTRIES" right="4 RECORDS · PUBLIC" className="lg:mt-3">
             <ul>
               {ARCHIVE.map((e, i) => (
                 <li key={e.q} className={`flex gap-3 py-1.5 ${i > 0 ? "border-t" : ""}`} style={{ borderColor: `${GOLD}1a` }}>
@@ -1116,7 +1300,7 @@ export default function ArcanaEnginePage() {
         </div>
 
         {/* ========================= CTA ========================= */}
-        <section className="len-panel relative mt-2 px-4 py-10 text-center sm:py-14">
+        <section className="len-panel len-bleed relative mt-2 px-4 py-10 text-center sm:py-14">
           <svg viewBox="0 0 120 120" className="pointer-events-none absolute top-3 left-3 h-16 w-16 opacity-40" fill="none" stroke={GOLD} strokeWidth="0.8" aria-hidden>
             <path d="M 6 60 H 60 M 60 6 V 60" />
             <path d={compassPath(60, 60, 50, 12)} opacity="0.6" />
@@ -1145,7 +1329,7 @@ export default function ArcanaEnginePage() {
         </section>
 
         {/* ========================= FOOTER ========================= */}
-        <footer className="len-mono mt-2 flex flex-wrap items-center gap-x-6 gap-y-1.5 border px-3 py-2.5 text-[7.5px] tracking-[0.18em] uppercase" style={{ borderColor: `${GOLD}1f`, color: GOLD_DIM }}>
+        <footer className="len-bleed len-mono mt-2 flex flex-wrap items-center gap-x-6 gap-y-1.5 border px-3 py-2.5 text-[7.5px] tracking-[0.18em] uppercase" style={{ borderColor: `${GOLD}1f`, color: GOLD_DIM }}>
           <span style={{ color: GOLD }}>© 2026 ASTRO SCOPE — ALL FATES RESERVED</span>
           <nav className="flex items-center gap-4">
             {["Horoscopes", "Tarot", "Compatibility", "Sign In"].map((l) => (
@@ -1157,6 +1341,43 @@ export default function ArcanaEnginePage() {
           <span className="ml-auto">SYSTEMS ARCANA VER 7.2.1 · ENGINE NOMINAL · RENDERED IN 0.042S</span>
         </footer>
       </div>
+
+      {/* ================= AGE & WEAR LAYER (over everything, non-interactive) ================= */}
+      {/* candlelight vignette: warm from upper-left, soot-dark at the far edges */}
+      <div aria-hidden className="len-age-vignette pointer-events-none fixed inset-0" />
+
+      {/* soot smudges drifting very slowly in corners/edges */}
+      <div aria-hidden className="len-age-smudge len-age-smudge-a pointer-events-none fixed" />
+      <div aria-hidden className="len-age-smudge len-age-smudge-b pointer-events-none fixed" />
+      <div aria-hidden className="len-age-smudge len-age-smudge-c pointer-events-none fixed" />
+
+      {/* worn metal: faint diagonal scratch hairlines */}
+      <svg
+        aria-hidden
+        className="pointer-events-none fixed inset-0 h-full w-full"
+        viewBox="0 0 1600 1000"
+        preserveAspectRatio="xMidYMid slice"
+      >
+        <g stroke={GOLD_HI} strokeWidth="0.5" opacity="0.055">
+          {SCRATCH_A.map((l, i) => (
+            <line key={`sa${i}`} x1={l.x1} y1={l.y1} x2={l.x2} y2={l.y2} />
+          ))}
+          {SCRATCH_B.map((l, i) => (
+            <line key={`sb${i}`} x1={l.x1} y1={l.y1} x2={l.x2} y2={l.y2} />
+          ))}
+        </g>
+        <g stroke="#000000" strokeWidth="0.7" opacity="0.09">
+          {SCRATCH_C.map((l, i) => (
+            <line key={`sc${i}`} x1={l.x1} y1={l.y1} x2={l.x2} y2={l.y2} />
+          ))}
+          {SCRATCH_A.filter((_, i) => i % 3 === 0).map((l, i) => (
+            <line key={`sd${i}`} x1={l.x1 + 3} y1={l.y1 + 2} x2={l.x2 + 3} y2={l.y2 + 2} />
+          ))}
+        </g>
+      </svg>
+
+      {/* global film of use: fractal-noise grain over the whole page */}
+      <div aria-hidden className="len-age-noise pointer-events-none fixed inset-0" />
     </main>
   );
 }
@@ -1181,6 +1402,17 @@ const LEN_CSS = `
   position: absolute; inset: 3px;
   border: 1px solid rgba(212,168,44,.1);
   pointer-events: none;
+}
+/* tarnish: uneven patina blotches hugging the panel borders (below content) */
+.len-panel::before {
+  content: "";
+  position: absolute; inset: 0;
+  pointer-events: none;
+  background:
+    radial-gradient(90px 26px at 6% 0%, rgba(96,70,18,.3), transparent 70%),
+    radial-gradient(70px 24px at 93% 100%, rgba(0,0,0,.5), transparent 70%),
+    radial-gradient(48px 48px at 100% 14%, rgba(150,114,36,.13), transparent 70%),
+    radial-gradient(40px 40px at 0% 82%, rgba(0,0,0,.42), transparent 70%);
 }
 .len-inset {
   border: 1px solid rgba(212,168,44,.18);
@@ -1246,6 +1478,37 @@ const LEN_CSS = `
 
 .len-glow { text-shadow: 0 0 16px rgba(212,168,44,.45), 0 0 46px rgba(212,168,44,.2); }
 
+/* full-viewport-width bleed out of the centered container */
+.len-bleed { width: 100vw; margin-left: calc(50% - 50vw); }
+
+/* ---------- age & wear layer ---------- */
+.len-age-noise {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='260' height='260'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  opacity: .05;
+  mix-blend-mode: overlay;
+}
+.len-age-vignette {
+  background:
+    radial-gradient(ellipse 90% 70% at 16% 8%, rgba(255,196,96,.075), transparent 55%),
+    radial-gradient(ellipse 150% 130% at 55% 45%, transparent 52%, rgba(2,1,0,.6) 100%);
+}
+.len-age-smudge { border-radius: 50%; }
+.len-age-smudge-a {
+  top: -14%; right: -9%;
+  width: 46vw; height: 46vw;
+  background: radial-gradient(closest-side, rgba(0,0,0,.5), transparent 72%);
+}
+.len-age-smudge-b {
+  bottom: -18%; left: -11%;
+  width: 52vw; height: 44vw;
+  background: radial-gradient(closest-side, rgba(4,2,0,.55), transparent 70%);
+}
+.len-age-smudge-c {
+  top: 34%; right: -15%;
+  width: 30vw; height: 30vw;
+  background: radial-gradient(closest-side, rgba(22,13,2,.34), transparent 70%);
+}
+
 ::selection { background: rgba(212,168,44,.35); color: #fff6dd; }
 
 /* ---------- slow, CSS-only motion (9–180s), reduced-motion guarded ---------- */
@@ -1254,6 +1517,20 @@ const LEN_CSS = `
 @keyframes lenPulse { 0%, 100% { opacity: .55; } 50% { opacity: 1; } }
 @keyframes lenTw { 0%, 100% { opacity: .15; } 50% { opacity: .8; } }
 @keyframes lenDash { to { stroke-dashoffset: -240; } }
+@keyframes lenDriftA {
+  0%, 100% { transform: translate(0, 0) scale(1); }
+  50% { transform: translate(-3.5%, 2.5%) scale(1.06); }
+}
+@keyframes lenDriftB {
+  0%, 100% { transform: translate(0, 0) scale(1); }
+  50% { transform: translate(3%, -2%) scale(1.08); }
+}
+@keyframes lenFlicker {
+  0%, 100% { opacity: .93; }
+  42% { opacity: 1; }
+  58% { opacity: .88; }
+  74% { opacity: .97; }
+}
 
 .len-spin-a, .len-spin-b, .len-spin-c { transform-box: view-box; transform-origin: center; }
 
@@ -1267,5 +1544,9 @@ const LEN_CSS = `
   .len-tw1 { animation: lenTw 31s ease-in-out infinite 7s; }
   .len-tw2 { animation: lenTw 27s ease-in-out infinite 13s; }
   .len-dash { animation: lenDash 60s linear infinite; }
+  .len-age-smudge-a { animation: lenDriftA 160s ease-in-out infinite; }
+  .len-age-smudge-b { animation: lenDriftB 185s ease-in-out infinite; }
+  .len-age-smudge-c { animation: lenDriftA 145s ease-in-out infinite 22s; }
+  .len-age-vignette { animation: lenFlicker 12s ease-in-out infinite; }
 }
 `;
