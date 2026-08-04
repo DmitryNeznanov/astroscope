@@ -17,6 +17,57 @@ import ArmillarySphereCard from "@/components/cards/armillary-sphere";
 import LunarCalendarCard from "@/components/cards/lunar-calendar";
 import StarDomeCard from "@/components/cards/star-dome";
 import AstronomicalClockCard from "@/components/cards/astronomical-clock";
+import OrreryCard from "@/components/cards/orrery";
+import NocturlabeCard from "@/components/cards/nocturlabe";
+import LunarMansionsCard from "@/components/cards/lunar-mansions";
+import VirgoChartCard from "@/components/cards/virgo-chart";
+import PlanetaryHoursCard from "@/components/cards/planetary-hours";
+import GoldMedallionCard from "@/components/cards/gold-medallion";
+import VolvelleCard from "@/components/cards/volvelle";
+import CelestialSextantCard from "@/components/cards/celestial-sextant";
+
+const INSTRUMENT_STYLES = [
+  {
+    name: "Orrery",
+    component: OrreryCard,
+    note: "A brass planetarium machine — geared rings, planet arms, the lantern burning where the Sun should be.",
+  },
+  {
+    name: "Nocturlabe",
+    component: NocturlabeCard,
+    note: "Telling time by starlight: Polaris at the pivot, Ursa Major on the dial, the pointer arm swung to the hour.",
+  },
+  {
+    name: "Lunar Mansions",
+    component: LunarMansionsCard,
+    note: "The 28 mansions of the Moon in a medieval wheel, the ninth mansion gilded.",
+  },
+  {
+    name: "Virgo Chart",
+    component: VirgoChartCard,
+    note: "The Maiden engraved around her true stars — Spica on the wheat, the Hermit gazing up.",
+  },
+  {
+    name: "Planetary Hours",
+    component: PlanetaryHoursCard,
+    note: "The Star of the Magi — a heptagram of planetary rulers with dies Saturni marked in red.",
+  },
+  {
+    name: "Gold Medallion",
+    component: GoldMedallionCard,
+    note: "A struck coin: low-relief Hermit, rim inscription, reeded edge on black velvet.",
+  },
+  {
+    name: "Volvelle",
+    component: VolvelleCard,
+    note: "A medieval paper computer — rotating disc, cut-out window, brass brad.",
+  },
+  {
+    name: "Celestial Sextant",
+    component: CelestialSextantCard,
+    note: "Engraved brass arc with vernier, the index arm swung to its reading under a sighted star.",
+  },
+];
 
 const ASTRO_STYLES = [
   {
@@ -155,6 +206,35 @@ export default function Home() {
 
         <div className="mt-14 grid grid-cols-1 gap-10 sm:grid-cols-2 lg:grid-cols-4">
           {ASTRO_STYLES.map((s) => {
+            const Card = s.component;
+            return (
+              <div key={s.name}>
+                <Replayable>
+                  <CardShell>
+                    <Card />
+                  </CardShell>
+                </Replayable>
+                <h2 className="mt-4 font-serif text-lg text-neutral-100">
+                  {s.name}
+                </h2>
+                <p className="mt-1 text-sm leading-relaxed text-neutral-500">
+                  {s.note}
+                </p>
+              </div>
+            );
+          })}
+        </div>
+
+        <h2 className="mt-24 text-center font-serif text-3xl text-neutral-100">
+          Gold &amp; Mechanism
+        </h2>
+        <p className="mx-auto mt-4 max-w-xl text-center text-sm leading-relaxed text-neutral-400">
+          Brass, gold leaf and engraved scales — the Hermit among the
+          instruments of the old astronomers.
+        </p>
+
+        <div className="mt-14 grid grid-cols-1 gap-10 sm:grid-cols-2 lg:grid-cols-4">
+          {INSTRUMENT_STYLES.map((s) => {
             const Card = s.component;
             return (
               <div key={s.name}>
