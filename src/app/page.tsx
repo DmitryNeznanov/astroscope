@@ -366,6 +366,10 @@ export default function Home() {
             ["living-cosmos", "Living Cosmos"],
             ["laboratorium", "Laboratorium"],
             ["silver-depths", "Silver Depths"],
+            ["aurum", "Aurum"],
+            ["codex", "Codex"],
+            ["selene", "Selene"],
+            ["forge", "Forge"],
           ].map(([slug, label], i) => (
             <span key={slug}>
               {i > 0 && " · "}
