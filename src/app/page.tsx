@@ -345,15 +345,166 @@ export default function Home() {
           })}
         </div>
 
-        <p className="mt-16 text-center text-xs text-neutral-600">
-          Earlier explorations (playful styles) live in the{" "}
-          <Link
-            href="/reference/card-lab"
-            className="underline underline-offset-4 transition hover:text-neutral-300"
-          >
-            reference archive
-          </Link>
-          .
+        <nav className="mt-24 border-t border-neutral-800 pt-14">
+          <h2 className="text-center font-serif text-2xl text-neutral-100">
+            Explore the work
+          </h2>
+          <div className="mt-10 grid grid-cols-2 gap-10 sm:grid-cols-3 lg:grid-cols-5">
+            <div>
+              <h3 className="text-xs uppercase tracking-[0.25em] text-neutral-500">
+                Tarot
+              </h3>
+              <ul className="mt-4 space-y-2 text-sm">
+                {[
+                  ["/tarot", "Tarot hub"],
+                  ["/tarot/spreads/daily-card", "Daily Card"],
+                  ["/tarot/spreads/yes-no", "Yes / No"],
+                  ["/tarot/spreads/past-present-future", "Past · Present · Future"],
+                  ["/tarot/spreads/love-three-card", "Love Three-Card"],
+                  ["/tarot/birth-arcana", "Birth Arcana"],
+                  ["/tarot/cards", "Cards cabinet"],
+                ].map(([href, label]) => (
+                  <li key={href}>
+                    <Link
+                      href={href}
+                      className="text-neutral-400 transition hover:text-amber-200"
+                    >
+                      {label}
+                    </Link>
+                  </li>
+                ))}
+              </ul>
+            </div>
+            <div>
+              <h3 className="text-xs uppercase tracking-[0.25em] text-neutral-500">
+                Card decks
+              </h3>
+              <ul className="mt-4 space-y-2 text-sm">
+                {[
+                  ["orrery", "Orrery"],
+                  ["nocturlabe", "Nocturlabe"],
+                  ["lunar-mansions", "Lunar Mansions"],
+                  ["virgo-chart", "Virgo Chart"],
+                  ["planetary-hours", "Planetary Hours"],
+                  ["gold-medallion", "Gold Medallion"],
+                  ["volvelle", "Volvelle"],
+                  ["celestial-sextant", "Celestial Sextant"],
+                ].map(([slug, label]) => (
+                  <li key={slug}>
+                    <Link
+                      href={`/gallery/${slug}`}
+                      className="text-neutral-400 transition hover:text-amber-200"
+                    >
+                      {label}
+                    </Link>
+                  </li>
+                ))}
+              </ul>
+            </div>
+            <div>
+              <h3 className="text-xs uppercase tracking-[0.25em] text-neutral-500">
+                Style landings
+              </h3>
+              <ul className="mt-4 space-y-2 text-sm">
+                {[
+                  ["orrery", "Orrery"],
+                  ["nocturlabe", "Nocturlabe"],
+                  ["lunar-mansions", "Lunar Mansions"],
+                  ["virgo-chart", "Virgo Chart"],
+                  ["planetary-hours", "Planetary Hours"],
+                  ["gold-medallion", "Gold Medallion"],
+                  ["volvelle", "Volvelle"],
+                  ["celestial-sextant", "Celestial Sextant"],
+                ].map(([slug, label]) => (
+                  <li key={slug}>
+                    <Link
+                      href={`/landing/${slug}`}
+                      className="text-neutral-400 transition hover:text-amber-200"
+                    >
+                      {label}
+                    </Link>
+                  </li>
+                ))}
+              </ul>
+            </div>
+            <div>
+              <h3 className="text-xs uppercase tracking-[0.25em] text-neutral-500">
+                Concept lab
+              </h3>
+              <ul className="mt-4 space-y-2 text-sm">
+                {[
+                  ["astra-console", "Astra Console"],
+                  ["solar-path", "Solar Path"],
+                  ["arcana-wheel", "Arcana Wheel"],
+                  ["circuit-arcana", "Circuit Arcana"],
+                  ["arcana-engine", "Arcana Engine"],
+                  ["living-cosmos", "Living Cosmos"],
+                  ["laboratorium", "Laboratorium"],
+                  ["silver-depths", "Silver Depths"],
+                ].map(([slug, label]) => (
+                  <li key={slug}>
+                    <Link
+                      href={`/lab/${slug}`}
+                      className="text-neutral-400 transition hover:text-amber-200"
+                    >
+                      {label}
+                    </Link>
+                  </li>
+                ))}
+              </ul>
+            </div>
+            <div>
+              <h3 className="text-xs uppercase tracking-[0.25em] text-neutral-500">
+                Lab landings
+              </h3>
+              <ul className="mt-4 space-y-2 text-sm">
+                {[
+                  ["aurum", "Aurum"],
+                  ["codex", "Codex"],
+                  ["selene", "Selene"],
+                  ["forge", "Forge"],
+                  ["remix-v1", "Production Remix v1"],
+                  ["remix-v2", "Production Remix v2"],
+                ].map(([slug, label]) => (
+                  <li key={slug}>
+                    <Link
+                      href={`/lab/${slug}`}
+                      className="text-neutral-400 transition hover:text-amber-200"
+                    >
+                      {label}
+                    </Link>
+                  </li>
+                ))}
+              </ul>
+            </div>
+            <div>
+              <h3 className="text-xs uppercase tracking-[0.25em] text-neutral-500">
+                Archive
+              </h3>
+              <ul className="mt-4 space-y-2 text-sm">
+                <li>
+                  <Link
+                    href="/reference/card-lab"
+                    className="text-neutral-400 transition hover:text-amber-200"
+                  >
+                    Tarot Card Style Lab
+                  </Link>
+                </li>
+                <li>
+                  <Link
+                    href="/reference/card-lab/pixel"
+                    className="text-neutral-400 transition hover:text-amber-200"
+                  >
+                    Playful decks
+                  </Link>
+                </li>
+              </ul>
+            </div>
+          </div>
+        </nav>
+
+        <p className="mt-14 text-center text-xs text-neutral-600">
+          Astro Scope — design explorations for the Birth Arcana Calculator.
         </p>
       </div>
     </main>
