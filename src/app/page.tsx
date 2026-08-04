@@ -256,14 +256,12 @@ export default function Home() {
                     {s.name}
                   </h2>
                   <span className="flex shrink-0 gap-2">
-                    {s.slug === "orrery" && (
-                      <Link
-                        href="/landing/orrery"
-                        className="rounded-full border border-amber-700/60 px-3 py-1 text-xs text-amber-300/90 transition hover:border-amber-500 hover:text-amber-200"
-                      >
-                        Landing →
-                      </Link>
-                    )}
+                    <Link
+                      href={`/landing/${s.slug}`}
+                      className="rounded-full border border-amber-700/60 px-3 py-1 text-xs text-amber-300/90 transition hover:border-amber-500 hover:text-amber-200"
+                    >
+                      Landing →
+                    </Link>
                     <Link
                       href={`/gallery/${s.slug}`}
                       className="rounded-full border border-neutral-600 px-3 py-1 text-xs text-neutral-300 transition hover:border-neutral-300 hover:text-white"
