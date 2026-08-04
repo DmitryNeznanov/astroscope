@@ -9,6 +9,57 @@ import NebulaWatercolorCard from "@/components/cards/nebula-watercolor";
 import GoldFoilCard from "@/components/cards/gold-foil";
 import EtherealMistCard from "@/components/cards/ethereal-mist";
 import AstrolabeCard from "@/components/cards/astrolabe";
+import NatalChartCard from "@/components/cards/natal-chart";
+import ZodiacMandalaCard from "@/components/cards/zodiac-mandala";
+import PlanetaryAlignmentCard from "@/components/cards/planetary-alignment";
+import EphemerisCard from "@/components/cards/ephemeris";
+import ArmillarySphereCard from "@/components/cards/armillary-sphere";
+import LunarCalendarCard from "@/components/cards/lunar-calendar";
+import StarDomeCard from "@/components/cards/star-dome";
+import AstronomicalClockCard from "@/components/cards/astronomical-clock";
+
+const ASTRO_STYLES = [
+  {
+    name: "Natal Chart",
+    component: NatalChartCard,
+    note: "A full birth-chart wheel — houses, planets at their degrees, aspect lines, the Hermit at the hub.",
+  },
+  {
+    name: "Zodiac Mandala",
+    component: ZodiacMandalaCard,
+    note: "A rose window of sign panels and planet bands, Virgo highlighted in gold.",
+  },
+  {
+    name: "Planetary Alignment",
+    component: PlanetaryAlignmentCard,
+    note: "The great procession of spheres over one small figure — cosmic scale, human smallness.",
+  },
+  {
+    name: "Ephemeris",
+    component: EphemerisCard,
+    note: "A page from the almanac: degree tables, retrograde marks, the Hermit's day ruled in ink.",
+  },
+  {
+    name: "Armillary Sphere",
+    component: ArmillarySphereCard,
+    note: "Renaissance instrument of rings — the seeker standing at the center of the cosmos.",
+  },
+  {
+    name: "Lunar Calendar",
+    component: LunarCalendarCard,
+    note: "A month of moon phases in a silver grid, the full moon of the ninth day ringed in gold.",
+  },
+  {
+    name: "Star Dome",
+    component: StarDomeCard,
+    note: "Planetarium projection — classical figures in faint light, the Hermit burning brightest.",
+  },
+  {
+    name: "Astronomical Clock",
+    component: AstronomicalClockCard,
+    note: "An Orloj-inspired dial with sun and moon hands, the Hermit standing on the pivot.",
+  },
+];
 
 const STYLES = [
   {
@@ -75,6 +126,35 @@ export default function Home() {
 
         <div className="mt-14 grid grid-cols-1 gap-10 sm:grid-cols-2 lg:grid-cols-4">
           {STYLES.map((s) => {
+            const Card = s.component;
+            return (
+              <div key={s.name}>
+                <Replayable>
+                  <CardShell>
+                    <Card />
+                  </CardShell>
+                </Replayable>
+                <h2 className="mt-4 font-serif text-lg text-neutral-100">
+                  {s.name}
+                </h2>
+                <p className="mt-1 text-sm leading-relaxed text-neutral-500">
+                  {s.note}
+                </p>
+              </div>
+            );
+          })}
+        </div>
+
+        <h2 className="mt-24 text-center font-serif text-3xl text-neutral-100">
+          Astrology Series
+        </h2>
+        <p className="mx-auto mt-4 max-w-xl text-center text-sm leading-relaxed text-neutral-400">
+          Charts, wheels and instruments — the Hermit read through the
+          machinery of the heavens.
+        </p>
+
+        <div className="mt-14 grid grid-cols-1 gap-10 sm:grid-cols-2 lg:grid-cols-4">
+          {ASTRO_STYLES.map((s) => {
             const Card = s.component;
             return (
               <div key={s.name}>
