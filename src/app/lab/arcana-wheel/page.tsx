@@ -64,12 +64,35 @@ const NODES: ArcanaNode[] = [
   { name: "THE TOWER", numeral: "XVI", keyword: "Change", value: "−18", color: "#f87171", angle: 196, radius: 330, delay: "12.6s" },
 ];
 
+/* Faint minor arcana satellite points — small unlabeled dots with tiny values */
+type MinorNode = { angle: number; radius: number; color: string; value: string; delay: string };
+
+const MINOR_NODES: MinorNode[] = [
+  { angle: -72, radius: 356, color: "#f5b93f", value: "+12", delay: "0.7s" },
+  { angle: -54, radius: 288, color: "#c9d4e6", value: "+08", delay: "1.9s" },
+  { angle: -18, radius: 352, color: "#2dd4bf", value: "+21", delay: "3.1s" },
+  { angle: 12, radius: 300, color: "#c084fc", value: "−05", delay: "4.3s" },
+  { angle: 34, radius: 358, color: "#a78bfa", value: "+16", delay: "5.5s" },
+  { angle: 58, radius: 344, color: "#b0465c", value: "−09", delay: "6.7s" },
+  { angle: 76, radius: 286, color: "#60a5fa", value: "+27", delay: "7.9s" },
+  { angle: 104, radius: 356, color: "#e8b64c", value: "+11", delay: "9.1s" },
+  { angle: 132, radius: 296, color: "#a78bfa", value: "+19", delay: "10.3s" },
+  { angle: 146, radius: 364, color: "#4ade80", value: "+06", delay: "11.5s" },
+  { angle: 164, radius: 340, color: "#2dd4bf", value: "−03", delay: "12.7s" },
+  { angle: 186, radius: 300, color: "#f87171", value: "−14", delay: "13.9s" },
+  { angle: 210, radius: 362, color: "#f5b93f", value: "+24", delay: "2.5s" },
+  { angle: 224, radius: 320, color: "#c9d4e6", value: "+09", delay: "5.1s" },
+  { angle: 240, radius: 348, color: "#60a5fa", value: "−07", delay: "8.3s" },
+  { angle: 252, radius: 292, color: "#e8b64c", value: "+15", delay: "10.9s" },
+];
+
 type Sector = {
   no: string;
   kicker: string;
   title: string;
   copy: string;
   node: string;
+  coord: string;
   color: string;
   span: string;
 };
@@ -81,6 +104,7 @@ const SECTORS: Sector[] = [
     title: "Birth Chart",
     copy: "Map your Sun, Moon, and Rising — the foundation of every reading.",
     node: "XIX · THE SUN",
+    coord: "θ 270° · R 310",
     color: "#f5b93f",
     span: "lg:col-span-7",
   },
@@ -90,6 +114,7 @@ const SECTORS: Sector[] = [
     title: "Daily Horoscope",
     copy: "Twelve signs, one sky. Clear forecasts without the fluff.",
     node: "XVIII · THE MOON",
+    coord: "θ 325° · R 322",
     color: "#c9d4e6",
     span: "lg:col-span-5 lg:mt-14",
   },
@@ -99,6 +124,7 @@ const SECTORS: Sector[] = [
     title: "Compatibility",
     copy: "Zodiac match, Chinese pairs, and deep synastry for two charts.",
     node: "VI · THE LOVERS",
+    coord: "θ 022° · R 326",
     color: "#c084fc",
     span: "lg:col-span-5",
   },
@@ -108,6 +134,7 @@ const SECTORS: Sector[] = [
     title: "Tarot",
     copy: "Daily card to Celtic Cross — pull, reflect, get a full reading.",
     node: "XVII · THE STAR",
+    coord: "θ 150° · R 328",
     color: "#a78bfa",
     span: "lg:col-span-7 lg:-mt-6",
   },
@@ -117,6 +144,7 @@ const SECTORS: Sector[] = [
     title: "Psychology",
     copy: "MBTI, Big Five, empathy and more — meet yourself beyond the signs.",
     node: "IX · THE HERMIT",
+    coord: "θ 355° · R 288",
     color: "#2dd4bf",
     span: "lg:col-span-6",
   },
@@ -126,9 +154,30 @@ const SECTORS: Sector[] = [
     title: "Cosmic Passport",
     copy: "Your Cosmic ID, people, journal, and Premium deep dives — one hub.",
     node: "III · THE EMPRESS",
+    coord: "θ 172° · R 292",
     color: "#4ade80",
     span: "lg:col-span-6 lg:mt-10",
   },
+];
+
+const INFLUENCES = [
+  { k: "SOLAR PEAK", v: "HIGH", c: "#f5b93f" },
+  { k: "LUNAR FLOW", v: "STRONG", c: "#c9d4e6" },
+  { k: "MERCURY TIDE", v: "RISING", c: "#2dd4bf" },
+  { k: "SATURN DRAG", v: "LOW", c: "#f87171" },
+];
+
+const ELEMENTS = [
+  { k: "FIRE", v: 72, c: "#f87171" },
+  { k: "WATER", v: 64, c: "#60a5fa" },
+  { k: "AIR", v: 41, c: "#e8b64c" },
+  { k: "EARTH", v: 88, c: "#4ade80" },
+];
+
+const RECENT_CARDS = [
+  { n: "XVII", name: "THE STAR", c: "#a78bfa" },
+  { n: "III", name: "THE EMPRESS", c: "#4ade80" },
+  { n: "XVI", name: "THE TOWER", c: "#f87171" },
 ];
 
 const FAQ = [
@@ -165,10 +214,26 @@ const TICKS = Array.from({ length: 72 }, (_, i) => {
   return { key: `t${i}`, x1: n(a.x), y1: n(a.y), x2: n(b.x), y2: n(b.y), major };
 });
 
+/* Secondary fine tick band — every 3°, majors every 15° */
+const MINOR_TICKS = Array.from({ length: 120 }, (_, i) => {
+  const deg = i * 3;
+  const major = deg % 15 === 0;
+  const a = pt(major ? 258 : 262, deg);
+  const b = pt(268, deg);
+  return { key: `mt${i}`, x1: n(a.x), y1: n(a.y), x2: n(b.x), y2: n(b.y), major };
+});
+
 const DEGREES = Array.from({ length: 12 }, (_, i) => {
   const deg = i * 30;
   const p = pt(388, deg);
   return { key: `d${i}`, x: n(p.x), y: n(p.y), label: `${deg}°` };
+});
+
+/* Dense degree band — every 10°, zero-padded */
+const DEG_BAND = Array.from({ length: 36 }, (_, i) => {
+  const deg = i * 10;
+  const p = pt(240, deg);
+  return { key: `db${i}`, x: n(p.x), y: n(p.y), label: String(deg).padStart(3, "0") };
 });
 
 const INNER_RING_POINTS = Array.from({ length: 12 }, (_, i) => {
@@ -200,6 +265,13 @@ const CORE_STAR = Array.from({ length: 16 }, (_, i) => {
   return `${n(p.x)},${n(p.y)}`;
 }).join(" ");
 
+/* Cosmic weather wave — 24h mini polyline */
+const WAVE = Array.from({ length: 41 }, (_, i) => {
+  const x = i * 5;
+  const y = 20 + 9 * Math.sin((i / 40) * Math.PI * 3.2) + 3 * Math.sin((i / 40) * Math.PI * 9);
+  return `${n(x)},${n(y)}`;
+}).join(" ");
+
 /* ------------------------------------------------------------------ */
 /* Scoped styles                                                       */
 /* ------------------------------------------------------------------ */
@@ -228,11 +300,16 @@ const LAW_STYLES = `
     0%, 100% { opacity: 0.75; }
     50% { opacity: 1; }
   }
+  @keyframes law-dash {
+    to { stroke-dashoffset: -240; }
+  }
   .law-rot-a { animation: law-rot 180s linear infinite; transform-origin: 500px 500px; }
   .law-rot-b { animation: law-rot-rev 120s linear infinite; transform-origin: 500px 500px; }
   .law-rot-c { animation: law-rot-rev 90s linear infinite; transform-origin: 500px 500px; }
+  .law-rot-d { animation: law-rot 150s linear infinite; transform-origin: 500px 500px; }
   .law-core { animation: law-core-pulse 16s ease-in-out infinite; }
   .law-node-glow { animation: law-pulse 14s ease-in-out infinite; }
+  .law-wave { animation: law-dash 40s linear infinite; }
   .law-begin { transition: letter-spacing 400ms ease; }
   .law-begin:hover .law-begin-text { letter-spacing: 0.55em; }
   .law-begin:hover .law-begin-ring { stroke-opacity: 0.9; }
@@ -242,7 +319,7 @@ const LAW_STYLES = `
     .law-hide-sm { display: none; }
   }
   @media (prefers-reduced-motion: reduce) {
-    .law-rot-a, .law-rot-b, .law-rot-c, .law-core, .law-node-glow { animation: none; }
+    .law-rot-a, .law-rot-b, .law-rot-c, .law-rot-d, .law-core, .law-node-glow, .law-wave { animation: none; }
     .law-begin { transition: none; }
   }
 `;
@@ -318,9 +395,9 @@ export default function ArcanaWheelPage() {
       </nav>
 
       {/* ---------------- Hero: the wheel dominates ---------------- */}
-      <header id="law-wheel" className="relative flex flex-col lg:block lg:min-h-screen">
+      <header id="law-wheel" className="relative flex flex-col xl:block xl:min-h-screen">
         {/* Hero text — small, top-left */}
-        <div className="relative z-10 max-w-md px-4 pt-10 sm:px-8 lg:absolute lg:left-8 lg:top-10 lg:max-w-xs lg:px-0 lg:pt-0">
+        <div className="relative z-10 max-w-md px-4 pt-10 sm:px-8 xl:absolute xl:left-8 xl:top-10 xl:max-w-xs xl:px-0 xl:pt-0">
           <p className="font-mono text-[10px] tracking-[0.4em] text-[#e8b64c]/80">
             NATAL INSTRUMENT · NO. 01
           </p>
@@ -349,38 +426,8 @@ export default function ArcanaWheelPage() {
           </div>
         </div>
 
-        {/* Instrument readout — top-right, desktop only */}
-        <aside className="absolute right-8 top-10 z-10 hidden w-52 lg:block" aria-label="Instrument readout">
-          <div className="border border-white/10 bg-black/30 p-4">
-            <p className="font-mono text-[9px] tracking-[0.35em] text-white/35">READOUT · LIVE SKY</p>
-            <dl className="mt-3 space-y-3">
-              {[
-                { k: "MAJOR ARCANA", v: "22", w: "100%" },
-                { k: "SIGNS TRACKED", v: "12", w: "66%" },
-                { k: "INSTRUMENT ARC", v: "360°", w: "88%" },
-                { k: "FREE TOOLS", v: "04", w: "44%" },
-              ].map((row) => (
-                <div key={row.k}>
-                  <div className="flex items-baseline justify-between">
-                    <dt className="font-mono text-[9px] tracking-[0.25em] text-white/40">{row.k}</dt>
-                    <dd className="font-mono text-xs text-[#e8b64c]">{row.v}</dd>
-                  </div>
-                  <div className="mt-1 h-px w-full bg-white/10">
-                    <div className="h-px bg-[#e8b64c]/60" style={{ width: row.w }} />
-                  </div>
-                </div>
-              ))}
-            </dl>
-            <p className="mt-4 border-t border-white/10 pt-3 font-mono text-[9px] leading-relaxed tracking-[0.2em] text-white/30">
-              UPDATED · 1 MIN AGO
-              <br />
-              CALIBRATION · TROPICAL
-            </p>
-          </div>
-        </aside>
-
         {/* The wheel */}
-        <div className="law-wheel-glow relative mx-auto w-[min(96vw,1020px)] lg:-mt-6">
+        <div className="law-wheel-glow relative mx-auto w-[min(94vw,940px)] xl:-mt-6">
           <svg
             viewBox="0 0 1000 1000"
             className="h-auto w-full"
@@ -399,10 +446,14 @@ export default function ArcanaWheelPage() {
             {/* Static hairline rings */}
             <g fill="none" stroke="#e8e4d8">
               <circle cx={CX} cy={CY} r={494} strokeOpacity={0.18} strokeWidth={1} />
+              <circle cx={CX} cy={CY} r={470} strokeOpacity={0.08} strokeWidth={1} strokeDasharray="1 6" />
               <circle cx={CX} cy={CY} r={442} strokeOpacity={0.1} strokeWidth={1} />
               <circle cx={CX} cy={CY} r={368} strokeOpacity={0.14} strokeWidth={1} />
+              <circle cx={CX} cy={CY} r={342} strokeOpacity={0.12} strokeWidth={1} />
               <circle cx={CX} cy={CY} r={300} strokeOpacity={0.1} strokeWidth={1} strokeDasharray="2 7" />
+              <circle cx={CX} cy={CY} r={278} strokeOpacity={0.08} strokeWidth={1} />
               <circle cx={CX} cy={CY} r={252} strokeOpacity={0.08} strokeWidth={1} />
+              <circle cx={CX} cy={CY} r={190} strokeOpacity={0.1} strokeWidth={1} strokeDasharray="2 5" />
               <circle cx={CX} cy={CY} r={158} strokeOpacity={0.12} strokeWidth={1} />
             </g>
 
@@ -433,10 +484,36 @@ export default function ArcanaWheelPage() {
               ))}
             </g>
 
+            {/* Secondary fine tick band (150s) */}
+            <g className="law-rot-d">
+              <circle cx={CX} cy={CY} r={268} fill="none" stroke="#e8e4d8" strokeOpacity={0.1} strokeWidth={1} />
+              {MINOR_TICKS.map((t) => (
+                <line
+                  key={t.key}
+                  x1={t.x1}
+                  y1={t.y1}
+                  x2={t.x2}
+                  y2={t.y2}
+                  stroke={t.major ? "#e8b64c" : "#e8e4d8"}
+                  strokeOpacity={t.major ? 0.35 : 0.16}
+                  strokeWidth={1}
+                />
+              ))}
+            </g>
+
             {/* Degree numbers (static, hidden on small screens) */}
             <g className="law-hide-sm" fontFamily={MONO} fontSize={9} fill="#6b6880" textAnchor="middle">
               {DEGREES.map((d) => (
                 <text key={d.key} x={d.x} y={d.y + 3}>
+                  {d.label}
+                </text>
+              ))}
+            </g>
+
+            {/* Dense degree band — every 10° (hidden on small screens) */}
+            <g className="law-hide-sm" fontFamily={MONO} fontSize={7} fill="#55536a" textAnchor="middle">
+              {DEG_BAND.map((d) => (
+                <text key={d.key} x={d.x} y={d.y + 2}>
                   {d.label}
                 </text>
               ))}
@@ -559,6 +636,42 @@ export default function ArcanaWheelPage() {
               </text>
             </a>
 
+            {/* Minor arcana satellites — faint dots with tiny values */}
+            <g>
+              {MINOR_NODES.map((m, i) => {
+                const p = pt(m.radius, m.angle);
+                const right = Math.cos(rad(m.angle)) >= 0;
+                return (
+                  <g key={`mn${i}`}>
+                    <circle
+                      className="law-node-glow"
+                      cx={n(p.x)}
+                      cy={n(p.y)}
+                      r={9}
+                      fill={m.color}
+                      fillOpacity={0.14}
+                      filter="url(#law-blur)"
+                      style={{ animationDelay: m.delay }}
+                    />
+                    <circle cx={n(p.x)} cy={n(p.y)} r={3.2} fill={m.color} fillOpacity={0.7} />
+                    <circle cx={n(p.x)} cy={n(p.y)} r={6.5} fill="none" stroke={m.color} strokeOpacity={0.3} strokeWidth={0.75} />
+                    <text
+                      className="law-hide-sm"
+                      x={n(right ? p.x + 10 : p.x - 10)}
+                      y={n(p.y + 2.5)}
+                      textAnchor={right ? "start" : "end"}
+                      fontFamily={MONO}
+                      fontSize={7}
+                      fill={m.color}
+                      fillOpacity={0.85}
+                    >
+                      {m.value}
+                    </text>
+                  </g>
+                );
+              })}
+            </g>
+
             {/* Zodiac orbit — outermost ring */}
             <g>
               {ZODIAC.map((sign, i) => {
@@ -648,11 +761,206 @@ export default function ArcanaWheelPage() {
           </svg>
         </div>
 
-        {/* Bottom hero marginalia */}
-        <div className="relative z-10 flex items-center justify-between px-4 pb-6 font-mono text-[9px] tracking-[0.3em] text-white/25 sm:px-8 lg:absolute lg:bottom-6 lg:left-0 lg:right-0">
-          <span>LAT 55.75° N · LON 37.61° E</span>
-          <span className="hidden sm:inline">FIG. 01 — THE ARCANA WHEEL</span>
-          <span>SCALE 1:1 · SKY</span>
+        {/* Readout clusters — flank the wheel on xl, stack below on smaller screens */}
+        <div className="grid gap-4 px-4 pb-10 sm:grid-cols-2 sm:px-8 xl:contents">
+          {/* Left cluster — under the hero text */}
+          <div className="space-y-4 xl:absolute xl:left-8 xl:top-72 xl:z-10 xl:w-60">
+            {/* PATH ALIGNMENT */}
+            <div className="border border-white/10 bg-black/40 p-4">
+              <div className="flex items-baseline justify-between">
+                <p className="font-mono text-[9px] tracking-[0.35em] text-white/35">PATH ALIGNMENT</p>
+                <span className="font-mono text-[8px] tracking-[0.25em] text-[#4ade80]/70">LIVE</span>
+              </div>
+              <p className="mt-2 text-4xl font-light text-[#e8b64c]">
+                87<span className="text-lg text-white/40">%</span>
+              </p>
+              <div className="mt-2 h-px w-full bg-white/10">
+                <div className="h-px bg-[#e8b64c]" style={{ width: "87%" }} />
+              </div>
+              <p className="mt-2 font-mono text-[8px] tracking-[0.25em] text-white/25">
+                UPDATED · 1 MIN AGO
+              </p>
+            </div>
+
+            {/* TODAY'S INFLUENCES */}
+            <div className="border border-white/10 bg-black/40 p-4">
+              <p className="font-mono text-[9px] tracking-[0.35em] text-white/35">
+                TODAY&rsquo;S INFLUENCES
+              </p>
+              <ul className="mt-3">
+                {INFLUENCES.map((row) => (
+                  <li
+                    key={row.k}
+                    className="flex items-baseline justify-between border-b border-white/5 py-1.5 last:border-0"
+                  >
+                    <span className="font-mono text-[9px] tracking-[0.2em] text-white/45">{row.k}</span>
+                    <span className="font-mono text-[9px] tracking-[0.2em]" style={{ color: row.c }}>
+                      {row.v}
+                    </span>
+                  </li>
+                ))}
+              </ul>
+            </div>
+
+            {/* ARCANA DRAW */}
+            <div className="border border-white/10 bg-black/40 p-4">
+              <div className="flex items-baseline justify-between">
+                <p className="font-mono text-[9px] tracking-[0.35em] text-white/35">ARCANA DRAW</p>
+                <span className="font-mono text-[9px] text-[#e8b64c]">1 / 3</span>
+              </div>
+              <div className="mt-3 flex gap-1.5">
+                {[0, 1, 2].map((i) => (
+                  <span key={i} className={`h-1 flex-1 ${i === 0 ? "bg-[#e8b64c]" : "bg-white/10"}`} />
+                ))}
+              </div>
+              <p className="mt-2 font-mono text-[8px] tracking-[0.25em] text-white/25">
+                NEXT DRAW · 04:12:36
+              </p>
+            </div>
+
+            {/* RECENT CARDS */}
+            <div className="border border-white/10 bg-black/40 p-4">
+              <div className="flex items-baseline justify-between">
+                <p className="font-mono text-[9px] tracking-[0.35em] text-white/35">RECENT CARDS</p>
+                <span className="font-mono text-[8px] tracking-[0.25em] text-white/30">VIEW ALL →</span>
+              </div>
+              <div className="mt-3 flex gap-2">
+                {RECENT_CARDS.map((card) => (
+                  <div
+                    key={card.n}
+                    className="flex-1 border px-1 pb-1.5 pt-3 text-center"
+                    style={{
+                      borderColor: `${card.c}55`,
+                      background: `radial-gradient(circle at 50% 30%, ${card.c}33, transparent 72%)`,
+                      boxShadow: `inset 0 0 14px ${card.c}22`,
+                    }}
+                  >
+                    <span className="block font-mono text-[10px]" style={{ color: card.c }}>
+                      {card.n}
+                    </span>
+                    <span className="mx-auto mt-1.5 block h-px w-4" style={{ backgroundColor: `${card.c}66` }} />
+                    <span className="mt-1.5 block font-mono text-[6px] tracking-[0.15em] text-white/40">
+                      {card.name}
+                    </span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+
+          {/* Right cluster — instrument readout */}
+          <aside className="xl:absolute xl:right-8 xl:top-10 xl:z-10 xl:w-56" aria-label="Instrument readout">
+            <div className="border border-white/10 bg-black/40 p-4">
+              <p className="font-mono text-[9px] tracking-[0.35em] text-white/35">READOUT · LIVE SKY</p>
+              <dl className="mt-3 space-y-3">
+                {[
+                  { k: "MAJOR ARCANA", v: "22", w: "100%" },
+                  { k: "SIGNS TRACKED", v: "12", w: "66%" },
+                  { k: "INSTRUMENT ARC", v: "360°", w: "88%" },
+                  { k: "FREE TOOLS", v: "04", w: "44%" },
+                ].map((row) => (
+                  <div key={row.k}>
+                    <div className="flex items-baseline justify-between">
+                      <dt className="font-mono text-[9px] tracking-[0.25em] text-white/40">{row.k}</dt>
+                      <dd className="font-mono text-xs text-[#e8b64c]">{row.v}</dd>
+                    </div>
+                    <div className="mt-1 h-px w-full bg-white/10">
+                      <div className="h-px bg-[#e8b64c]/60" style={{ width: row.w }} />
+                    </div>
+                  </div>
+                ))}
+              </dl>
+
+              {/* CYCLE PROGRESS */}
+              <div className="mt-4 border-t border-white/10 pt-3">
+                <p className="font-mono text-[9px] tracking-[0.35em] text-white/35">CYCLE PROGRESS</p>
+                <div className="mt-2 flex items-baseline justify-between font-mono text-[9px] tracking-[0.2em]">
+                  <span className="text-white/45">PERSONAL YEAR 7</span>
+                  <span className="text-[#e8b64c]">DAY 198 / 365</span>
+                </div>
+                <div className="mt-2 h-px w-full bg-white/10">
+                  <div className="h-px bg-[#e8b64c]" style={{ width: "54%" }} />
+                </div>
+              </div>
+
+              {/* ELEMENTAL CURRENT */}
+              <div className="mt-4 border-t border-white/10 pt-3">
+                <p className="font-mono text-[9px] tracking-[0.35em] text-white/35">ELEMENTAL CURRENT</p>
+                <div className="mt-2 space-y-2">
+                  {ELEMENTS.map((el) => (
+                    <div key={el.k} className="flex items-center gap-2">
+                      <span className="w-10 font-mono text-[8px] tracking-[0.2em] text-white/40">{el.k}</span>
+                      <div className="h-px flex-1 bg-white/10">
+                        <div className="h-px" style={{ width: `${el.v}%`, backgroundColor: el.c }} />
+                      </div>
+                      <span className="font-mono text-[8px]" style={{ color: el.c }}>
+                        {el.v}
+                      </span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* COSMIC WEATHER */}
+              <div className="mt-4 border-t border-white/10 pt-3">
+                <p className="font-mono text-[9px] tracking-[0.35em] text-white/35">COSMIC WEATHER · 24H</p>
+                <svg viewBox="0 0 200 40" className="mt-2 w-full" aria-hidden>
+                  <line x1={0} y1={20} x2={200} y2={20} stroke="#e8e4d8" strokeOpacity={0.12} strokeWidth={0.5} />
+                  <polyline
+                    className="law-wave"
+                    points={WAVE}
+                    fill="none"
+                    stroke="#2dd4bf"
+                    strokeOpacity={0.7}
+                    strokeWidth={1}
+                    strokeDasharray="4 3"
+                  />
+                  {[0, 67, 133, 199].map((x) => (
+                    <line key={x} x1={x} y1={16} x2={x} y2={24} stroke="#e8e4d8" strokeOpacity={0.2} strokeWidth={0.5} />
+                  ))}
+                </svg>
+                <div className="mt-1 flex justify-between font-mono text-[7px] tracking-[0.2em] text-white/25">
+                  <span>06H</span>
+                  <span>12H</span>
+                  <span>18H</span>
+                  <span>24H</span>
+                </div>
+              </div>
+
+              <p className="mt-4 border-t border-white/10 pt-3 font-mono text-[9px] leading-relaxed tracking-[0.2em] text-white/30">
+                UPDATED · 1 MIN AGO
+                <br />
+                CALIBRATION · TROPICAL
+              </p>
+            </div>
+          </aside>
+        </div>
+
+        {/* Bottom status strip */}
+        <div className="relative z-10 border-t border-white/10 px-4 py-3 sm:px-8">
+          <div className="flex flex-wrap items-center justify-between gap-x-6 gap-y-2 font-mono text-[9px] tracking-[0.3em] text-white/30">
+            <span>FIG. 01 — THE ARCANA WHEEL · SCALE 1:1 · SKY</span>
+            <span className="hidden md:inline">LAT 55.75° N · LON 37.61° E</span>
+            <span>
+              <span className="text-[#e8b64c]/80">372</span> DRAWS ·{" "}
+              <span className="text-[#e8b64c]/80">5.6K</span> INSIGHTS ·{" "}
+              <span className="text-[#e8b64c]/80">183</span> ARCANA POINTS
+            </span>
+          </div>
+          <div aria-hidden className="mt-2 flex items-end justify-between">
+            {Array.from({ length: 49 }, (_, i) => (
+              <span
+                key={i}
+                className={
+                  i % 8 === 0
+                    ? "h-3 w-px bg-[#e8b64c]/40"
+                    : i % 4 === 0
+                      ? "h-2 w-px bg-white/20"
+                      : "h-1 w-px bg-white/10"
+                }
+              />
+            ))}
+          </div>
         </div>
       </header>
 
@@ -694,9 +1002,25 @@ export default function ArcanaWheelPage() {
               </div>
               <h3 className="mt-5 text-2xl font-light tracking-tight text-[#efe9dc]">{s.title}</h3>
               <p className="mt-3 max-w-md text-[13px] leading-relaxed text-white/50">{s.copy}</p>
-              <div className="mt-6 flex items-center justify-between border-t border-white/10 pt-4">
+
+              {/* tiny scale ticks */}
+              <div aria-hidden className="mt-5 flex items-end justify-between">
+                {Array.from({ length: 25 }, (_, i) => (
+                  <span
+                    key={i}
+                    className={
+                      i % 6 === 0 ? "h-2.5 w-px bg-white/25" : "h-1.5 w-px bg-white/10"
+                    }
+                  />
+                ))}
+              </div>
+
+              <div className="mt-3 flex items-center justify-between gap-3 border-t border-white/10 pt-4">
                 <span className="font-mono text-[9px] tracking-[0.25em] text-white/30">
                   LINKED NODE · {s.node}
+                </span>
+                <span className="hidden font-mono text-[8px] tracking-[0.2em] text-white/25 sm:inline">
+                  {s.coord}
                 </span>
                 <span className="text-[11px] tracking-[0.2em] text-[#e8b64c] transition-transform duration-300 group-hover:translate-x-1">
                   EXPLORE →

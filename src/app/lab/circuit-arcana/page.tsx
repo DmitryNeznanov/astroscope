@@ -10,81 +10,136 @@ export const metadata: Metadata = {
 /* data                                                                */
 /* ------------------------------------------------------------------ */
 
-const SIGNS: { glyph: string; name: string; dates: string; numeral: string }[] = [
-  { glyph: "♈︎", name: "Aries", dates: "Mar 21 – Apr 19", numeral: "I" },
-  { glyph: "♉︎", name: "Taurus", dates: "Apr 20 – May 20", numeral: "II" },
-  { glyph: "♊︎", name: "Gemini", dates: "May 21 – Jun 20", numeral: "III" },
-  { glyph: "♋︎", name: "Cancer", dates: "Jun 21 – Jul 22", numeral: "IV" },
-  { glyph: "♌︎", name: "Leo", dates: "Jul 23 – Aug 22", numeral: "V" },
-  { glyph: "♍︎", name: "Virgo", dates: "Aug 23 – Sep 22", numeral: "VI" },
-  { glyph: "♎︎", name: "Libra", dates: "Sep 23 – Oct 22", numeral: "VII" },
-  { glyph: "♏︎", name: "Scorpio", dates: "Oct 23 – Nov 21", numeral: "VIII" },
-  { glyph: "♐︎", name: "Sagittarius", dates: "Nov 22 – Dec 21", numeral: "IX" },
-  { glyph: "♑︎", name: "Capricorn", dates: "Dec 22 – Jan 19", numeral: "X" },
-  { glyph: "♒︎", name: "Aquarius", dates: "Jan 20 – Feb 18", numeral: "XI" },
-  { glyph: "♓︎", name: "Pisces", dates: "Feb 19 – Mar 20", numeral: "XII" },
+const SIGNS: { glyph: string; name: string; dates: string; numeral: string; serial: string }[] = [
+  { glyph: "♈︎", name: "Aries", dates: "Mar 21 – Apr 19", numeral: "I", serial: "SN 0321-ARI" },
+  { glyph: "♉︎", name: "Taurus", dates: "Apr 20 – May 20", numeral: "II", serial: "SN 0420-TAU" },
+  { glyph: "♊︎", name: "Gemini", dates: "May 21 – Jun 20", numeral: "III", serial: "SN 0521-GEM" },
+  { glyph: "♋︎", name: "Cancer", dates: "Jun 21 – Jul 22", numeral: "IV", serial: "SN 0621-CNC" },
+  { glyph: "♌︎", name: "Leo", dates: "Jul 23 – Aug 22", numeral: "V", serial: "SN 0723-LEO" },
+  { glyph: "♍︎", name: "Virgo", dates: "Aug 23 – Sep 22", numeral: "VI", serial: "SN 0823-VIR" },
+  { glyph: "♎︎", name: "Libra", dates: "Sep 23 – Oct 22", numeral: "VII", serial: "SN 0923-LIB" },
+  { glyph: "♏︎", name: "Scorpio", dates: "Oct 23 – Nov 21", numeral: "VIII", serial: "SN 1023-SCO" },
+  { glyph: "♐︎", name: "Sagittarius", dates: "Nov 22 – Dec 21", numeral: "IX", serial: "SN 1122-SAG" },
+  { glyph: "♑︎", name: "Capricorn", dates: "Dec 22 – Jan 19", numeral: "X", serial: "SN 1222-CAP" },
+  { glyph: "♒︎", name: "Aquarius", dates: "Jan 20 – Feb 18", numeral: "XI", serial: "SN 0120-AQR" },
+  { glyph: "♓︎", name: "Pisces", dates: "Feb 19 – Mar 20", numeral: "XII", serial: "SN 0219-PSC" },
 ];
 
-const MODULES: { index: string; tag: string; title: string; copy: string }[] = [
+const MODULES: {
+  index: string;
+  tag: string;
+  title: string;
+  copy: string;
+  spec: string;
+  led: string;
+}[] = [
   {
     index: "01",
     tag: "FREE",
     title: "Birth Chart",
     copy: "Map your Sun, Moon, and Rising — the foundation of every reading.",
+    spec: "BUS 0x19 · 22 NODES",
+    led: "#e8b45a",
   },
   {
     index: "02",
     tag: "DAILY",
     title: "Daily Horoscope",
     copy: "Twelve signs, one sky. Clear forecasts without the fluff.",
+    spec: "BUS 0x2A · 12 GATES",
+    led: "#e056a0",
   },
   {
     index: "03",
     tag: "SYNASTRY",
     title: "Compatibility",
     copy: "Zodiac match, Chinese pairs, and deep synastry for two charts.",
+    spec: "BUS 0x33 · 2 CHARTS",
+    led: "#e8b45a",
   },
   {
     index: "04",
     tag: "SPREADS",
     title: "Tarot",
     copy: "Daily card to Celtic Cross — pull, reflect, get a full reading.",
+    spec: "BUS 0x4D · 78 CARDS",
+    led: "#f0762b",
   },
   {
     index: "05",
     tag: "TESTS",
     title: "Psychology",
     copy: "MBTI, Big Five, empathy and more — meet yourself beyond the signs.",
+    spec: "BUS 0x51 · 5 SCALES",
+    led: "#e8b45a",
   },
   {
     index: "06",
     tag: "YOU",
     title: "Cosmic Passport",
     copy: "Your Cosmic ID, people, journal, and Premium deep dives — one hub.",
+    spec: "BUS 0x66 · 1 HUB",
+    led: "#e056a0",
   },
 ];
 
-const FAQ: { no: string; q: string; a: string }[] = [
+const READOUTS: { label: string; value: string; unit: string; live?: boolean }[] = [
+  { label: "Sidereal Time", value: "04:17:39", unit: "LST", live: true },
+  { label: "Moon Phase", value: "WAXING 62%", unit: "☽︎", live: true },
+  { label: "Julian Date", value: "2460927.5", unit: "JD" },
+  { label: "Next Transit", value: "MERCURY → VIRGO", unit: "11H", live: true },
+  { label: "Arcana Score", value: "742", unit: "Σ" },
+];
+
+const FAQ: { no: string; q: string; a: string; note: string }[] = [
   {
     no: "A1",
     q: "What can I do for free?",
     a: "The birth chart, daily horoscopes, tarot pulls, and the psychology tests are all free — no account required to begin a reading.",
+    note: "cf. MODULE 01–06, pins open",
   },
   {
     no: "A2",
     q: "How do I get my free birth chart?",
     a: "Enter your date, time, and place of birth in the calculator. The chart is drawn at once, with Sun, Moon, and Rising mapped.",
+    note: "3 inputs → 22 nodes resolved",
   },
   {
     no: "A3",
     q: "Where are daily horoscopes?",
     a: "On the homepage grid, one plate per sign — or collected together in the Horoscopes hub.",
+    note: "see ZODIAC BUS, gates I–XII",
   },
   {
     no: "A4",
     q: "What is the Destiny Matrix?",
     a: "An optional birth-date octagram. It maps purpose, love, money, and age themes from your birth date alone.",
+    note: "socket DMX-22, optional load",
   },
+];
+
+const FIELD_NOTES: string[] = [
+  "01 — The board remembers every sky it has ever drawn; the traces are the memory.",
+  "02 — Do not tin the lumen bus. Light solders itself.",
+  "03 — A chart cast twice differs only in the reader.",
+  "04 — Mercury retrograde measured here three times this year. No fault found.",
+  "05 — If a gate reads cold, wait for the sun to move. It will.",
+  "06 — The octagram socket accepts any birth date. Results are not refundable.",
+];
+
+const REVISIONS: { rev: string; date: string; note: string }[] = [
+  { rev: "A", date: "MMXXIV", note: "Initial pour. Twelve gates, one column." },
+  { rev: "B", date: "MMXXV", note: "Re-routed lumen bus away from the veil." },
+  { rev: "C", date: "MMXXVI", note: "Silkscreen cleanup. Fate tolerance tightened." },
+];
+
+const VIAS: { id: string; x: string; y: string }[] = [
+  { id: "V1", x: "060", y: "026" },
+  { id: "V2", x: "384", y: "120" },
+  { id: "V3", x: "220", y: "350" },
+  { id: "V4", x: "044", y: "300" },
+  { id: "V5", x: "120", y: "620" },
+  { id: "V6", x: "368", y: "560" },
 ];
 
 /* ------------------------------------------------------------------ */
@@ -97,6 +152,16 @@ function NodeDot({ className = "", delay = "0s" }: { className?: string; delay?:
       aria-hidden
       style={{ animationDelay: delay }}
       className={`lca-node-breathe pointer-events-none inline-block h-[5px] w-[5px] rounded-full bg-[#e8b45a] shadow-[0_0_8px_2px_rgba(232,180,90,0.55)] ${className}`}
+    />
+  );
+}
+
+function StatusLed({ color, delay = "0s" }: { color: string; delay?: string }) {
+  return (
+    <span
+      aria-hidden
+      style={{ backgroundColor: color, boxShadow: `0 0 8px 2px ${color}99`, animationDelay: delay }}
+      className="lca-node-breathe pointer-events-none inline-block h-[6px] w-[6px] rounded-full"
     />
   );
 }
@@ -161,6 +226,75 @@ function BusLine({ className = "" }: { className?: string }) {
   );
 }
 
+/* small analog gauge: arc + needle + value */
+function Gauge({ label, value, frac }: { label: string; value: string; frac: number }) {
+  const angle = Math.PI - frac * Math.PI;
+  const nx = 22 + 13 * Math.cos(angle);
+  const ny = 22 - 13 * Math.sin(angle);
+  return (
+    <div className="flex flex-col items-center">
+      <svg viewBox="0 0 44 30" className="h-9 w-14" fill="none" aria-hidden>
+        <path d="M6 22 A16 16 0 0 1 38 22" stroke="#8a6a44" strokeWidth="1" />
+        {Array.from({ length: 9 }, (_, i) => {
+          const a = Math.PI - (i / 8) * Math.PI;
+          const x1 = 22 + 16 * Math.cos(a);
+          const y1 = 22 - 16 * Math.sin(a);
+          const x2 = 22 + 13.5 * Math.cos(a);
+          const y2 = 22 - 13.5 * Math.sin(a);
+          return <line key={i} x1={x1} y1={y1} x2={x2} y2={y2} stroke="#8a6a44" strokeWidth="0.6" />;
+        })}
+        <line x1="22" y1="22" x2={nx} y2={ny} stroke="#e8b45a" strokeWidth="1" />
+        <circle cx="22" cy="22" r="1.6" fill="#e8b45a" />
+      </svg>
+      <span className="mt-1 font-mono text-[7px] uppercase tracking-[0.24em] text-[#5d6580]">{label}</span>
+      <span className="font-mono text-[9px] tracking-[0.12em] text-[#e8b45a]">{value}</span>
+    </div>
+  );
+}
+
+/* tiny oscilloscope in a graticule box */
+function Scope() {
+  const pts = Array.from({ length: 49 }, (_, i) => {
+    const x = 4 + i * 1.5;
+    const y = 18 + Math.sin(i / 3.1) * 7 * Math.sin(i / 11) + Math.sin(i / 1.7) * 1.6;
+    return `${x.toFixed(1)},${y.toFixed(1)}`;
+  }).join(" ");
+  return (
+    <div>
+      <svg viewBox="0 0 76 36" className="h-12 w-full" fill="none" aria-hidden>
+        <rect x="0.5" y="0.5" width="75" height="35" stroke="#8a6a44" strokeWidth="1" />
+        {[9, 18, 27].map((y) => (
+          <line key={y} x1="1" y1={y} x2="75" y2={y} stroke="#8a6a44" strokeWidth="0.4" strokeDasharray="2 3" />
+        ))}
+        {[19, 38, 57].map((x) => (
+          <line key={x} x1={x} y1="1" x2={x} y2="35" stroke="#8a6a44" strokeWidth="0.4" strokeDasharray="2 3" />
+        ))}
+        <polyline points={pts} stroke="#e056a0" strokeWidth="1" className="lca-scope-line" />
+      </svg>
+      <div className="mt-1 flex justify-between font-mono text-[7px] uppercase tracking-[0.2em] text-[#5d6580]">
+        <span>CH-A · ÆTHER</span>
+        <span className="text-[#e056a0]">−74 dB</span>
+      </div>
+    </div>
+  );
+}
+
+/* linear readout with label, value and fill bar */
+function Readout({ label, value, frac, unit }: { label: string; value: string; frac: number; unit: string }) {
+  return (
+    <div>
+      <div className="flex items-baseline justify-between">
+        <span className="font-mono text-[7px] uppercase tracking-[0.26em] text-[#5d6580]">{label}</span>
+        <span className="font-mono text-[7px] tracking-[0.14em] text-[#8a6a44]">{unit}</span>
+      </div>
+      <div className="mt-0.5 font-mono text-[13px] tracking-[0.1em] text-[#e8b45a]">{value}</div>
+      <div className="mt-1 h-[3px] w-full bg-[#b97e46]/15">
+        <div className="h-full bg-gradient-to-r from-[#b97e46] to-[#e8b45a]" style={{ width: `${Math.round(frac * 100)}%` }} />
+      </div>
+    </div>
+  );
+}
+
 /* ------------------------------------------------------------------ */
 /* hero apparatus — the Solar Ascent column                            */
 /* ------------------------------------------------------------------ */
@@ -171,6 +305,7 @@ function Apparatus() {
   const orbitNodes = Array.from({ length: 8 }, (_, i) => i * 45);
   const frameTrace =
     "M60 26 H170 V42 H270 V26 H384 V120 H368 V240 H384 V560 H368 V620 H240 V636 H120 V620 H60 V440 H44 V300 H60 Z";
+  const midTrace = "M14 350 H120 V370 H340 V350 H446";
 
   return (
     <div className="relative">
@@ -205,6 +340,24 @@ function Apparatus() {
         <rect x="8" y="8" width="424" height="664" rx="6" stroke="#b97e46" strokeOpacity="0.7" />
         <rect x="14" y="14" width="412" height="652" rx="4" stroke="#b97e46" strokeOpacity="0.25" />
 
+        {/* edge pin pads + labels, P1..P8 like a chip package */}
+        {[140, 260, 440, 560].map((y, i) => (
+          <g key={`pl${i}`}>
+            <rect x="8" y={y} width="10" height="5" fill="#b97e46" fillOpacity="0.75" />
+            <text x="24" y={y + 5} fill="#8a6a44" fontSize="6.5" fontFamily="ui-monospace, monospace" letterSpacing="1">
+              {`P${i + 1}`}
+            </text>
+          </g>
+        ))}
+        {[140, 260, 440, 560].map((y, i) => (
+          <g key={`pr${i}`}>
+            <rect x="422" y={y} width="10" height="5" fill="#b97e46" fillOpacity="0.75" />
+            <text x="404" y={y + 5} fill="#8a6a44" fontSize="6.5" fontFamily="ui-monospace, monospace" letterSpacing="1">
+              {`P${i + 5}`}
+            </text>
+          </g>
+        ))}
+
         {/* inner trace frame with 90° bends */}
         <path d={frameTrace} stroke="#b97e46" strokeOpacity="0.5" strokeWidth="1" />
         <path
@@ -215,6 +368,11 @@ function Apparatus() {
           strokeDasharray="2 10"
           className="lca-dash-flow"
         />
+
+        {/* horizontal mid bus crossing the panel */}
+        <path d={midTrace} stroke="#b97e46" strokeOpacity="0.3" strokeWidth="1" />
+        <circle cx="14" cy="350" r="2.4" stroke="#b97e46" strokeOpacity="0.6" />
+        <circle cx="446" cy="350" r="2.4" stroke="#b97e46" strokeOpacity="0.6" />
 
         {/* corner triangle-in-circle motifs */}
         {[
@@ -350,18 +508,60 @@ function Apparatus() {
           <text x="120" y="664" opacity="0.7">LUMEN BUS 3.3V — DO NOT GROUND THE STARS</text>
         </g>
 
-        {/* traveling light along the frame trace */}
+        {/* travelers: light moving along the traces */}
         <circle r="3" fill="#ffd27a" className="lca-traveler">
           <animateMotion dur="26s" repeatCount="indefinite" path={frameTrace} />
         </circle>
         <circle r="2" fill="#e056a0" className="lca-traveler" opacity="0.9">
           <animateMotion dur="41s" begin="-17s" repeatCount="indefinite" path={frameTrace} />
         </circle>
+        <circle r="2.4" fill="#f0762b" className="lca-traveler" opacity="0.9">
+          <animateMotion dur="57s" begin="-30s" repeatCount="indefinite" path={midTrace} />
+        </circle>
       </svg>
 
       {/* floating DOM corner accents */}
       <CornerMotif className="absolute -left-2 -top-2 opacity-70" />
       <CornerMotif className="absolute -right-2 -top-2 opacity-70" />
+
+      {/* left instrument rail */}
+      <div className="absolute -left-[118px] top-10 hidden w-[108px] flex-col gap-5 border border-[#b97e46]/30 bg-[#0d1226]/85 p-3 xl:flex">
+        <div className="font-mono text-[7px] uppercase tracking-[0.3em] text-[#c9965b]">
+          COL Telemetry
+        </div>
+        <Readout label="Flux" value="7.18" unit="lm" frac={0.72} />
+        <Readout label="Res" value="88%" unit="Q" frac={0.88} />
+        <Readout label="Ω Tot" value="8.31" unit="Ω" frac={0.55} />
+        <div className="flex items-center justify-between border-t border-[#b97e46]/20 pt-3">
+          <span className="font-mono text-[7px] uppercase tracking-[0.22em] text-[#5d6580]">Cal</span>
+          <span className="flex items-center gap-1.5 font-mono text-[8px] tracking-[0.14em] text-[#e8b45a]">
+            <StatusLed color="#e8b45a" delay="3s" /> OK
+          </span>
+        </div>
+        <div className="flex items-end gap-[3px]" aria-hidden>
+          {[38, 62, 47, 80, 55, 71, 30, 66, 44, 58].map((h, i) => (
+            <span key={i} className="w-[6px] bg-[#b97e46]/60" style={{ height: `${h * 0.4}px` }} />
+          ))}
+        </div>
+        <div className="font-mono text-[6.5px] uppercase leading-relaxed tracking-[0.18em] text-[#5d6580]">
+          ch 1.618 · drift 0.00<br />sample 4096/s
+        </div>
+      </div>
+
+      {/* right instrument rail */}
+      <div className="absolute -right-[128px] top-16 hidden w-[118px] flex-col gap-5 border border-[#b97e46]/30 bg-[#0d1226]/85 p-3 xl:flex">
+        <div className="font-mono text-[7px] uppercase tracking-[0.3em] text-[#c9965b]">
+          Field Meters
+        </div>
+        <div className="flex justify-between">
+          <Gauge label="Æther" value="0.62" frac={0.62} />
+          <Gauge label="Veil" value="0.88" frac={0.88} />
+        </div>
+        <Scope />
+        <div className="border-t border-[#b97e46]/20 pt-3 font-mono text-[6.5px] uppercase leading-relaxed tracking-[0.18em] text-[#5d6580]">
+          trig ext · hold 20s<br />sweep slow / fate
+        </div>
+      </div>
     </div>
   );
 }
@@ -413,7 +613,34 @@ export default function CircuitArcanaPage() {
             Sign&nbsp;In
           </a>
         </div>
-        <BusLine className="mx-auto max-w-6xl px-6 pb-0" />
+
+        {/* ============ READOUT STRIP ============ */}
+        <div className="border-t border-[#b97e46]/20 bg-[#0c1122]/80">
+          <div className="mx-auto flex max-w-6xl items-stretch overflow-x-auto px-6">
+            {READOUTS.map((r, i) => (
+              <div
+                key={r.label}
+                className={`flex min-w-[150px] flex-1 flex-col gap-1 py-2.5 pr-6 ${
+                  i > 0 ? "border-l border-[#b97e46]/20 pl-6" : ""
+                }`}
+              >
+                <span className="flex items-center gap-2 font-mono text-[7.5px] uppercase tracking-[0.3em] text-[#5d6580]">
+                  {r.live && <StatusLed color="#e8b45a" delay={`${i * 4}s`} />}
+                  {r.label}
+                </span>
+                <span className="font-mono text-[12px] tracking-[0.12em] text-[#e8b45a]">
+                  {r.value}
+                  <span className="ml-2 text-[8px] text-[#8a6a44]">{r.unit}</span>
+                </span>
+              </div>
+            ))}
+            <div className="hidden items-center border-l border-[#b97e46]/20 pl-6 lg:flex">
+              <span className="font-mono text-[7px] uppercase leading-relaxed tracking-[0.24em] text-[#5d6580]">
+                board nom.<br />all gates open
+              </span>
+            </div>
+          </div>
+        </div>
       </header>
 
       {/* ============================ HERO ============================ */}
@@ -478,7 +705,7 @@ export default function CircuitArcanaPage() {
           </div>
         </div>
 
-        <div className="relative mx-auto w-full max-w-[420px]">
+        <div className="relative mx-auto w-full max-w-[420px] xl:mx-14">
           <Apparatus />
         </div>
       </section>
@@ -492,8 +719,12 @@ export default function CircuitArcanaPage() {
             <a
               key={s.name}
               href="#"
-              className="group relative border border-[#b97e46]/30 bg-[#0d1226]/70 px-4 py-4 transition-colors hover:border-[#e8b45a]/70"
+              className="group relative border border-[#b97e46]/30 bg-[#0d1226]/70 px-4 pb-5 pt-4 transition-colors hover:border-[#e8b45a]/70"
             >
+              {/* edge pins */}
+              <span aria-hidden className="absolute -top-px left-3 h-[3px] w-4 bg-[#b97e46]/70" />
+              <span aria-hidden className="absolute -top-px right-3 h-[3px] w-4 bg-[#b97e46]/70" />
+              <span aria-hidden className="absolute -bottom-px left-1/2 h-[3px] w-4 -translate-x-1/2 bg-[#b97e46]/70" />
               <CornerTrace rotate={i % 2 === 0 ? "" : "-scale-x-100"} />
               <div className="flex items-baseline justify-between">
                 <span className="text-[20px] leading-none text-[#e8b45a]">{s.glyph}</span>
@@ -504,6 +735,9 @@ export default function CircuitArcanaPage() {
               <div className="mt-3 font-serif text-[15px] text-[#efe6d8]">{s.name}</div>
               <div className="mt-1 font-mono text-[8.5px] uppercase tracking-[0.14em] text-[#8a92a8]">
                 {s.dates}
+              </div>
+              <div className="mt-2 font-mono text-[6.5px] uppercase tracking-[0.18em] text-[#5d6580]">
+                {s.serial}
               </div>
               <span className="absolute bottom-2 right-2 h-[5px] w-[5px] rounded-full bg-[#e056a0] opacity-0 shadow-[0_0_8px_2px_rgba(224,86,160,0.6)] transition-opacity duration-500 group-hover:opacity-100" />
             </a>
@@ -522,21 +756,26 @@ export default function CircuitArcanaPage() {
         <BusLine className="mt-5" />
 
         <div className="mt-10 grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-          {MODULES.map((m) => (
+          {MODULES.map((m, mi) => (
             <a
               key={m.index}
               href="#"
-              className="group relative flex min-h-[220px] flex-col border border-[#b97e46]/30 bg-[#0d1226]/70 p-7 transition-colors hover:border-[#e8b45a]/70"
+              className="group relative flex min-h-[240px] flex-col border border-[#b97e46]/30 bg-[#0d1226]/70 p-7 transition-colors hover:border-[#e8b45a]/70"
             >
               <CornerTrace rotate="" />
               <CornerTrace rotate="-scale-x-100 right-0" />
               <CornerTrace rotate="-scale-y-100 bottom-0" />
               <CornerTrace rotate="-scale-100 bottom-0 right-0" />
+              {/* corner vias */}
+              <span aria-hidden className="absolute left-1/2 top-0 h-[3px] w-6 -translate-x-1/2 bg-[#b97e46]/50" />
 
               <div className="flex items-center justify-between">
                 <span className="font-mono text-[22px] font-light text-[#b97e46]/70">{m.index}</span>
-                <span className="border border-[#b97e46]/40 px-2 py-1 font-mono text-[8px] uppercase tracking-[0.3em] text-[#c9965b]">
-                  {m.tag}
+                <span className="flex items-center gap-3">
+                  <StatusLed color={m.led} delay={`${mi * 2.7}s`} />
+                  <span className="border border-[#b97e46]/40 px-2 py-1 font-mono text-[8px] uppercase tracking-[0.3em] text-[#c9965b]">
+                    {m.tag}
+                  </span>
                 </span>
               </div>
 
@@ -545,12 +784,17 @@ export default function CircuitArcanaPage() {
                 {m.copy}
               </p>
 
-              <div className="mt-auto flex items-center justify-between pt-7">
-                <span className="font-mono text-[10px] uppercase tracking-[0.26em] text-[#c9965b] transition-colors group-hover:text-[#e8b45a]">
-                  Explore →
-                </span>
-                <span className="h-[6px] w-[6px] rounded-full bg-[#e8b45a] opacity-0 shadow-[0_0_10px_3px_rgba(232,180,90,0.7)] transition-opacity duration-500 group-hover:opacity-100" />
+              <div className="mt-auto pt-7">
+                <div className="flex items-center justify-between border-t border-[#b97e46]/20 pt-3">
+                  <span className="font-mono text-[7.5px] uppercase tracking-[0.2em] text-[#5d6580]">
+                    {m.spec}
+                  </span>
+                  <span className="font-mono text-[10px] uppercase tracking-[0.26em] text-[#c9965b] transition-colors group-hover:text-[#e8b45a]">
+                    Explore →
+                  </span>
+                </div>
               </div>
+              <span className="absolute bottom-2 right-2 h-[6px] w-[6px] rounded-full bg-[#e8b45a] opacity-0 shadow-[0_0_10px_3px_rgba(232,180,90,0.7)] transition-opacity duration-500 group-hover:opacity-100" />
             </a>
           ))}
         </div>
@@ -610,9 +854,89 @@ export default function CircuitArcanaPage() {
         </div>
       </section>
 
+      {/* ============================ ANNOTATION LAYER ============================ */}
+      <section className="relative z-10 mx-auto max-w-6xl px-6 pb-28">
+        <SectionLabel left="Annotation Layer" right="Field Notes · Bottom Copper" />
+        <BusLine className="mt-5" />
+
+        <div className="mt-12 grid gap-x-16 gap-y-14 lg:grid-cols-2">
+          {/* field notes */}
+          <div>
+            <div className="font-mono text-[8px] uppercase tracking-[0.36em] text-[#c9965b]">
+              § Field Notes — printed, not spoken
+            </div>
+            <ul className="mt-5 space-y-3">
+              {FIELD_NOTES.map((n) => (
+                <li
+                  key={n}
+                  className="border-l border-[#b97e46]/25 pl-4 font-mono text-[9.5px] leading-relaxed tracking-[0.06em] text-[#8a92a8]"
+                >
+                  {n}
+                </li>
+              ))}
+            </ul>
+            <div className="mt-8 border border-[#b97e46]/25 bg-[#0d1226]/60 p-5">
+              <div className="font-mono text-[7.5px] uppercase tracking-[0.3em] text-[#5d6580]">
+                Working Formulas
+              </div>
+              <div className="mt-3 space-y-2 font-mono text-[10px] tracking-[0.08em] text-[#c9965b]">
+                <div>ΔE = Σ m·v² / 2 <span className="text-[#5d6580]">— kinetic share of a transit</span></div>
+                <div>χ²(sky-fit) &lt; 0.03 <span className="text-[#5d6580]">— else recast the chart</span></div>
+                <div>φ = (1 + √5) / 2 <span className="text-[#5d6580]">— spacing of the rings</span></div>
+                <div>sin θ ≈ θ <span className="text-[#5d6580]">— for small fates only</span></div>
+              </div>
+            </div>
+          </div>
+
+          {/* revision table + via map */}
+          <div>
+            <div className="font-mono text-[8px] uppercase tracking-[0.36em] text-[#c9965b]">
+              § Revision History
+            </div>
+            <div className="mt-5 border border-[#b97e46]/25">
+              <div className="grid grid-cols-[52px_80px_1fr] gap-x-4 border-b border-[#b97e46]/25 bg-[#0d1226]/80 px-4 py-2 font-mono text-[7.5px] uppercase tracking-[0.26em] text-[#5d6580]">
+                <span>Rev</span>
+                <span>Date</span>
+                <span>Change Order</span>
+              </div>
+              {REVISIONS.map((r) => (
+                <div
+                  key={r.rev}
+                  className="grid grid-cols-[52px_80px_1fr] gap-x-4 border-b border-[#b97e46]/15 px-4 py-2.5 font-mono text-[9px] tracking-[0.06em] last:border-b-0"
+                >
+                  <span className="text-[#e8b45a]">{r.rev}</span>
+                  <span className="text-[#8a92a8]">{r.date}</span>
+                  <span className="text-[#8a92a8]">{r.note}</span>
+                </div>
+              ))}
+            </div>
+
+            <div className="mt-8 font-mono text-[8px] uppercase tracking-[0.36em] text-[#c9965b]">
+              § Via Map — Layer 2
+            </div>
+            <div className="mt-5 grid grid-cols-3 gap-3 sm:grid-cols-6">
+              {VIAS.map((v) => (
+                <div key={v.id} className="flex flex-col items-center gap-1.5 border border-[#b97e46]/20 px-2 py-3">
+                  <span className="h-[7px] w-[7px] rounded-full border border-[#e8b45a] bg-[#0a0e1c]" />
+                  <span className="font-mono text-[8px] tracking-[0.14em] text-[#e8b45a]">{v.id}</span>
+                  <span className="font-mono text-[6.5px] tracking-[0.1em] text-[#5d6580]">
+                    {v.x}·{v.y}
+                  </span>
+                </div>
+              ))}
+            </div>
+
+            <div className="mt-8 flex items-center justify-between font-mono text-[7.5px] uppercase tracking-[0.26em] text-[#5d6580]">
+              <span>Tolerance ±0.00 — fate is exact</span>
+              <span className="hidden sm:inline">fab: house of the rising sun</span>
+            </div>
+          </div>
+        </div>
+      </section>
+
       {/* ============================ FAQ ============================ */}
       <section className="relative z-10 mx-auto max-w-6xl px-6 pb-28">
-        <SectionLabel left="Service Notes" right="Printed Annotations · Rev. C" />
+        <SectionLabel left="Service Notes" right="Silkscreen Annotations · Rev. C" />
         <BusLine className="mt-5" />
 
         <div className="mt-12 grid gap-x-16 gap-y-12 lg:grid-cols-2">
@@ -628,6 +952,12 @@ export default function CircuitArcanaPage() {
               <p className="mt-4 max-w-[52ch] border-l border-[#b97e46]/25 pl-5 text-[12.5px] leading-relaxed text-[#9aa1b5]">
                 {f.a}
               </p>
+              <div className="mt-3 flex items-center gap-3 pl-5">
+                <span aria-hidden className="h-px w-8 border-t border-dashed border-[#b97e46]/40" />
+                <span className="font-mono text-[7.5px] uppercase tracking-[0.22em] text-[#5d6580]">
+                  {f.note}
+                </span>
+              </div>
             </div>
           ))}
         </div>
@@ -735,6 +1065,10 @@ const LCA_CSS = `
     0%, 100% { opacity: 0.55; transform: scale(1); }
     50% { opacity: 1; transform: scale(1.35); }
   }
+  @keyframes lca-kf-scope {
+    0%, 100% { stroke-opacity: 0.55; }
+    50% { stroke-opacity: 1; }
+  }
 
   @media (prefers-reduced-motion: no-preference) {
     .lca-glow-pulse { animation: lca-kf-pulse 24s ease-in-out infinite; }
@@ -742,6 +1076,7 @@ const LCA_CSS = `
     .lca-spin-240 { animation: lca-kf-spin-rev 240s linear infinite; }
     .lca-dash-flow { animation: lca-kf-dash 36s linear infinite; }
     .lca-node-breathe { animation: lca-kf-node 18s ease-in-out infinite; }
+    .lca-scope-line { animation: lca-kf-scope 22s ease-in-out infinite; }
   }
 
   @media (prefers-reduced-motion: reduce) {

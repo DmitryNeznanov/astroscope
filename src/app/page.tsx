@@ -362,6 +362,10 @@ export default function Home() {
             ["solar-path", "Solar Path"],
             ["arcana-wheel", "Arcana Wheel"],
             ["circuit-arcana", "Circuit Arcana"],
+            ["arcana-engine", "Arcana Engine"],
+            ["living-cosmos", "Living Cosmos"],
+            ["laboratorium", "Laboratorium"],
+            ["silver-depths", "Silver Depths"],
           ].map(([slug, label], i) => (
             <span key={slug}>
               {i > 0 && " · "}
