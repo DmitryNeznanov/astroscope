@@ -78,6 +78,42 @@ export default function CinematicStillCard() {
           margin-top: 4.5cqw;
           background: linear-gradient(90deg, transparent, rgba(255, 179, 107, 0.5), transparent);
         }
+        .cz-cs-coords {
+          margin-top: 2.6cqw;
+          color: rgba(200, 220, 232, 0.38);
+          font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+          font-size: 2.1cqw;
+          font-weight: 400;
+          letter-spacing: 0.28em;
+          text-indent: 0.28em;
+          line-height: 1;
+        }
+        /* Physical card frame — dark rim + faint warm hairline */
+        .cz-cs-frame {
+          position: absolute;
+          inset: 0;
+          z-index: 4;
+          pointer-events: none;
+          border: 1.1cqw solid #060608;
+          border-radius: 2.5cqw;
+          box-shadow:
+            inset 0 0 0 1px rgba(255, 190, 120, 0.22),
+            inset 0 0 2.4cqw rgba(0, 0, 0, 0.5);
+        }
+        /* Corner ticks, like frame markers on a star chart */
+        .cz-cs-tick {
+          position: absolute;
+          width: 3.2cqw;
+          height: 3.2cqw;
+          border: 0 solid rgba(255, 205, 150, 0.5);
+        }
+        .cz-cs-tick-tl { top: 2.4cqw; left: 2.4cqw; border-top-width: 1px; border-left-width: 1px; }
+        .cz-cs-tick-tr { top: 2.4cqw; right: 2.4cqw; border-top-width: 1px; border-right-width: 1px; }
+        .cz-cs-tick-bl { bottom: 2.4cqw; left: 2.4cqw; border-bottom-width: 1px; border-left-width: 1px; }
+        .cz-cs-tick-br { bottom: 2.4cqw; right: 2.4cqw; border-bottom-width: 1px; border-right-width: 1px; }
+        .cz-cs-moon {
+          animation: cz-cs-lantern-breathe 30s ease-in-out infinite alternate;
+        }
         .cz-cs-scene-wrap {
           position: absolute;
           left: 0;
@@ -150,18 +186,21 @@ export default function CinematicStillCard() {
           .cz-cs-lantern-glow,
           .cz-cs-rays,
           .cz-cs-twinkle-a,
-          .cz-cs-twinkle-b {
+          .cz-cs-twinkle-b,
+          .cz-cs-moon {
             animation: none;
           }
           .cz-cs-cone { opacity: 0.85; }
           .cz-cs-rays { opacity: 0.28; }
           .cz-cs-lantern-glow { opacity: 1; }
+          .cz-cs-moon { opacity: 1; }
         }
       `}</style>
 
       {/* Top letterbox bar */}
       <div className="cz-cs-bar cz-cs-bar-top">
         <span className="cz-cs-numeral">IX</span>
+        <span className="cz-cs-coords">RA 13h 24m · DEC −8° 12′</span>
       </div>
 
       {/* Letterboxed scene (~2.39:1) */}
@@ -208,6 +247,16 @@ export default function CinematicStillCard() {
               <radialGradient id="czcs-haze" cx="0.5" cy="0.5" r="0.5">
                 <stop offset="0" stopColor="#7fb3c8" stopOpacity="0.16" />
                 <stop offset="1" stopColor="#7fb3c8" stopOpacity="0" />
+              </radialGradient>
+              {/* Moon disc and halo */}
+              <radialGradient id="czcs-moon" cx="0.42" cy="0.38" r="0.65">
+                <stop offset="0" stopColor="#e6eef2" stopOpacity="0.55" />
+                <stop offset="0.7" stopColor="#b9cdd8" stopOpacity="0.3" />
+                <stop offset="1" stopColor="#9db8c6" stopOpacity="0.18" />
+              </radialGradient>
+              <radialGradient id="czcs-moonhalo" cx="0.5" cy="0.5" r="0.5">
+                <stop offset="0" stopColor="#c8dbe6" stopOpacity="0.22" />
+                <stop offset="1" stopColor="#c8dbe6" stopOpacity="0" />
               </radialGradient>
               {/* Cinematic vignette / grade */}
               <radialGradient id="czcs-vignette" cx="0.5" cy="0.46" r="0.75">
@@ -257,6 +306,33 @@ export default function CinematicStillCard() {
               <circle cx="146" cy="30" r="0.25" opacity="0.35" />
               <circle cx="30" cy="38" r="0.25" opacity="0.3" />
               <circle cx="196" cy="35" r="0.25" opacity="0.3" />
+            </g>
+
+            {/* Constellations — star-chart style connected dots */}
+            <g
+              stroke="#c2d8e4"
+              strokeWidth="0.28"
+              strokeDasharray="1.4 1.1"
+              opacity="0.32"
+              fill="none"
+            >
+              {/* Two constellations: the Lantern Bearer (left), the Wandering Star (right) */}
+              <path d="M18 12 L41 26 L63 9 L86 21 L97 33 M41 26 L30 38" />
+              <path d="M158 10 L181 24 L204 8 L224 20 M181 24 L196 35" />
+            </g>
+            <g fill="#dcebf3" opacity="0.55">
+              <circle cx="18" cy="12" r="0.55" />
+              <circle cx="41" cy="26" r="0.5" />
+              <circle cx="86" cy="21" r="0.5" />
+              <circle cx="181" cy="24" r="0.55" />
+              <circle cx="204" cy="8" r="0.5" />
+              <circle cx="224" cy="20" r="0.5" />
+            </g>
+
+            {/* Faint large moon, low in the sky, half-veiled by the ridge */}
+            <g className="cz-cs-moon">
+              <circle cx="186" cy="60" r="30" fill="url(#czcs-moonhalo)" />
+              <circle cx="186" cy="60" r="15" fill="url(#czcs-moon)" />
             </g>
 
             {/* Horizon haze */}
@@ -365,6 +441,14 @@ export default function CinematicStillCard() {
         <span className="cz-cs-title">THE HERMIT</span>
         <span className="cz-cs-subtitle">MAJOR ARCANA</span>
         <span className="cz-cs-rule" />
+      </div>
+
+      {/* Physical card frame — rim, warm hairline, corner ticks */}
+      <div className="cz-cs-frame" aria-hidden="true">
+        <span className="cz-cs-tick cz-cs-tick-tl" />
+        <span className="cz-cs-tick cz-cs-tick-tr" />
+        <span className="cz-cs-tick cz-cs-tick-bl" />
+        <span className="cz-cs-tick cz-cs-tick-br" />
       </div>
     </figure>
   );

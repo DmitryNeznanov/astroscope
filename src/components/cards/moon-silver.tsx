@@ -2,6 +2,8 @@
 // Lunar silverpoint: charcoal-black card, silver/grey ink only.
 // Hooded figure on a moonlit ridge, lantern as a small white moon-disc,
 // a ring of eight moon phases arcing across the top, misty valley below.
+// Framed as a real tarot card: silver double rule, corner crescents,
+// constellation lines, and a manuscript "luna IX" moon-age colophon.
 
 type MoonPhase = {
   x: number;
@@ -44,6 +46,37 @@ const STARS: Array<[number, number, number, number]> = [
   [214, 176, 0.8, 0.2],
 ];
 
+// Faint constellation figures in the sky — open polylines, star-map style.
+const CONSTELLATIONS: Array<Array<[number, number]>> = [
+  [[38, 128], [58, 112], [82, 124], [72, 150], [48, 158]],
+  [[222, 132], [244, 114], [264, 134], [248, 156], [228, 150]],
+];
+
+// A tiny star-map dot cluster (Pleiades-like) in the upper-left sky.
+const CLUSTER: Array<[number, number, number]> = [
+  [60, 92, 1.2],
+  [54, 88, 0.8],
+  [66, 86, 0.9],
+  [57, 97, 0.7],
+  [65, 95, 0.8],
+  [50, 94, 0.6],
+  [70, 91, 0.6],
+];
+
+// Delicate lunar-cycle strip above the title: new -> full -> new in miniature.
+const STRIP_R = 2.2;
+const STRIP: MoonPhase[] = [
+  { x: 118, y: 397, shadow: 0, dir: -1 },
+  { x: 126, y: 397, shadow: 1.1, dir: -1 },
+  { x: 134, y: 397, shadow: 1.8, dir: -1 },
+  { x: 142, y: 397, shadow: 3, dir: -1 },
+  { x: 150, y: 397, shadow: null, dir: 0 },
+  { x: 158, y: 397, shadow: 3, dir: 1 },
+  { x: 166, y: 397, shadow: 1.8, dir: 1 },
+  { x: 174, y: 397, shadow: 1.1, dir: 1 },
+  { x: 182, y: 397, shadow: 0, dir: 1 },
+];
+
 const SERIF = "Georgia, 'Times New Roman', 'Palatino Linotype', serif";
 
 export default function MoonSilverCard() {
@@ -84,8 +117,10 @@ export default function MoonSilverCard() {
         }
 
         .cz-ms-phases { animation: cz-ms-phase-in 0.7s ease-out both; }
+        .cz-ms-sky    { animation: cz-ms-phase-in 0.9s ease-out 0.35s both; }
         .cz-ms-scene  { animation: cz-ms-rise 1s ease-out 0.5s both; }
         .cz-ms-title  { animation: cz-ms-phase-in 0.8s ease-out 0.9s both; }
+        .cz-ms-frame  { animation: cz-ms-phase-in 0.7s ease-out both; }
 
         .cz-ms-halo {
           transform-box: fill-box;
@@ -96,7 +131,7 @@ export default function MoonSilverCard() {
         .cz-ms-mist-b { animation: cz-ms-drift-b 60s ease-in-out infinite; }
 
         @media (prefers-reduced-motion: reduce) {
-          .cz-ms-phases, .cz-ms-scene, .cz-ms-title,
+          .cz-ms-phases, .cz-ms-sky, .cz-ms-scene, .cz-ms-title, .cz-ms-frame,
           .cz-ms-halo, .cz-ms-mist-a, .cz-ms-mist-b {
             animation: none !important;
           }
@@ -159,6 +194,11 @@ export default function MoonSilverCard() {
           <filter id="cz-ms-mistblur" x="-30%" y="-60%" width="160%" height="220%">
             <feGaussianBlur stdDeviation="3" />
           </filter>
+          {/* Small crescent ornament, horns pointing left; rotate per corner */}
+          <path
+            id="cz-ms-crescent"
+            d="M0 -4.2 A4.2 4.2 0 1 1 0 4.2 A5 5 0 0 0 0 -4.2 Z"
+          />
           {PHASES.map((p, i) => (
             <clipPath key={i} id={`cz-ms-mc${i}`}>
               <circle cx={p.x} cy={p.y} r={MOON_R} />
@@ -173,6 +213,27 @@ export default function MoonSilverCard() {
         <g>
           {STARS.map(([cx, cy, r, o], i) => (
             <circle key={i} cx={cx} cy={cy} r={r} fill="#c4c9d3" opacity={o} />
+          ))}
+        </g>
+
+        {/* Constellation figures + star-map cluster — fade in before the land */}
+        <g className="cz-ms-sky">
+          {CONSTELLATIONS.map((pts, i) => (
+            <g key={i}>
+              <polyline
+                points={pts.map(([x, y]) => `${x},${y}`).join(" ")}
+                fill="none"
+                stroke="#c4c9d3"
+                strokeOpacity="0.16"
+                strokeWidth="0.6"
+              />
+              {pts.map(([x, y], j) => (
+                <circle key={j} cx={x} cy={y} r="1" fill="#cdd2db" opacity="0.55" />
+              ))}
+            </g>
+          ))}
+          {CLUSTER.map(([cx, cy, r], i) => (
+            <circle key={`cl${i}`} cx={cx} cy={cy} r={r} fill="#d4d9e1" opacity="0.5" />
           ))}
         </g>
 
@@ -305,8 +366,30 @@ export default function MoonSilverCard() {
           </g>
         </g>
 
-        {/* Title — thin tracked silver caps */}
+        {/* Title — thin tracked silver caps, lunar strip, manuscript colophon */}
         <g className="cz-ms-title">
+          {/* Miniature lunar-cycle strip; shadow spill is invisible on the
+              near-black ridge, so no clips needed at this size */}
+          {STRIP.map((m, i) => (
+            <g key={i}>
+              {m.shadow === 0 ? (
+                <circle
+                  cx={m.x}
+                  cy={m.y}
+                  r={STRIP_R - 0.5}
+                  fill="none"
+                  stroke="#c8ccd6"
+                  strokeOpacity="0.3"
+                  strokeWidth="0.5"
+                />
+              ) : (
+                <circle cx={m.x} cy={m.y} r={STRIP_R} fill="#c9cdd6" opacity="0.8" />
+              )}
+              {m.shadow !== null && m.shadow > 0 && (
+                <circle cx={m.x + m.shadow * m.dir} cy={m.y} r={STRIP_R} fill="#101216" />
+              )}
+            </g>
+          ))}
           <rect x="86" y="413.4" width="14" height="0.8" fill="#9aa0ab" opacity="0.7" />
           <rect x="200" y="413.4" width="14" height="0.8" fill="#9aa0ab" opacity="0.7" />
           <text
@@ -320,20 +403,49 @@ export default function MoonSilverCard() {
           >
             THE HERMIT
           </text>
+          <text
+            x="150"
+            y="431.5"
+            textAnchor="middle"
+            fontFamily={SERIF}
+            fontStyle="italic"
+            fontSize="8"
+            letterSpacing="2"
+            fill="#8f949e"
+          >
+            luna IX
+          </text>
         </g>
 
-        {/* Hairline frame + vignette */}
-        <rect
-          x="9"
-          y="9"
-          width="282"
-          height="432"
-          rx="6"
-          fill="none"
-          stroke="#b9bfca"
-          strokeOpacity="0.28"
-          strokeWidth="1"
-        />
+        {/* Designed tarot frame: silver double rule + corner crescents */}
+        <g className="cz-ms-frame">
+          <rect
+            x="8"
+            y="8"
+            width="284"
+            height="434"
+            rx="7"
+            fill="none"
+            stroke="#c6cbd5"
+            strokeOpacity="0.4"
+            strokeWidth="1"
+          />
+          <rect
+            x="13.5"
+            y="13.5"
+            width="273"
+            height="423"
+            rx="4"
+            fill="none"
+            stroke="#b9bfca"
+            strokeOpacity="0.22"
+            strokeWidth="0.6"
+          />
+          <use href="#cz-ms-crescent" transform="translate(26 26) rotate(45)" fill="#c0c5cf" opacity="0.55" />
+          <use href="#cz-ms-crescent" transform="translate(274 26) rotate(135)" fill="#c0c5cf" opacity="0.55" />
+          <use href="#cz-ms-crescent" transform="translate(274 424) rotate(225)" fill="#c0c5cf" opacity="0.55" />
+          <use href="#cz-ms-crescent" transform="translate(26 424) rotate(315)" fill="#c0c5cf" opacity="0.55" />
+        </g>
         <rect x="0" y="0" width="300" height="450" fill="url(#cz-ms-vig)" />
       </svg>
     </figure>

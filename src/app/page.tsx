@@ -1,5 +1,6 @@
 import Link from "next/link";
 import Replayable from "@/components/card-lab/replayable";
+import CardShell from "@/components/cards/card-shell";
 import CelestialAtlasCard from "@/components/cards/celestial-atlas";
 import MoonSilverCard from "@/components/cards/moon-silver";
 import SacredGeometryCard from "@/components/cards/sacred-geometry";
@@ -77,11 +78,11 @@ export default function Home() {
             const Card = s.component;
             return (
               <div key={s.name}>
-                <div className="overflow-hidden rounded-lg shadow-2xl shadow-black/70">
-                  <Replayable>
+                <Replayable>
+                  <CardShell>
                     <Card />
-                  </Replayable>
-                </div>
+                  </CardShell>
+                </Replayable>
                 <h2 className="mt-4 font-serif text-lg text-neutral-100">
                   {s.name}
                 </h2>

@@ -5,8 +5,11 @@
  * The Hermit is rendered as a constellation — bright star points joined by
  * hairline gold lines — with his lantern as the brightest star. Engraved
  * coordinate circles, meridian arcs, declination grid, labeled neighbor
- * stars, a zodiac band of twelve glyph plates, a compass-rose "IX"
- * medallion, and engraved serif "THE HERMIT".
+ * stars, two faint background stick-figure constellations, a zodiac band
+ * of twelve glyph plates, planetary ruler glyphs (Mercury / Virgo), a
+ * compass-rose "IX" medallion, and "THE HERMIT" in an engraved cartouche.
+ * The whole plate sits inside a hatched double-rule frame with star-rosette
+ * corner pieces.
  *
  * Server-component safe: no hooks, no event handlers. All motion is CSS in
  * the scoped <style> block (prefix `cz-atlas-`), guarded by
@@ -88,39 +91,88 @@ const LINKS: [number, number][] = [
   [7, 20],
 ];
 
+/** Faint stick-figure constellations in the background sky. */
+interface MiniConstellation {
+  label: string;
+  lx: number;
+  ly: number;
+  stars: [number, number][];
+  links: [number, number][];
+}
+
+const BG_CONSTELLATIONS: MiniConstellation[] = [
+  {
+    label: "CORVUS",
+    lx: 312,
+    ly: 94,
+    stars: [
+      [300, 122],
+      [322, 106],
+      [344, 118],
+      [352, 142],
+      [326, 150],
+    ],
+    links: [
+      [0, 1],
+      [1, 2],
+      [2, 3],
+      [2, 4],
+      [1, 4],
+    ],
+  },
+  {
+    label: "LYRA",
+    lx: 330,
+    ly: 262,
+    stars: [
+      [340, 208],
+      [356, 196],
+      [366, 216],
+      [352, 230],
+      [338, 244],
+    ],
+    links: [
+      [0, 1],
+      [1, 2],
+      [2, 3],
+      [3, 4],
+      [0, 3],
+    ],
+  },
+];
+
 /** Faint named neighbor stars, in the manner of atlas plates. */
 const NEIGHBORS = [
   { x: 84, y: 300, label: "α Erem", dx: 10, dy: 4 },
   { x: 318, y: 322, label: "ζ Mont", dx: -58, dy: 4 },
-  { x: 304, y: 152, label: "β Sol", dx: 10, dy: 4 },
+  { x: 70, y: 108, label: "β Sol", dx: 10, dy: 4 },
   { x: 96, y: 442, label: "η Cael", dx: 10, dy: 4 },
 ];
 
-/** Deterministic field of tiny background stars. */
+/**
+ * Deterministic field of background stars with magnitude tiers: radius
+ * varies widely, and every 9th star is a "bright" one that gets a small
+ * engraved halo ring.
+ */
 const FIELD = Array.from({ length: 44 }, (_, i) => ({
   x: 20 + ((i * 97 + 31) % 360),
   y: 26 + ((i * 57 + 89) % 430),
-  r: 0.5 + ((i * 13) % 10) / 16,
+  r: 0.4 + ((i * 13) % 10) / 12,
+  bright: i % 9 === 0,
   dur: 15 + ((i * 7) % 35), // 15–49s twinkle cycles
   delay: -((i * 2.7) % 12),
 }));
 
-/** Degree ticks around the great coordinate circle. */
-const TICKS = Array.from({ length: 72 }, (_, i) => {
-  const a = (i * 5 * Math.PI) / 180;
-  const major = i % 6 === 0;
-  const r1 = 168;
-  const r2 = major ? 178 : 173;
-  return {
-    x1: 200 + r1 * Math.cos(a),
-    y1: 268 + r1 * Math.sin(a),
-    x2: 200 + r2 * Math.cos(a),
-    y2: 268 + r2 * Math.sin(a),
-    major,
-  };
-});
+/**
+ * Degree ticks around the great coordinate circle: angle in radians plus a
+ * major flag (every 30°). Endpoints are computed at render time.
+ */
+const TICKS = Array.from({ length: 72 }, (_, i) => ({
+  a: (i * 5 * Math.PI) / 180,
+  major: i % 6 === 0,
+}));
 
-const ZODIAC = ["♈", "♉", "♊", "♋", "♌", "♍", "♎", "♏", "♐", "♑", "♒", "♓"];
+const ZODIAC = ["♈︎", "♉︎", "♊︎", "♋︎", "♌︎", "♍︎", "♎︎", "♏︎", "♐︎", "♑︎", "♒︎", "♓︎"];
 
 const COMPASS_SPOKES = Array.from({ length: 8 }, (_, i) => {
   const a = (i * 45 * Math.PI) / 180;
@@ -131,6 +183,23 @@ const COMPASS_SPOKES = Array.from({ length: 8 }, (_, i) => {
     long: i % 2 === 0,
   };
 });
+
+/** Frame corners that carry star-rosette ornaments. */
+const CORNERS: [number, number][] = [
+  [30, 30],
+  [370, 30],
+  [30, 561],
+  [370, 561],
+];
+
+/** Engraver's hatching between the outer and inner frame rules. */
+const HATCH: [number, number, number, number][] = [];
+for (let x = 48; x <= 352; x += 16) {
+  HATCH.push([x, 12, x, 18], [x, 582, x, 588]);
+}
+for (let y = 48; y <= 552; y += 16) {
+  HATCH.push([12, y, 18, y], [382, y, 388, y]);
+}
 
 export default function CelestialAtlasCard() {
   return (
@@ -215,28 +284,57 @@ export default function CelestialAtlasCard() {
         <rect x="0" y="0" width="400" height="600" fill="url(#cz-atlas-sky)" />
         <rect x="0" y="0" width="400" height="600" filter="url(#cz-atlas-grain)" />
 
-        {/* double engraved frame */}
+        {/* engraved atlas frame: hatched double rule + star-rosette corners */}
         <g className="cz-atlas-fade" style={{ animationDelay: "0.1s" }}>
           <rect x="12" y="12" width="376" height="576" fill="none" stroke={GOLD_DIM} strokeWidth="1.4" />
           <rect x="18" y="18" width="364" height="564" fill="none" stroke={GOLD_DIM} strokeWidth="0.5" />
+          {HATCH.map(([x1, y1, x2, y2], i) => (
+            <line key={i} x1={x1} y1={y1} x2={x2} y2={y2} stroke={GOLD} strokeOpacity="0.22" strokeWidth="0.4" />
+          ))}
+          {CORNERS.map(([cx, cy], ci) => (
+            <g key={ci}>
+              <circle cx={cx} cy={cy} r="13" fill={INK} fillOpacity="0.7" stroke={GOLD} strokeOpacity="0.6" strokeWidth="0.8" />
+              <circle cx={cx} cy={cy} r="9.5" fill="none" stroke={GOLD} strokeOpacity="0.35" strokeWidth="0.4" />
+              {Array.from({ length: 8 }, (_, k) => {
+                const a = (k * 45 * Math.PI) / 180;
+                const len = k % 2 === 0 ? 8 : 5;
+                return (
+                  <line
+                    key={k}
+                    x1={cx}
+                    y1={cy}
+                    x2={cx + len * Math.cos(a)}
+                    y2={cy + len * Math.sin(a)}
+                    stroke={GOLD}
+                    strokeOpacity="0.7"
+                    strokeWidth="0.55"
+                  />
+                );
+              })}
+              <circle cx={cx} cy={cy} r="1.4" fill={GOLD_BRIGHT} />
+            </g>
+          ))}
         </g>
 
         {/* engraved coordinate system: great circle, ticks, ecliptic, declinations */}
         <g className="cz-atlas-fade" style={{ animationDelay: "0.35s" }}>
           <circle cx="200" cy="268" r="170" fill="none" stroke={GOLD} strokeOpacity="0.16" strokeWidth="0.7" />
           <circle cx="200" cy="268" r="178" fill="none" stroke={GOLD} strokeOpacity="0.1" strokeWidth="0.4" />
-          {TICKS.map((t, i) => (
-            <line
-              key={i}
-              x1={t.x1}
-              y1={t.y1}
-              x2={t.x2}
-              y2={t.y2}
-              stroke={GOLD}
-              strokeOpacity={t.major ? 0.4 : 0.2}
-              strokeWidth={t.major ? 0.7 : 0.4}
-            />
-          ))}
+          {TICKS.map((t, i) => {
+            const r2 = t.major ? 178 : 173;
+            return (
+              <line
+                key={i}
+                x1={200 + 168 * Math.cos(t.a)}
+                y1={268 + 168 * Math.sin(t.a)}
+                x2={200 + r2 * Math.cos(t.a)}
+                y2={268 + r2 * Math.sin(t.a)}
+                stroke={GOLD}
+                strokeOpacity={t.major ? 0.4 : 0.2}
+                strokeWidth={t.major ? 0.7 : 0.4}
+              />
+            );
+          })}
           <g className="cz-atlas-ring-breathe">
             <ellipse
               cx="200"
@@ -297,18 +395,54 @@ export default function CelestialAtlasCard() {
           />
         </g>
 
-        {/* background star field — twinkles very slowly, at varied rates */}
+        {/* background star field — magnitude tiers, very slow varied twinkle */}
         <g className="cz-atlas-fade" style={{ animationDelay: "0.55s" }}>
           {FIELD.map((s, i) => (
-            <circle
+            <g
               key={i}
               className="cz-atlas-twinkle"
-              cx={s.x}
-              cy={s.y}
-              r={s.r}
-              fill={GOLD_BRIGHT}
               style={{ animationDuration: `${s.dur}s`, animationDelay: `${s.delay}s` }}
-            />
+            >
+              <circle cx={s.x} cy={s.y} r={s.r} fill={GOLD_BRIGHT} />
+              {s.bright && (
+                <circle cx={s.x} cy={s.y} r={s.r + 1.9} fill="none" stroke={GOLD_BRIGHT} strokeOpacity="0.3" strokeWidth="0.3" />
+              )}
+            </g>
+          ))}
+        </g>
+
+        {/* faint background stick-figure constellations */}
+        <g className="cz-atlas-fade" style={{ animationDelay: "1.05s" }}>
+          {BG_CONSTELLATIONS.map((c) => (
+            <g key={c.label}>
+              {c.links.map(([a, b], li) => (
+                <line
+                  key={li}
+                  x1={c.stars[a][0]}
+                  y1={c.stars[a][1]}
+                  x2={c.stars[b][0]}
+                  y2={c.stars[b][1]}
+                  stroke={GOLD}
+                  strokeOpacity="0.2"
+                  strokeWidth="0.45"
+                />
+              ))}
+              {c.stars.map(([sx, sy], si) => (
+                <circle key={si} cx={sx} cy={sy} r={si === 1 ? 1.7 : 1.2} fill={GOLD} fillOpacity="0.55" />
+              ))}
+              <text
+                x={c.lx}
+                y={c.ly}
+                fill={GOLD}
+                fillOpacity="0.45"
+                fontSize="7"
+                fontFamily={SERIF}
+                fontStyle="italic"
+                letterSpacing="1.5"
+              >
+                {c.label}
+              </text>
+            </g>
           ))}
         </g>
 
@@ -401,7 +535,7 @@ export default function CelestialAtlasCard() {
           </g>
         </g>
 
-        {/* compass-rose medallion with IX */}
+        {/* compass-rose medallion with IX, flanked by planetary ruler glyphs */}
         <g className="cz-atlas-fade" style={{ animationDelay: "1.35s" }}>
           <circle cx="200" cy="64" r="30" fill={INK} fillOpacity="0.65" stroke={GOLD} strokeOpacity="0.7" strokeWidth="0.9" />
           <circle cx="200" cy="64" r="25" fill="none" stroke={GOLD} strokeOpacity="0.4" strokeWidth="0.5" />
@@ -418,64 +552,72 @@ export default function CelestialAtlasCard() {
             />
           ))}
           <circle cx="200" cy="64" r="16" fill={INK} stroke={GOLD} strokeOpacity="0.8" strokeWidth="0.7" />
-          <text
-            x="200"
-            y="69"
-            textAnchor="middle"
-            fill={GOLD_BRIGHT}
-            fontSize="13"
-            fontFamily={SERIF}
-            letterSpacing="1"
-          >
+          <text x="200" y="69" textAnchor="middle" fill={GOLD_BRIGHT} fontSize="13" fontFamily={SERIF} letterSpacing="1">
             IX
           </text>
         </g>
 
-        {/* engraved title with flanking rules */}
-        <g className="cz-atlas-fade" style={{ animationDelay: "1.5s" }}>
-          <line x1="60" y1="528" x2="106" y2="528" stroke={GOLD} strokeOpacity="0.5" strokeWidth="0.6" />
-          <line x1="294" y1="528" x2="340" y2="528" stroke={GOLD} strokeOpacity="0.5" strokeWidth="0.6" />
-          <text
-            x="200"
-            y="532"
-            textAnchor="middle"
-            fill={GOLD_BRIGHT}
-            fontSize="17"
-            fontFamily={SERIF}
-            letterSpacing="6"
-          >
-            THE HERMIT
+        {/* planetary rulers of the Hermit: Mercury ☿︎ (ruler) and Virgo ♍︎ (sign) */}
+        <g className="cz-atlas-fade" style={{ animationDelay: "1.45s" }}>
+          <line x1="150" y1="64" x2="169" y2="64" stroke={GOLD} strokeOpacity="0.3" strokeWidth="0.5" />
+          <line x1="231" y1="64" x2="250" y2="64" stroke={GOLD} strokeOpacity="0.3" strokeWidth="0.5" />
+          <circle cx="140" cy="64" r="10" fill={INK} fillOpacity="0.7" stroke={GOLD} strokeOpacity="0.55" strokeWidth="0.7" />
+          <circle cx="260" cy="64" r="10" fill={INK} fillOpacity="0.7" stroke={GOLD} strokeOpacity="0.55" strokeWidth="0.7" />
+          <text x="140" y="68" textAnchor="middle" fill={GOLD} fontSize="11" fontFamily={SERIF}>
+            ☿︎
+          </text>
+          <text x="260" y="68" textAnchor="middle" fill={GOLD} fontSize="11" fontFamily={SERIF}>
+            ♍︎
           </text>
         </g>
 
-        {/* zodiac band: twelve engraved glyph plates */}
+        {/* title cartouche: stepped engraved panel + flanking rules */}
+        <g className="cz-atlas-fade" style={{ animationDelay: "1.5s" }}>
+          <rect x="118" y="510" width="164" height="30" fill={INK} fillOpacity="0.8" stroke={GOLD} strokeOpacity="0.55" strokeWidth="0.8" />
+          <rect x="122" y="514" width="156" height="22" fill="none" stroke={GOLD} strokeOpacity="0.3" strokeWidth="0.4" />
+          <rect x="108" y="516" width="10" height="18" fill={INK} fillOpacity="0.8" stroke={GOLD} strokeOpacity="0.45" strokeWidth="0.6" />
+          <rect x="282" y="516" width="10" height="18" fill={INK} fillOpacity="0.8" stroke={GOLD} strokeOpacity="0.45" strokeWidth="0.6" />
+          <text
+            x="200"
+            y="521"
+            textAnchor="middle"
+            fill={GOLD}
+            fillOpacity="0.7"
+            fontSize="6.5"
+            fontFamily={SERIF}
+            letterSpacing="3.5"
+          >
+            STELLÆ EREMITÆ
+          </text>
+          <text x="200" y="534" textAnchor="middle" fill={GOLD_BRIGHT} fontSize="15" fontFamily={SERIF} letterSpacing="5">
+            THE HERMIT
+          </text>
+          <line x1="58" y1="525" x2="102" y2="525" stroke={GOLD} strokeOpacity="0.5" strokeWidth="0.6" />
+          <line x1="298" y1="525" x2="342" y2="525" stroke={GOLD} strokeOpacity="0.5" strokeWidth="0.6" />
+          <path d="M 52 525 L 56 521 L 60 525 L 56 529 Z" fill={GOLD} fillOpacity="0.6" />
+          <path d="M 340 525 L 344 521 L 348 525 L 344 529 Z" fill={GOLD} fillOpacity="0.6" />
+        </g>
+
+        {/* zodiac band: twelve engraved glyph plates between the corner rosettes */}
         <g className="cz-atlas-fade" style={{ animationDelay: "1.6s" }}>
-          <rect x="18" y="546" width="364" height="30" fill={GOLD} fillOpacity="0.05" stroke={GOLD_DIM} strokeWidth="0.7" />
+          <rect x="50" y="546" width="300" height="30" fill={GOLD} fillOpacity="0.05" stroke={GOLD_DIM} strokeWidth="0.7" />
           {ZODIAC.map((glyph, i) => {
-            const cellW = 364 / 12;
-            const cx = 18 + cellW * i + cellW / 2;
+            const cellW = 300 / 12;
+            const cx = 50 + cellW * i + cellW / 2;
             return (
               <g key={glyph}>
                 {i > 0 && (
                   <line
-                    x1={18 + cellW * i}
+                    x1={50 + cellW * i}
                     y1="546"
-                    x2={18 + cellW * i}
+                    x2={50 + cellW * i}
                     y2="576"
                     stroke={GOLD}
                     strokeOpacity="0.3"
                     strokeWidth="0.5"
                   />
                 )}
-                <text
-                  x={cx}
-                  y="567"
-                  textAnchor="middle"
-                  fill={GOLD}
-                  fillOpacity="0.9"
-                  fontSize="14"
-                  fontFamily={SERIF}
-                >
+                <text x={cx} y="567" textAnchor="middle" fill={GOLD} fillOpacity="0.9" fontSize="13" fontFamily={SERIF}>
                   {glyph}
                 </text>
               </g>

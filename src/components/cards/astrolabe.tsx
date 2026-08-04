@@ -1,6 +1,7 @@
 // ASTROLABE — The Hermit (IX)
-// Medieval astronomical manuscript page: aged parchment, the Hermit scene
-// enclosed in an astrolabe construction (mater ring with degree scale, rete
+// Medieval astronomical manuscript page: aged parchment, marginalia border
+// (vine corner doodles, pricking marks), the Hermit scene enclosed in an
+// astrolabe construction (mater ring with degree scale + zodiac glyphs, rete
 // arcs, alidade rule bar), figure drawn in iron-gall ink with lapis + gold
 // accents. Server-component safe: no hooks, no client directive.
 
@@ -9,6 +10,9 @@ const CENTER_Y = 225;
 
 const TICKS = Array.from({ length: 72 }, (_, i) => i * 5);
 const DEGREE_NUMBERS = Array.from({ length: 12 }, (_, i) => i * 30);
+const ZODIAC_SIGNS = ["♈︎", "♉︎", "♊︎", "♋︎", "♌︎", "♍︎", "♎︎", "♏︎", "♐︎", "♑︎", "♒︎", "♓︎"];
+const PRICK_X = [55, 95, 205, 245];
+const PRICK_Y = [130, 225, 320];
 
 const INK = "#3a2a1c";
 const INK_DARK = "#2c1d12";
@@ -85,6 +89,15 @@ export default function AstrolabeHermitCard() {
             <stop offset="70%" stopColor="#f0e6cc" />
             <stop offset="100%" stopColor="#e0d0a8" />
           </radialGradient>
+          {/* marginalia corner doodle: curling vine tendril + leaves + red star */}
+          <g id="cz-astro-vine">
+            <path d="M 19 47 Q 17 17 47 19" fill="none" stroke={INK} strokeWidth="0.8" />
+            <path d="M 19 47 q -2 5 3 6" fill="none" stroke={INK} strokeWidth="0.7" />
+            <path d="M 47 19 q 5 -2 6 3" fill="none" stroke={INK} strokeWidth="0.7" />
+            <path d="M 21 29 q 5 -2 8 1 q -5 3 -8 -1 Z" fill={INK} />
+            <path d="M 29 21 q 2 -5 7 -4 q -2 5 -7 4 Z" fill={INK} />
+            <path d="M 20.5 17.5 L 22 20 L 20.5 22.5 L 19 20 Z" fill={RUBRIC} />
+          </g>
         </defs>
 
         {/* aged parchment ground */}
@@ -95,9 +108,33 @@ export default function AstrolabeHermitCard() {
         <ellipse cx="238" cy="330" rx="30" ry="44" fill="#a8894e" opacity="0.06" />
         <ellipse cx="70" cy="120" rx="26" ry="18" fill="#a8894e" opacity="0.06" />
 
-        {/* double manuscript frame */}
+        {/* manuscript page border: double ink rules, corner vines, prickings */}
         <rect x="10" y="10" width="280" height="430" fill="none" stroke={INK} strokeWidth="1.6" opacity="0.85" />
         <rect x="15" y="15" width="270" height="420" fill="none" stroke={INK} strokeWidth="0.6" opacity="0.6" />
+        <use href="#cz-astro-vine" />
+        <use href="#cz-astro-vine" transform="translate(300 0) scale(-1 1)" />
+        <use href="#cz-astro-vine" transform="translate(0 450) scale(1 -1)" />
+        <use href="#cz-astro-vine" transform="translate(300 450) scale(-1 -1)" />
+        {/* pricking marks between the frame rules */}
+        <g fill={INK} opacity="0.55">
+          {PRICK_X.map((x) => (
+            <circle key={`t${x}`} cx={x} cy="12.5" r="0.9" />
+          ))}
+          {PRICK_X.map((x) => (
+            <circle key={`b${x}`} cx={x} cy="437.5" r="0.9" />
+          ))}
+          {PRICK_Y.map((y) => (
+            <circle key={`l${y}`} cx="12.5" cy={y} r="0.9" />
+          ))}
+          {PRICK_Y.map((y) => (
+            <circle key={`r${y}`} cx="287.5" cy={y} r="0.9" />
+          ))}
+        </g>
+        {/* small star doodles flanking the initial box */}
+        <g fill={INK} opacity="0.8">
+          <path d="M 90 41 L 91.8 45.5 L 90 50 L 88.2 45.5 Z" />
+          <path d="M 210 41 L 211.8 45.5 L 210 50 L 208.2 45.5 Z" />
+        </g>
 
         {/* decorated initial box: IX in lapis + gold */}
         <g>
@@ -151,6 +188,21 @@ export default function AstrolabeHermitCard() {
                 fill={INK}
               >
                 {a}
+              </text>
+            </g>
+          ))}
+          {/* zodiac glyphs on the mater band, between the degree numerals */}
+          {ZODIAC_SIGNS.map((g, i) => (
+            <g key={g} transform={`rotate(${i * 30 + 15} ${CENTER_X} ${CENTER_Y})`}>
+              <text
+                x={CENTER_X}
+                y={CENTER_Y - 106}
+                textAnchor="middle"
+                fontFamily="Georgia, 'DejaVu Sans', 'Segoe UI Symbol', serif"
+                fontSize="7.5"
+                fill={INK}
+              >
+                {g}
               </text>
             </g>
           ))}
@@ -263,6 +315,31 @@ export default function AstrolabeHermitCard() {
           <path d="M 48 330 L 50 335 L 48 340 L 46 335 Z" />
         </g>
         <path d="M 254 312 L 256.4 318 L 254 324 L 251.6 318 Z" fill={RUBRIC} opacity="0.9" />
+        {/* gold accent star in the right margin */}
+        <path
+          d="M 274 190 L 276.2 196 L 274 202 L 271.8 196 Z"
+          fill={GOLD}
+          stroke={INK}
+          strokeWidth="0.4"
+          opacity="0.95"
+        />
+
+        {/* planetary hour notation in the left margin, manuscript style */}
+        <g transform="rotate(-90 26 225)">
+          <text
+            x="26"
+            y="225"
+            textAnchor="middle"
+            fontFamily="Georgia, 'Times New Roman', serif"
+            fontStyle="italic"
+            fontSize="9"
+            letterSpacing="1.5"
+            fill={INK}
+            opacity="0.85"
+          >
+            ♄︎ hora saturni
+          </text>
+        </g>
 
         {/* latin-ish marginal annotation */}
         <text

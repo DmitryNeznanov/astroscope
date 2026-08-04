@@ -127,6 +127,16 @@ export default function GoldFoilHermitCard() {
           </clipPath>
         </defs>
 
+        {/* Blind-emboss second frame: faint impression, stamps with the foil,
+            deliberately outside #cz-gold-art so the sheen never flashes on it */}
+        <path
+          className="cz-gold-art"
+          d="M64 25 H336 M64 575 H336 M25 64 V536 M375 64 V536"
+          fill="none"
+          stroke="rgba(233, 214, 160, 0.12)"
+          strokeWidth="1"
+        />
+
         {/* ============ Gold artwork (stamps on at load) ============ */}
         <g
           id="cz-gold-art"
@@ -136,9 +146,24 @@ export default function GoldFoilHermitCard() {
           strokeLinecap="round"
           strokeLinejoin="round"
         >
-          {/* Stationery frame: double hairline border */}
-          <rect x="14" y="14" width="372" height="572" strokeWidth="1" opacity="0.85" />
-          <rect x="22" y="22" width="356" height="556" strokeWidth="0.5" opacity="0.5" />
+          {/* Luxury frame: outer thick-thin rule pair */}
+          <rect x="13" y="13" width="374" height="574" strokeWidth="2" opacity="0.9" />
+          <rect x="20" y="20" width="360" height="560" strokeWidth="0.6" opacity="0.7" />
+
+          {/* Ornate corner flourishes: foil fan arcs + diamond pivot */}
+          <g id="cz-gold-corner" strokeWidth="1">
+            <path d="M30 40 A10 10 0 0 0 40 30" />
+            <path d="M30 46 A16 16 0 0 0 46 30" opacity="0.8" />
+            <path d="M30 52 A22 22 0 0 0 52 30" opacity="0.55" />
+            <path
+              d="M30 26.5 L33.5 30 L30 33.5 L26.5 30 Z"
+              fill="url(#cz-gold-grad)"
+              stroke="none"
+            />
+          </g>
+          <use href="#cz-gold-corner" transform="translate(400 0) scale(-1 1)" />
+          <use href="#cz-gold-corner" transform="translate(0 600) scale(1 -1)" />
+          <use href="#cz-gold-corner" transform="translate(400 600) scale(-1 -1)" />
 
           {/* IX — small foil caps, top center, flanked by hairline rules */}
           <path d="M118 70 H168 M232 70 H282" strokeWidth="0.8" opacity="0.8" />
@@ -158,6 +183,8 @@ export default function GoldFoilHermitCard() {
           {/* Zodiac wheel: thin ring + hairline inner ring + 12 tiny glyphs */}
           <circle cx="200" cy="300" r="130" strokeWidth="1" opacity="0.9" />
           <circle cx="200" cy="300" r="124" strokeWidth="0.5" opacity="0.45" />
+          {/* Inner planet ring */}
+          <circle cx="200" cy="300" r="112" strokeWidth="0.5" opacity="0.4" />
           <g
             fill="url(#cz-gold-text-grad)"
             stroke="none"
@@ -165,18 +192,35 @@ export default function GoldFoilHermitCard() {
             fontSize="12"
             textAnchor="middle"
           >
-            <text x="200" y="170" dominantBaseline="central">♈</text>
-            <text x="265" y="187.4" dominantBaseline="central">♉</text>
-            <text x="312.6" y="235" dominantBaseline="central">♊</text>
-            <text x="330" y="300" dominantBaseline="central">♋</text>
-            <text x="312.6" y="365" dominantBaseline="central">♌</text>
-            <text x="265" y="412.6" dominantBaseline="central">♍</text>
-            <text x="200" y="430" dominantBaseline="central">♎</text>
-            <text x="135" y="412.6" dominantBaseline="central">♏</text>
-            <text x="87.4" y="365" dominantBaseline="central">♐</text>
-            <text x="70" y="300" dominantBaseline="central">♑</text>
-            <text x="87.4" y="235" dominantBaseline="central">♒</text>
-            <text x="135" y="187.4" dominantBaseline="central">♓</text>
+            <text x="200" y="170" dominantBaseline="central">♈︎</text>
+            <text x="265" y="187.4" dominantBaseline="central">♉︎</text>
+            <text x="312.6" y="235" dominantBaseline="central">♊︎</text>
+            <text x="330" y="300" dominantBaseline="central">♋︎</text>
+            <text x="312.6" y="365" dominantBaseline="central">♌︎</text>
+            <text x="265" y="412.6" dominantBaseline="central">♍︎</text>
+            <text x="200" y="430" dominantBaseline="central">♎︎</text>
+            <text x="135" y="412.6" dominantBaseline="central">♏︎</text>
+            <text x="87.4" y="365" dominantBaseline="central">♐︎</text>
+            <text x="70" y="300" dominantBaseline="central">♑︎</text>
+            <text x="87.4" y="235" dominantBaseline="central">♒︎</text>
+            <text x="135" y="187.4" dominantBaseline="central">♓︎</text>
+          </g>
+
+          {/* 7 classical planets on the inner ring (Sun at the top) */}
+          <g
+            fill="url(#cz-gold-text-grad)"
+            stroke="none"
+            fontFamily="Georgia, 'Times New Roman', serif"
+            fontSize="11"
+            textAnchor="middle"
+          >
+            <text x="200" y="188" dominantBaseline="central">☉︎</text>
+            <text x="287.6" y="230.2" dominantBaseline="central">☽︎</text>
+            <text x="309.2" y="324.9" dominantBaseline="central">☿︎</text>
+            <text x="248.6" y="400.9" dominantBaseline="central">♀︎</text>
+            <text x="151.4" y="400.9" dominantBaseline="central">♂︎</text>
+            <text x="90.8" y="324.9" dominantBaseline="central">♃︎</text>
+            <text x="112.4" y="230.2" dominantBaseline="central">♄︎</text>
           </g>
 
           {/* Mountain peak */}
@@ -227,7 +271,28 @@ export default function GoldFoilHermitCard() {
           <g fill="url(#cz-gold-grad)" stroke="none" opacity="0.9">
             <path d="M148 219 L149.2 222.8 L153 224 L149.2 225.2 L148 229 L146.8 225.2 L143 224 L146.8 222.8 Z" />
             <path d="M286 256 L287 259 L290 260 L287 261 L286 264 L285 261 L282 260 L285 259 Z" />
-            <path d="M230 181.5 L231 184.9 L234.5 186 L231 187.1 L230 190.5 L229 187.1 L225.5 186 L229 184.9 Z" />
+            <path d="M224 193.5 L225 196.9 L228.5 198 L225 199.1 L224 202.5 L223 199.1 L219.5 198 L223 196.9 Z" />
+          </g>
+
+          {/* Tiny constellation accents in the matte field */}
+          <g strokeWidth="0.6" opacity="0.5">
+            <path d="M62 148 L80 132 L98 142 L88 162" />
+            <path d="M52 452 L70 442 L86 456 L74 476" />
+            <path d="M312 458 L332 448 L348 464 L334 484" />
+          </g>
+          <g fill="url(#cz-gold-grad)" stroke="none" opacity="0.8">
+            <circle cx="62" cy="148" r="1.2" />
+            <circle cx="80" cy="132" r="1.5" />
+            <circle cx="98" cy="142" r="1.1" />
+            <circle cx="88" cy="162" r="1.3" />
+            <circle cx="52" cy="452" r="1.2" />
+            <circle cx="70" cy="442" r="1.5" />
+            <circle cx="86" cy="456" r="1.1" />
+            <circle cx="74" cy="476" r="1.3" />
+            <circle cx="312" cy="458" r="1.2" />
+            <circle cx="332" cy="448" r="1.5" />
+            <circle cx="348" cy="464" r="1.1" />
+            <circle cx="334" cy="484" r="1.3" />
           </g>
 
           {/* Title block: hairline rules + wide-tracked serif caps */}

@@ -89,6 +89,16 @@ export default function NebulaWatercolorHermit() {
           to   { opacity: 1; transform: scale(1); filter: blur(0px); }
         }
         .${NS}title { animation: ${NS}rise 1.4s ease-out 1.15s both; }
+        .${NS}frame { animation: ${NS}rise 1.6s ease-out 1s both; }
+        .${NS}moon { animation: ${NS}rise 1.4s ease-out 0.9s both; }
+        .${NS}stamp { animation: ${NS}rise 1.4s ease-out 1.25s both; }
+        .${NS}const {
+          animation: ${NS}rise 1.5s ease-out 1s both, ${NS}constPulse 26s ease-in-out 3s infinite alternate;
+        }
+        @keyframes ${NS}constPulse {
+          from { opacity: 0.55; }
+          to   { opacity: 0.85; }
+        }
 
         /* ---- AMBIENT: very slow nebula drift + gentle star twinkle ---- */
         .${NS}wash-1 { animation: ${NS}bleed 1.6s cubic-bezier(0.22,0.61,0.21,1) both, ${NS}driftA 34s ease-in-out 2s infinite alternate; }
@@ -120,7 +130,8 @@ export default function NebulaWatercolorHermit() {
 
         @media (prefers-reduced-motion: reduce) {
           .${NS}wash, .${NS}wash-1, .${NS}wash-2, .${NS}wash-3, .${NS}wash-4,
-          .${NS}reveal, .${NS}lantern, .${NS}title, .${NS}tw {
+          .${NS}reveal, .${NS}lantern, .${NS}title, .${NS}tw,
+          .${NS}frame, .${NS}moon, .${NS}stamp, .${NS}const {
             animation: none !important;
             opacity: 1 !important;
             transform: none !important;
@@ -157,6 +168,12 @@ export default function NebulaWatercolorHermit() {
             <feTurbulence type="fractalNoise" baseFrequency="0.05" numOctaves="2" seed="5" result="n" />
             <feDisplacementMap in="SourceGraphic" in2="n" scale="4" />
             <feGaussianBlur stdDeviation="0.7" />
+          </filter>
+          {/* uneven hairline for the hand-painted ink frame */}
+          <filter id={`${NS}rough`} x="-10%" y="-10%" width="120%" height="120%">
+            <feTurbulence type="fractalNoise" baseFrequency="0.045 0.06" numOctaves="3" seed="11" result="n" />
+            <feDisplacementMap in="SourceGraphic" in2="n" scale="2.6" />
+            <feGaussianBlur stdDeviation="0.45" />
           </filter>
           {/* wet-on-wet bleed for the lantern bloom */}
           <filter id={`${NS}wet`} x="-60%" y="-60%" width="220%" height="220%">
@@ -237,6 +254,46 @@ export default function NebulaWatercolorHermit() {
           ))}
         </g>
 
+        {/* faint constellation within the indigo wash — connected star points */}
+        <g className={`${NS}const`} opacity="0.7">
+          <polyline
+            points="46,62 62,50 80,58 74,78 54,86 46,62"
+            fill="none"
+            stroke="#cfc4f2"
+            strokeOpacity="0.35"
+            strokeWidth="0.6"
+          />
+          <g fill="#e6ddfa">
+            <circle cx="46" cy="62" r="1.1" opacity="0.8" />
+            <circle cx="62" cy="50" r="1.4" opacity="0.9" />
+            <circle cx="80" cy="58" r="1" opacity="0.75" />
+            <circle cx="74" cy="78" r="1.3" opacity="0.85" />
+            <circle cx="54" cy="86" r="0.9" opacity="0.7" />
+          </g>
+        </g>
+
+        {/* crescent moon painted into the upper-right corner */}
+        <g className={`${NS}moon`}>
+          <circle cx="172" cy="34" r="8.5" fill="#ecdcae" opacity="0.85" filter={`url(#${NS}wet)`} />
+          <circle cx="175.5" cy="31" r="7" fill="#0d0b1e" opacity="0.92" filter={`url(#${NS}wet)`} />
+          <circle cx="170.5" cy="35.5" r="3.4" fill="#f4e8c4" opacity="0.35" filter={`url(#${NS}wet)`} />
+        </g>
+
+        {/* Virgo glyph — soft rubber-stamp impression */}
+        <text
+          className={`${NS}stamp`}
+          x="40"
+          y="212"
+          transform="rotate(-9 40 212)"
+          fontFamily='Georgia, "Palatino Linotype", serif'
+          fontSize="17"
+          fill="#9d86d8"
+          opacity="0.5"
+          filter={`url(#${NS}rough)`}
+        >
+          ♍︎
+        </text>
+
         {/* rocky outcrop */}
         <g className={`${NS}reveal`}>
           <path
@@ -287,6 +344,27 @@ export default function NebulaWatercolorHermit() {
         {/* vignette + paper grain */}
         <rect width="200" height="300" fill={`url(#${NS}vignette)`} />
         <rect width="200" height="300" filter={`url(#${NS}grain)`} opacity="0.5" />
+
+        {/* hand-painted ink frame — taped-off watercolor border, uneven hairline */}
+        <g className={`${NS}frame`}>
+          <rect
+            x="8" y="8" width="184" height="284" rx="7"
+            fill="none" stroke="#b9a8e8" strokeOpacity="0.14" strokeWidth="5"
+            filter={`url(#${NS}rough)`}
+          />
+          <rect
+            x="8" y="8" width="184" height="284" rx="7"
+            fill="none" stroke="#d8cdf5" strokeOpacity="0.55" strokeWidth="1.1"
+            filter={`url(#${NS}rough)`}
+          />
+          {/* tiny corner star dabs */}
+          <g fill="#f0e6c8" filter={`url(#${NS}rough)`}>
+            <path d="M 16 12.6 L 16.9 15.1 L 19.4 16 L 16.9 16.9 L 16 19.4 L 15.1 16.9 L 12.6 16 L 15.1 15.1 Z" opacity="0.85" />
+            <path d="M 184 12.6 L 184.9 15.1 L 187.4 16 L 184.9 16.9 L 184 19.4 L 183.1 16.9 L 180.6 16 L 183.1 15.1 Z" opacity="0.85" />
+            <path d="M 16 280.6 L 16.9 283.1 L 19.4 284 L 16.9 284.9 L 16 287.4 L 15.1 284.9 L 12.6 284 L 15.1 283.1 Z" opacity="0.85" />
+            <path d="M 184 280.6 L 184.9 283.1 L 187.4 284 L 184.9 284.9 L 184 287.4 L 183.1 284.9 L 180.6 284 L 183.1 283.1 Z" opacity="0.85" />
+          </g>
+        </g>
       </svg>
 
       {/* typesetting */}

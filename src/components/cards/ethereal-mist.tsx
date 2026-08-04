@@ -124,6 +124,33 @@ export default function EtherealMistHermit() {
             <stop offset="1" stopColor="#2f3a47" stopOpacity="0.22" />
           </radialGradient>
 
+          {/* Ghosted moon disc, high in the fog */}
+          <radialGradient id="cz-emist-moon" cx="0.5" cy="0.5" r="0.5">
+            <stop offset="0" stopColor="#eef2f7" stopOpacity="0.4" />
+            <stop offset="0.55" stopColor="#e8edf2" stopOpacity="0.22" />
+            <stop offset="0.8" stopColor="#e8edf2" stopOpacity="0.07" />
+            <stop offset="1" stopColor="#e8edf2" stopOpacity="0" />
+          </radialGradient>
+
+          {/* Ghost frame: edge strokes that dissolve at both ends */}
+          <linearGradient id="cz-emist-frame-h" x1="0" y1="0" x2="1" y2="0">
+            <stop offset="0" stopColor="#e8edf2" stopOpacity="0" />
+            <stop offset="0.16" stopColor="#e8edf2" stopOpacity="1" />
+            <stop offset="0.84" stopColor="#e8edf2" stopOpacity="1" />
+            <stop offset="1" stopColor="#e8edf2" stopOpacity="0" />
+          </linearGradient>
+          <linearGradient id="cz-emist-frame-v" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0" stopColor="#e8edf2" stopOpacity="0" />
+            <stop offset="0.14" stopColor="#e8edf2" stopOpacity="1" />
+            <stop offset="0.86" stopColor="#e8edf2" stopOpacity="1" />
+            <stop offset="1" stopColor="#e8edf2" stopOpacity="0" />
+          </linearGradient>
+          {/* Tiny four-point star used as corner marker */}
+          <path
+            id="cz-emist-cornerstar"
+            d="M0 -3.2 L0.75 -0.75 L3.2 0 L0.75 0.75 L0 3.2 L-0.75 0.75 L-3.2 0 L-0.75 -0.75 Z"
+          />
+
           {/* Lantern: large soft halo, very dim warm core */}
           <radialGradient id="cz-emist-halo" cx="0.5" cy="0.5" r="0.5">
             <stop offset="0" stopColor="#f2c47c" stopOpacity="0.5" />
@@ -167,6 +194,40 @@ export default function EtherealMistHermit() {
         {/* Atmosphere */}
         <rect x="0" y="0" width="200" height="300" fill="url(#cz-emist-sky)" />
         <rect x="0" y="0" width="200" height="300" fill="url(#cz-emist-haze)" />
+
+        {/* Celestial layer: ghosted moon, faint star points, one soft constellation */}
+        <circle cx="158" cy="54" r="17" fill="url(#cz-emist-moon)" />
+        <g fill="#e8edf2">
+          <circle cx="38" cy="30" r="0.8" opacity="0.4" />
+          <circle cx="64" cy="18" r="0.55" opacity="0.28" />
+          <circle cx="92" cy="26" r="0.7" opacity="0.32" />
+          <circle cx="124" cy="16" r="0.5" opacity="0.24" />
+          <circle cx="176" cy="30" r="0.75" opacity="0.36" />
+          <circle cx="148" cy="88" r="0.55" opacity="0.26" />
+          <circle cx="184" cy="76" r="0.6" opacity="0.3" />
+          <circle cx="20" cy="68" r="0.5" opacity="0.22" />
+          <circle cx="52" cy="112" r="0.6" opacity="0.24" />
+          <circle cx="168" cy="112" r="0.5" opacity="0.2" />
+          <circle cx="118" cy="58" r="0.65" opacity="0.3" />
+          <circle cx="82" cy="70" r="0.45" opacity="0.2" />
+        </g>
+        {/* One soft constellation, barely visible through the mist */}
+        <g opacity="0.55">
+          <polyline
+            points="30,88 42,74 56,80 66,64 78,70"
+            fill="none"
+            stroke="#e8edf2"
+            strokeWidth="0.4"
+            opacity="0.35"
+          />
+          <g fill="#e8edf2">
+            <circle cx="30" cy="88" r="1" opacity="0.5" />
+            <circle cx="42" cy="74" r="1.3" opacity="0.6" />
+            <circle cx="56" cy="80" r="0.9" opacity="0.45" />
+            <circle cx="66" cy="64" r="1.2" opacity="0.55" />
+            <circle cx="78" cy="70" r="0.8" opacity="0.4" />
+          </g>
+        </g>
 
         {/* Ghosted roman numeral */}
         <text
@@ -276,6 +337,20 @@ export default function EtherealMistHermit() {
         >
           THE HERMIT
         </text>
+
+        {/* Ghost frame: ultra-thin, dissolving at the corners, star markers */}
+        <g opacity="0.36" strokeWidth="0.7" fill="none">
+          <line x1="11" y1="11" x2="189" y2="11" stroke="url(#cz-emist-frame-h)" />
+          <line x1="11" y1="289" x2="189" y2="289" stroke="url(#cz-emist-frame-h)" />
+          <line x1="11" y1="11" x2="11" y2="289" stroke="url(#cz-emist-frame-v)" />
+          <line x1="189" y1="11" x2="189" y2="289" stroke="url(#cz-emist-frame-v)" />
+        </g>
+        <g fill="#e8edf2" opacity="0.5">
+          <use href="#cz-emist-cornerstar" x="11" y="11" />
+          <use href="#cz-emist-cornerstar" x="189" y="11" />
+          <use href="#cz-emist-cornerstar" x="11" y="289" />
+          <use href="#cz-emist-cornerstar" x="189" y="289" />
+        </g>
       </svg>
     </figure>
   );
