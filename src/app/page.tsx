@@ -441,6 +441,7 @@ export default function Home() {
                   ["living-cosmos", "Living Cosmos"],
                   ["laboratorium", "Laboratorium"],
                   ["silver-depths", "Silver Depths"],
+                  ["tabs", "Tab Instruments"],
                 ].map(([slug, label]) => (
                   <li key={slug}>
                     <Link
