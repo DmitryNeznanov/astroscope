@@ -255,12 +255,22 @@ export default function Home() {
                   <h2 className="font-serif text-lg text-neutral-100">
                     {s.name}
                   </h2>
-                  <Link
-                    href={`/gallery/${s.slug}`}
-                    className="shrink-0 rounded-full border border-neutral-600 px-3 py-1 text-xs text-neutral-300 transition hover:border-neutral-300 hover:text-white"
-                  >
-                    Deck →
-                  </Link>
+                  <span className="flex shrink-0 gap-2">
+                    {s.slug === "orrery" && (
+                      <Link
+                        href="/landing/orrery"
+                        className="rounded-full border border-amber-700/60 px-3 py-1 text-xs text-amber-300/90 transition hover:border-amber-500 hover:text-amber-200"
+                      >
+                        Landing →
+                      </Link>
+                    )}
+                    <Link
+                      href={`/gallery/${s.slug}`}
+                      className="rounded-full border border-neutral-600 px-3 py-1 text-xs text-neutral-300 transition hover:border-neutral-300 hover:text-white"
+                    >
+                      Deck →
+                    </Link>
+                  </span>
                 </div>
                 <p className="mt-1 text-sm leading-relaxed text-neutral-500">
                   {s.note}
