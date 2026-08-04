@@ -442,6 +442,7 @@ export default function Home() {
                   ["laboratorium", "Laboratorium"],
                   ["silver-depths", "Silver Depths"],
                   ["tabs", "Tab Instruments"],
+                  ["matrix", "Matrix Lab"],
                 ].map(([slug, label]) => (
                   <li key={slug}>
                     <Link
