@@ -1,10 +1,19 @@
 "use client";
 
+// TAROT / DAILY CARD — a TOOL page, not a landing: compact header with tarot
+// cross-nav, the draw chamber immediately at the top of the viewport, and
+// condensed explainer/FAQ below. Production palette (from lab/remix-v2):
+// bg rgb(10,9,18), text #e9e6f2/#b7b1cc, gold #f3c77a/#e39a4c/#ffdd9c,
+// deep gold #c9a227, violet #a25adf/#b794f6. Broken+magic structure kept:
+// translucent panels over a fixed sky of counter-rotating wheels, star
+// specks, hairline orbits, constellations and giant dim glyphs (U+FE0E).
+
+import Link from "next/link";
 import { useState } from "react";
 import type { CSSProperties } from "react";
 
 /* ------------------------------------------------------------------ */
-/* Geometry helpers                                                    */
+/* Geometry + PRNG helpers                                             */
 /* ------------------------------------------------------------------ */
 
 const rad = (deg: number) => (deg * Math.PI) / 180;
@@ -12,6 +21,34 @@ const polar = (cx: number, cy: number, r: number, deg: number) => ({
   x: Math.round((cx + r * Math.cos(rad(deg))) * 100) / 100,
   y: Math.round((cy + r * Math.sin(rad(deg))) * 100) / 100,
 });
+
+// deterministic PRNG so the star field is stable between renders
+function mulberry32(seed: number) {
+  let s = seed;
+  return () => {
+    s |= 0;
+    s = (s + 0x6d2b79f5) | 0;
+    let t = Math.imul(s ^ (s >>> 15), 1 | s);
+    t = (t + Math.imul(t ^ (s >>> 7), 61 | t)) ^ t;
+    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+  };
+}
+
+/* ------------------------------------------------------------------ */
+/* Palette                                                             */
+/* ------------------------------------------------------------------ */
+
+const GOLD = "#f3c77a";
+const GOLD_DEEP = "#c9a227";
+const GOLD_HOT = "#e39a4c";
+const CREAM = "#ffdd9c";
+const VIOLET = "#a25adf";
+const VIOLET_SOFT = "#b794f6";
+const TEXT_HI = "#e9e6f2";
+const TEXT_LO = "#b7b1cc";
+
+// glyphs carry U+FE0E so they render as text, never emoji
+const FE = "︎";
 
 /* ------------------------------------------------------------------ */
 /* Data — the chamber's calibrated octant of the major arcana          */
@@ -32,7 +69,7 @@ const DECK: Arcana[] = [
   {
     numeral: "0",
     name: "THE FOOL",
-    hue: "#ffb15c",
+    hue: CREAM,
     keywords: ["BEGINNINGS", "LEAP", "TRUST"],
     guidance: "Step before the plan is finished; the ground assembles under an honest foot.",
     emblem: "fool",
@@ -40,7 +77,7 @@ const DECK: Arcana[] = [
   {
     numeral: "I",
     name: "THE MAGICIAN",
-    hue: "#ff5c85",
+    hue: GOLD,
     keywords: ["WILL", "CRAFT", "FOCUS"],
     guidance: "Every tool you need is already on the bench; today, use exactly one of them well.",
     emblem: "magician",
@@ -48,7 +85,7 @@ const DECK: Arcana[] = [
   {
     numeral: "II",
     name: "THE HIGH PRIESTESS",
-    hue: "#c47dff",
+    hue: VIOLET_SOFT,
     keywords: ["INTUITION", "SILENCE", "DEPTHS"],
     guidance: "The answer is behind the curtain, not in the noise; sit still until it surfaces.",
     emblem: "priestess",
@@ -56,7 +93,7 @@ const DECK: Arcana[] = [
   {
     numeral: "VII",
     name: "THE CHARIOT",
-    hue: "#ff8a3c",
+    hue: GOLD_HOT,
     keywords: ["DRIVE", "DIRECTION", "CONTROL"],
     guidance: "Pick one heading and hold it; the horses pull hardest when the reins agree.",
     emblem: "chariot",
@@ -64,7 +101,7 @@ const DECK: Arcana[] = [
   {
     numeral: "X",
     name: "WHEEL OF FORTUNE",
-    hue: "#ffb15c",
+    hue: GOLD,
     keywords: ["CYCLES", "TURNING", "CHANCE"],
     guidance: "The wheel is mid-rotation; do not cling to the spoke that carried you up.",
     emblem: "wheel",
@@ -72,7 +109,7 @@ const DECK: Arcana[] = [
   {
     numeral: "XIV",
     name: "TEMPERANCE",
-    hue: "#c47dff",
+    hue: VIOLET_SOFT,
     keywords: ["MEASURE", "BLEND", "PATIENCE"],
     guidance: "Pour slowly between the vessels; today’s work is dilution, not force.",
     emblem: "temperance",
@@ -80,7 +117,7 @@ const DECK: Arcana[] = [
   {
     numeral: "XVII",
     name: "THE STAR",
-    hue: "#ff5c85",
+    hue: CREAM,
     keywords: ["HOPE", "SIGNAL", "RENEWAL"],
     guidance: "One clear signal outlasts a sky of noise; follow the brightest, smallest point.",
     emblem: "star",
@@ -88,67 +125,80 @@ const DECK: Arcana[] = [
   {
     numeral: "XXI",
     name: "THE WORLD",
-    hue: "#ff8a3c",
+    hue: GOLD_HOT,
     keywords: ["COMPLETION", "CIRCUIT", "ARRIVAL"],
     guidance: "Close the loop you opened weeks ago; the last seam is also the threshold.",
     emblem: "world",
   },
 ];
 
-const STEPS: { id: string; title: string; copy: string; readout: string }[] = [
+const NAV: { label: string; href: string; active?: boolean }[] = [
+  { label: "TAROT HUB", href: "/tarot" },
+  { label: "DAILY CARD", href: "/tarot/spreads/daily-card", active: true },
+  { label: "YES / NO", href: "/tarot/spreads/yes-no" },
+  { label: "PAST · PRESENT · FUTURE", href: "/tarot/spreads/past-present-future" },
+  { label: "LOVE", href: "/tarot/spreads/love-three-card" },
+  { label: "BIRTH ARCANA", href: "/tarot/birth-arcana" },
+  { label: "ALL CARDS", href: "/tarot/cards" },
+];
+
+// tab "dirt": slight rotations so the nav refuses to sit straight
+const TAB_DIRT = [
+  "rotate(-.7deg) translateY(1px)",
+  "rotate(.4deg)",
+  "rotate(-.3deg) translateY(-1px)",
+  "rotate(.6deg) translateY(1px)",
+  "rotate(-.5deg)",
+  "rotate(.3deg) translateY(-1px)",
+  "rotate(-.4deg) translateY(1px)",
+];
+
+const STEPS: { id: string; title: string; copy: string }[] = [
   {
-    id: "STEP 01",
+    id: "01",
     title: "Draw at first light",
-    copy: "Pull the card before the day's inputs reach you — before mail, news, other people's weather. The chamber reads an unshaped day best.",
-    readout: "T-00:00 · PRE-INPUT",
+    copy: "Pull before mail, news, other people’s weather — the chamber reads an unshaped day best.",
   },
   {
-    id: "STEP 02",
+    id: "02",
     title: "Name the theme",
-    copy: "Reduce the card to one word. Carry the word, not the image — a word survives contact with the day; a picture only decorates it.",
-    readout: "1 WORD · CARRIED",
+    copy: "Reduce the card to one word and carry the word, not the image.",
   },
   {
-    id: "STEP 03",
+    id: "03",
     title: "Test at midday",
-    copy: "Hold the theme against what actually happened by noon. Note where it fit and, more useful, where it resisted.",
-    readout: "CHECK · 12:00",
+    copy: "Hold the theme against the day by noon; note where it resisted.",
   },
   {
-    id: "STEP 04",
+    id: "04",
     title: "Seal at night",
-    copy: "Log a single line before sleep. The log, not the draw, is the instrument — thirty lines make a pattern no single card can.",
-    readout: "LOG · 1 LINE",
+    copy: "Log one line. Thirty lines make a pattern no single card can.",
   },
+];
+
+const STEP_DIRT: CSSProperties[] = [
+  { transform: "rotate(-.8deg)" },
+  { transform: "rotate(.6deg) translateY(18px)" },
+  { transform: "rotate(-.5deg) translateY(-6px)" },
+  { transform: "rotate(.9deg) translateY(12px)" },
 ];
 
 const FAQ: { id: string; q: string; a: string }[] = [
   {
     id: "NOTE 01",
     q: "Is the daily card a prediction?",
-    a: "No. Treat it as a lens, not a verdict. The card fixes a theme; you run the experiment. A day examined through one deliberate idea teaches more than a day passively forecast.",
+    a: "No — treat it as a lens, not a verdict. The card fixes a theme; you run the experiment. A day examined through one deliberate idea teaches more than a day passively forecast.",
   },
   {
     id: "NOTE 02",
     q: "Can I draw more than once?",
-    a: "One draw per day holds the signal — a second pull usually just shops for a better answer. Re-draws in this chamber are unlogged, so practice freely here and keep the discipline in your own log.",
+    a: "One draw per day holds the signal; a second pull usually just shops for a better answer. Re-draws in this chamber are unlogged, so practice freely here and keep the discipline in your own log.",
   },
   {
     id: "NOTE 03",
     q: "Why only eight cards in this chamber?",
     a: "This bay holds a calibrated octant of the major arcana — eight archetypes tuned for daily work. The full seventy-eight-card deck lives in the larger spreads, where more apparatus is warranted.",
   },
-];
-
-/* ------------------------------------------------------------------ */
-/* Layout dirt — deterministic offsets, tilts, overlaps                */
-/* ------------------------------------------------------------------ */
-
-const STEP_DIRT: CSSProperties[] = [
-  { transform: "rotate(-.8deg)", marginTop: 0 },
-  { transform: "rotate(.6deg) translateY(26px)" },
-  { transform: "rotate(-.5deg) translateY(-10px)" },
-  { transform: "rotate(.9deg) translateY(18px)" },
 ];
 
 const FAQ_DIRT: CSSProperties[] = [
@@ -158,169 +208,101 @@ const FAQ_DIRT: CSSProperties[] = [
 ];
 
 /* ------------------------------------------------------------------ */
-/* Background layers — embers, numerals, faint zodiac ring             */
+/* Backdrop data — star field, generated once at module scope          */
 /* ------------------------------------------------------------------ */
 
-const ZODIAC_RING = ["♈︎", "♉︎", "♊︎", "♋︎", "♌︎", "♍︎", "♎︎", "♏︎", "♐︎", "♑︎", "♒︎", "♓︎"];
-
-const BG_NUMERALS: { ch: string; top: string; left?: string; right?: string; size: number; rot: number; c: string }[] = [
-  { ch: "XVII", top: "6%", right: "3%", size: 230, rot: 7, c: "rgba(255,92,140,.05)" },
-  { ch: "0", top: "26%", left: "1%", size: 300, rot: -9, c: "rgba(255,177,92,.045)" },
-  { ch: "XIV", top: "46%", right: "8%", size: 240, rot: -5, c: "rgba(196,125,255,.05)" },
-  { ch: "VII", top: "64%", left: "38%", size: 210, rot: 10, c: "rgba(255,92,140,.04)" },
-  { ch: "XXI", top: "82%", right: "16%", size: 250, rot: -7, c: "rgba(255,177,92,.045)" },
-];
-
-const EMBERS: { l: number; s: number; c: string; dur: string; del: string }[] = [
-  { l: 5, s: 3, c: "#ffb15c", dur: "36s", del: "-9s" },
-  { l: 14, s: 2, c: "#ff5c85", dur: "48s", del: "-31s" },
-  { l: 23, s: 4, c: "#ff8a3c", dur: "29s", del: "-18s" },
-  { l: 37, s: 2, c: "#c47dff", dur: "53s", del: "-44s" },
-  { l: 46, s: 3, c: "#ffb15c", dur: "39s", del: "-6s" },
-  { l: 58, s: 2, c: "#ff5c85", dur: "56s", del: "-47s" },
-  { l: 67, s: 3, c: "#ff8a3c", dur: "32s", del: "-21s" },
-  { l: 76, s: 2, c: "#ffb15c", dur: "44s", del: "-13s" },
-  { l: 84, s: 4, c: "#c47dff", dur: "27s", del: "-4s" },
-  { l: 92, s: 2, c: "#ff5c85", dur: "50s", del: "-35s" },
-];
-
-/* ------------------------------------------------------------------ */
-/* Grime presets — deterministic stains, drips, specks                 */
-/* ------------------------------------------------------------------ */
-
-type GrimePreset = {
-  stains: { cx: number; cy: number; rx: number; ry: number; c: string }[];
-  drips: { x: number; y: number; len: number; c: string }[];
-  specks: { x: number; y: number; r: number; c: string }[];
-};
-
-const GRIME: GrimePreset[] = [
-  {
-    stains: [
-      { cx: 5, cy: 90, rx: 14, ry: 9, c: "rgba(6,2,3,.42)" },
-      { cx: 94, cy: 10, rx: 11, ry: 7, c: "rgba(70,16,40,.36)" },
-      { cx: 92, cy: 88, rx: 9, ry: 6, c: "rgba(140,70,20,.13)" },
-    ],
-    drips: [
-      { x: 90, y: 2, len: 15, c: "rgba(140,70,20,.25)" },
-      { x: 7, y: 64, len: 11, c: "rgba(96,40,60,.28)" },
-    ],
-    specks: [
-      { x: 16, y: 24, r: 0.5, c: "rgba(0,0,0,.5)" },
-      { x: 28, y: 68, r: 0.35, c: "rgba(255,150,90,.2)" },
-      { x: 44, y: 14, r: 0.45, c: "rgba(0,0,0,.42)" },
-      { x: 61, y: 82, r: 0.4, c: "rgba(0,0,0,.45)" },
-      { x: 74, y: 36, r: 0.3, c: "rgba(255,150,90,.16)" },
-      { x: 86, y: 58, r: 0.5, c: "rgba(0,0,0,.48)" },
-      { x: 35, y: 48, r: 0.35, c: "rgba(0,0,0,.38)" },
-      { x: 9, y: 44, r: 0.3, c: "rgba(0,0,0,.4)" },
-    ],
-  },
-  {
-    stains: [
-      { cx: 90, cy: 84, rx: 13, ry: 9, c: "rgba(6,2,3,.4)" },
-      { cx: 8, cy: 12, rx: 9, ry: 6, c: "rgba(70,16,40,.36)" },
-      { cx: 52, cy: 96, rx: 15, ry: 5, c: "rgba(6,2,3,.3)" },
-    ],
-    drips: [
-      { x: 9, y: 3, len: 13, c: "rgba(96,40,60,.27)" },
-      { x: 86, y: 66, len: 14, c: "rgba(140,70,20,.24)" },
-    ],
-    specks: [
-      { x: 12, y: 56, r: 0.45, c: "rgba(0,0,0,.46)" },
-      { x: 27, y: 24, r: 0.3, c: "rgba(255,150,90,.18)" },
-      { x: 39, y: 72, r: 0.5, c: "rgba(0,0,0,.42)" },
-      { x: 55, y: 18, r: 0.35, c: "rgba(0,0,0,.44)" },
-      { x: 68, y: 50, r: 0.4, c: "rgba(255,150,90,.16)" },
-      { x: 81, y: 80, r: 0.3, c: "rgba(0,0,0,.4)" },
-      { x: 93, y: 38, r: 0.45, c: "rgba(0,0,0,.45)" },
-      { x: 47, y: 90, r: 0.35, c: "rgba(0,0,0,.38)" },
-    ],
-  },
-];
+const STARS = (() => {
+  const rnd = mulberry32(20260204);
+  return Array.from({ length: 110 }, (_, i) => ({
+    x: +(rnd() * 1600).toFixed(0),
+    y: +(rnd() * 1000).toFixed(0),
+    r: +(0.5 + rnd() * 1.1).toFixed(2),
+    o: +(0.14 + rnd() * 0.4).toFixed(2),
+    tw: i % 5 === 0,
+    d: +(rnd() * 8).toFixed(1),
+    key: i,
+  }));
+})();
 
 /* ------------------------------------------------------------------ */
 /* Scoped styles                                                       */
 /* ------------------------------------------------------------------ */
 
 const CSS = `
-.ldc-root { background:#160509; color:#e0aebe; font-family:Georgia,'Times New Roman',serif; position:relative; overflow-x:clip; }
+.ldc-root { background:rgb(10,9,18); color:${TEXT_LO}; font-family:Georgia,'Times New Roman',serif; position:relative; overflow-x:clip; }
 .ldc-mono { font-family:ui-monospace,'SF Mono',Menlo,Consolas,monospace; }
+.ldc-serif { font-family:'Playfair Display','Cormorant Garamond',Georgia,'Times New Roman',serif; }
+.ldc-glyph { font-family:'Noto Sans Symbols','Noto Sans Symbols 2',Symbola,'Segoe UI Symbol',serif; font-style:normal; }
 .ldc-caps { text-transform:uppercase; letter-spacing:.24em; }
 .ldc-caps-sm { text-transform:uppercase; letter-spacing:.2em; font-size:9px; }
-.ldc-bg { position:fixed; inset:0; z-index:0; pointer-events:none; overflow:hidden; }
-.ldc-bg-page { position:absolute; inset:0; z-index:0; pointer-events:none; overflow:hidden; }
+/* panels stay translucent so the sky machinery passes visibly BEHIND them */
 .ldc-panel {
-  background:linear-gradient(160deg, rgba(52,12,26,.85), rgba(26,6,16,.94));
-  border:1px solid rgba(226,92,128,.22);
-  box-shadow:inset 0 0 0 1px rgba(0,0,0,.55), inset 0 0 36px rgba(96,10,42,.28), 0 0 26px rgba(0,0,0,.5);
+  background:linear-gradient(160deg, rgba(23,19,40,.62), rgba(12,10,22,.72));
+  border:1px solid rgba(233,230,242,.10);
+  backdrop-filter:blur(3px);
   position:relative;
 }
-.ldc-panel::before {
-  content:""; position:absolute; inset:4px; pointer-events:none;
-  border:1px solid rgba(226,92,128,.1);
-}
-.ldc-header {
-  display:flex; align-items:center; gap:8px;
-  border-bottom:1px solid rgba(226,92,128,.18);
-  padding:7px 12px;
-}
-.ldc-hdot { width:5px; height:5px; transform:rotate(45deg); background:#ff3d6e; box-shadow:0 0 6px #ff3d6e; flex:none; }
-.ldc-htext { font-size:10px; letter-spacing:.28em; color:#eebcc9; text-transform:uppercase; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
-.ldc-rule { height:1px; background:linear-gradient(90deg, rgba(226,92,128,.42), rgba(226,92,128,.05)); }
-.ldc-rule-r { height:1px; background:linear-gradient(270deg, rgba(226,92,128,.42), rgba(226,92,128,.05)); }
-.ldc-ticks { background-image:repeating-linear-gradient(90deg, rgba(226,92,128,.38) 0 1px, transparent 1px 8px); height:5px; }
-.ldc-ticks-v { background-image:repeating-linear-gradient(0deg, rgba(226,92,128,.42) 0 1px, transparent 1px 7px); width:5px; }
+.ldc-header { display:flex; align-items:center; gap:8px; border-bottom:1px solid rgba(243,199,122,.16); padding:7px 12px; }
+.ldc-hdot { width:5px; height:5px; transform:rotate(45deg); background:${GOLD}; box-shadow:0 0 6px ${GOLD}; flex:none; }
+.ldc-htext { font-size:10px; letter-spacing:.28em; color:${TEXT_HI}; text-transform:uppercase; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.ldc-rule { height:1px; background:linear-gradient(90deg, rgba(243,199,122,.4), rgba(243,199,122,.04)); }
+.ldc-ticks { background-image:repeating-linear-gradient(90deg, rgba(243,199,122,.32) 0 1px, transparent 1px 8px); height:5px; }
+.ldc-ticks-v { background-image:repeating-linear-gradient(0deg, rgba(243,199,122,.36) 0 1px, transparent 1px 7px); width:5px; }
 .ldc-engrave {
-  text-transform:uppercase; letter-spacing:.4em; font-size:10px; color:#8f4559;
-  text-shadow:0 1px 0 rgba(0,0,0,.8), 0 -1px 0 rgba(255,150,180,.08);
+  text-transform:uppercase; letter-spacing:.4em; font-size:10px; color:rgba(243,199,122,.48);
+  text-shadow:0 1px 0 rgba(0,0,0,.8), 0 -1px 0 rgba(255,221,156,.08);
 }
 .ldc-btn {
   display:inline-flex; align-items:center; gap:10px; cursor:pointer;
-  background:linear-gradient(180deg, rgba(255,61,110,.3), rgba(122,14,52,.5));
-  border:1px solid rgba(255,92,140,.62); color:#ffd9e2;
+  background:linear-gradient(180deg, rgba(243,199,122,.24), rgba(201,162,39,.3));
+  border:1px solid rgba(243,199,122,.62); color:${CREAM};
   text-transform:uppercase; letter-spacing:.26em; font-size:10px;
-  padding:11px 22px; box-shadow:0 0 20px rgba(255,61,110,.38), inset 0 0 14px rgba(255,61,110,.26);
+  padding:11px 22px; box-shadow:0 0 20px rgba(243,199,122,.28), inset 0 0 14px rgba(243,199,122,.2);
   transition:box-shadow .3s;
 }
-.ldc-btn:hover { box-shadow:0 0 32px rgba(255,61,110,.65), inset 0 0 18px rgba(255,61,110,.42); }
+.ldc-btn:hover { box-shadow:0 0 32px rgba(243,199,122,.5), inset 0 0 18px rgba(243,199,122,.34); }
 .ldc-btn[disabled] { opacity:.55; cursor:wait; }
 .ldc-btn-ghost {
   display:inline-flex; align-items:center; gap:8px;
-  border:1px solid rgba(255,177,92,.4); color:#ffcf9a;
+  border:1px solid rgba(183,148,246,.4); color:#d3c3f7;
   text-transform:uppercase; letter-spacing:.24em; font-size:10px;
-  padding:11px 18px; background:rgba(255,138,60,.06);
-  box-shadow:inset 0 0 12px rgba(255,138,60,.1);
+  padding:11px 18px; background:rgba(162,90,223,.07);
+  box-shadow:inset 0 0 12px rgba(162,90,223,.12);
   transition:box-shadow .3s, border-color .3s;
 }
-.ldc-btn-ghost:hover { border-color:rgba(255,177,92,.75); box-shadow:0 0 18px rgba(255,138,60,.3), inset 0 0 14px rgba(255,138,60,.2); }
-details.ldc-faq { border:1px solid rgba(226,92,128,.2); background:rgba(26,6,16,.82); position:relative; }
+.ldc-btn-ghost:hover { border-color:rgba(183,148,246,.75); box-shadow:0 0 18px rgba(162,90,223,.3), inset 0 0 14px rgba(162,90,223,.2); }
+.ldc-tab {
+  display:inline-block; text-decoration:none;
+  border:1px solid transparent; color:${TEXT_LO};
+  text-transform:uppercase; letter-spacing:.18em; font-size:9px;
+  padding:7px 11px; transition:color .25s, border-color .25s, background .25s, box-shadow .25s;
+  white-space:nowrap;
+}
+.ldc-tab:hover { color:${CREAM}; border-color:rgba(243,199,122,.35); }
+.ldc-tab-active {
+  color:${CREAM}; border-color:rgba(243,199,122,.55);
+  background:rgba(243,199,122,.09);
+  box-shadow:0 0 14px rgba(243,199,122,.22), inset 0 0 10px rgba(243,199,122,.12);
+  text-shadow:0 0 8px rgba(243,199,122,.6);
+}
+details.ldc-faq { border:1px solid rgba(233,230,242,.12); background:rgba(18,15,32,.6); backdrop-filter:blur(3px); position:relative; }
 details.ldc-faq summary { cursor:pointer; list-style:none; display:flex; align-items:center; gap:12px; padding:13px 16px; }
 details.ldc-faq summary::-webkit-details-marker { display:none; }
 details.ldc-faq summary .ldc-faq-x { transition:transform .3s; }
 details.ldc-faq[open] summary .ldc-faq-x { transform:rotate(45deg); }
-details.ldc-faq[open] { border-color:rgba(255,92,140,.45); box-shadow:0 0 18px rgba(255,61,110,.18); }
-.ldc-grime-noise {
-  position:fixed; inset:0; z-index:40; pointer-events:none; opacity:.06;
-  background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='220' height='220'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2' stitchTiles='stitch'/><feColorMatrix type='saturate' values='0'/></filter><rect width='100%25' height='100%25' filter='url(%23n)'/></svg>");
+details.ldc-faq[open] { border-color:rgba(243,199,122,.45); box-shadow:0 0 18px rgba(243,199,122,.14); }
+.ldc-wheel-spin { animation:ldc-spin 260s linear infinite; }
+.ldc-wheel-spin-rev { animation:ldc-spin 320s linear infinite reverse; }
+.ldc-twinkle { animation:ldc-twinkle 7s ease-in-out infinite; }
+.ldc-float-a { animation:ldc-floatA 34s ease-in-out infinite; }
+.ldc-float-b { animation:ldc-floatB 42s ease-in-out infinite; }
+.ldc-nebula { animation:ldc-floatA 60s ease-in-out infinite; }
+.ldc-shoot {
+  position:absolute; width:190px; height:1px;
+  background:linear-gradient(90deg, rgba(255,221,156,.9), rgba(255,221,156,0));
+  opacity:0; animation:ldc-shoot 17s linear infinite; animation-delay:4s;
 }
-.ldc-scratches {
-  position:fixed; inset:0; z-index:41; pointer-events:none; opacity:.55;
-  background-image:
-    repeating-linear-gradient(101deg, rgba(255,214,224,.028) 0 1px, transparent 1px 340px),
-    repeating-linear-gradient(77deg, rgba(0,0,0,.16) 0 1px, transparent 1px 250px),
-    repeating-linear-gradient(14deg, rgba(255,190,200,.02) 0 1px, transparent 1px 540px);
-}
-.ldc-ember {
-  position:absolute; bottom:-12px; border-radius:50%; opacity:0;
-  animation:ldc-ember linear infinite;
-}
-.ldc-hero-bleed { position:relative; }
-@media (min-width:1024px) {
-  .ldc-hero-bleed { transform:translateX(15%) scale(1.14); }
-  .ldc-readout { transform:translateX(11%) rotate(.5deg); }
-  .ldc-stage-shift { transform:translateX(-4%) rotate(-.6deg); }
-}
+.ldc-shoot-b { animation-duration:23s; animation-delay:12s; width:140px; }
 .ldc-stage { perspective:1500px; }
 .ldc-flip {
   position:relative; width:100%; height:100%;
@@ -333,6 +315,10 @@ details.ldc-faq[open] { border-color:rgba(255,92,140,.45); box-shadow:0 0 18px r
 .ldc-flip.ldc-on .ldc-face-front > div { animation:ldc-reveal .9s cubic-bezier(.2,.7,.3,1) both; }
 .ldc-charging .ldc-face-back > div { animation:ldc-shiver .34s linear infinite; }
 .ldc-readout-swap { animation:ldc-reveal .7s ease-out both; }
+@media (min-width:1024px) {
+  .ldc-readout { transform:translateX(10%) rotate(.5deg); }
+  .ldc-stage-shift { transform:translateX(-4%) rotate(-.6deg); }
+}
 .ldc-anim-spin { animation:ldc-spin linear infinite; }
 .ldc-anim-spinr { animation:ldc-spinr linear infinite; }
 .ldc-anim-bob { animation:ldc-bob ease-in-out infinite; }
@@ -345,11 +331,20 @@ details.ldc-faq[open] { border-color:rgba(255,92,140,.45); box-shadow:0 0 18px r
 @keyframes ldc-pulse { 0%,100% { opacity:.5; } 50% { opacity:1; } }
 @keyframes ldc-flicker { 0%,100% { opacity:.85; } 8% { opacity:.58; } 12% { opacity:.95; } 46% { opacity:.7; } 52% { opacity:1; } 78% { opacity:.74; } }
 @keyframes ldc-flow { to { stroke-dashoffset:-240; } }
-@keyframes ldc-ember { 0% { transform:translate(0,0); opacity:0; } 10% { opacity:.75; } 80% { opacity:.4; } 100% { transform:translate(34px,-108vh); opacity:0; } }
+@keyframes ldc-twinkle { 0%,100% { opacity:.12; } 50% { opacity:.75; } }
+@keyframes ldc-floatA { 0%,100% { transform:translate(0,0) rotate(-2deg); } 50% { transform:translate(1.5vw,-2vh) rotate(1deg); } }
+@keyframes ldc-floatB { 0%,100% { transform:translate(0,0) rotate(3deg); } 50% { transform:translate(-1.5vw,2vh) rotate(-1deg); } }
+@keyframes ldc-shoot {
+  0% { opacity:0; transform:translate3d(0,0,0) rotate(-26deg); }
+  3% { opacity:.9; }
+  11% { opacity:0; transform:translate3d(-58vw,30vh,0) rotate(-26deg); }
+  100% { opacity:0; transform:translate3d(-58vw,30vh,0) rotate(-26deg); }
+}
 @keyframes ldc-reveal { 0% { transform:scale(.93); opacity:.35; } 100% { transform:scale(1); opacity:1; } }
 @keyframes ldc-shiver { 0%,100% { transform:translate(0,0) rotate(0); } 25% { transform:translate(-1.5px,.5px) rotate(-.5deg); } 50% { transform:translate(1px,-1px) rotate(.4deg); } 75% { transform:translate(-.5px,1px) rotate(-.3deg); } }
 @media (prefers-reduced-motion: reduce) {
   .ldc-root *, .ldc-root *::before, .ldc-root *::after { animation:none !important; transition:none !important; }
+  .ldc-shoot, .ldc-shoot-b { display:none; }
 }
 `;
 
@@ -363,12 +358,12 @@ function PanelHead({ title, right }: { title: string; right?: string }) {
       <span className="ldc-hdot" />
       <span className="ldc-htext">{title}</span>
       <span className="ldc-rule" style={{ flex: 1 }} />
-      {right ? <span className="ldc-caps-sm ldc-mono" style={{ color: "#a0586e", whiteSpace: "nowrap" }}>{right}</span> : null}
+      {right ? <span className="ldc-caps-sm ldc-mono" style={{ color: "rgba(243,199,122,.55)", whiteSpace: "nowrap" }}>{right}</span> : null}
     </div>
   );
 }
 
-function CornerTicks({ c = "rgba(255,92,140,.55)" }: { c?: string }) {
+function CornerTicks({ c = "rgba(243,199,122,.5)" }: { c?: string }) {
   const s: CSSProperties = { position: "absolute", width: 9, height: 9, borderColor: c, borderStyle: "solid", borderWidth: 0, pointerEvents: "none" };
   return (
     <>
@@ -380,39 +375,13 @@ function CornerTicks({ c = "rgba(255,92,140,.55)" }: { c?: string }) {
   );
 }
 
-function PanelGrime({ v }: { v: number }) {
-  const p = GRIME[((v % GRIME.length) + GRIME.length) % GRIME.length];
-  return (
-    <svg className="pointer-events-none absolute inset-0 h-full w-full" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden>
-      {p.stains.map((s, i) => (
-        <ellipse key={`s${i}`} cx={s.cx} cy={s.cy} rx={s.rx} ry={s.ry} fill={s.c} />
-      ))}
-      {p.drips.map((d, i) => (
-        <g key={`d${i}`}>
-          <path
-            d={`M${d.x} ${d.y} C${d.x + 0.8} ${d.y + d.len * 0.4} ${d.x - 0.8} ${d.y + d.len * 0.7} ${d.x} ${d.y + d.len}`}
-            stroke={d.c}
-            strokeWidth=".5"
-            fill="none"
-            strokeLinecap="round"
-          />
-          <circle cx={d.x} cy={d.y + d.len} r=".9" fill={d.c} />
-        </g>
-      ))}
-      {p.specks.map((s, i) => (
-        <circle key={`p${i}`} cx={s.x} cy={s.y} r={s.r} fill={s.c} />
-      ))}
-    </svg>
-  );
-}
-
 /* ------------------------------------------------------------------ */
 /* Card emblems — hand-drawn apparatus glyphs, one per arcana          */
 /* ------------------------------------------------------------------ */
 
 function CardEmblem({ kind, hue }: { kind: Emblem; hue: string }) {
   const st = { stroke: hue, strokeWidth: 1.3, fill: "none", strokeLinecap: "round" as const };
-  const dim = { stroke: "rgba(226,92,128,.4)", strokeWidth: .7, fill: "none" };
+  const dim = { stroke: "rgba(183,148,246,.4)", strokeWidth: .7, fill: "none" };
   let body: React.ReactNode = null;
   if (kind === "fool") {
     body = (
@@ -519,33 +488,33 @@ function CardBack() {
       <svg viewBox="0 0 200 300" style={{ width: "100%", height: "100%", display: "block" }} role="img" aria-label="Face-down tarot card">
         <defs>
           <pattern id="ldc-hatch" width="9" height="9" patternTransform="rotate(45)" patternUnits="userSpaceOnUse">
-            <rect width="9" height="9" fill="rgba(30,8,18,.9)" />
-            <line x1="0" y1="0" x2="0" y2="9" stroke="rgba(226,92,128,.22)" strokeWidth="1" />
+            <rect width="9" height="9" fill="rgba(20,17,38,.94)" />
+            <line x1="0" y1="0" x2="0" y2="9" stroke="rgba(243,199,122,.2)" strokeWidth="1" />
           </pattern>
           <radialGradient id="ldc-backglow" cx="50%" cy="46%" r="55%">
-            <stop offset="0%" stopColor="rgba(130,20,64,.5)" />
-            <stop offset="100%" stopColor="rgba(22,5,13,0)" />
+            <stop offset="0%" stopColor="rgba(162,90,223,.28)" />
+            <stop offset="100%" stopColor="rgba(10,9,18,0)" />
           </radialGradient>
         </defs>
-        <rect x="1" y="1" width="198" height="298" rx="7" fill="url(#ldc-hatch)" stroke="rgba(255,92,140,.55)" strokeWidth="1.4" />
-        <rect x="8" y="8" width="184" height="284" rx="4" fill="none" stroke="rgba(226,92,128,.35)" strokeWidth=".8" />
+        <rect x="1" y="1" width="198" height="298" rx="7" fill="url(#ldc-hatch)" stroke="rgba(243,199,122,.6)" strokeWidth="1.4" />
+        <rect x="8" y="8" width="184" height="284" rx="4" fill="none" stroke="rgba(243,199,122,.3)" strokeWidth=".8" />
         <rect x="1" y="1" width="198" height="298" rx="7" fill="url(#ldc-backglow)" />
         {/* central seal */}
         <g className="ldc-anim-spin" style={{ animationDuration: "90s", transformOrigin: "100px 150px" }}>
-          <circle cx="100" cy="150" r="52" fill="none" stroke="rgba(255,177,92,.5)" strokeWidth=".8" strokeDasharray="3 6" />
+          <circle cx="100" cy="150" r="52" fill="none" stroke="rgba(183,148,246,.5)" strokeWidth=".8" strokeDasharray="3 6" />
         </g>
-        <circle cx="100" cy="150" r="42" fill="rgba(22,5,13,.7)" stroke="rgba(226,92,128,.5)" strokeWidth="1" />
-        <path d="M100 116 L106 138 L128 132 L112 148 L128 162 L106 158 L100 184 L94 158 L72 162 L88 148 L72 132 L94 138 Z" fill="none" stroke="#ff5c85" strokeWidth="1.2" className="ldc-anim-pulse" style={{ animationDuration: "7s" }} />
-        <circle cx="100" cy="150" r="5" fill="#ff3d6e" opacity=".85" className="ldc-anim-flicker" style={{ animationDuration: "6s" }} />
+        <circle cx="100" cy="150" r="42" fill="rgba(12,10,22,.72)" stroke="rgba(243,199,122,.5)" strokeWidth="1" />
+        <path d="M100 116 L106 138 L128 132 L112 148 L128 162 L106 158 L100 184 L94 158 L72 162 L88 148 L72 132 L94 138 Z" fill="none" stroke={GOLD} strokeWidth="1.2" className="ldc-anim-pulse" style={{ animationDuration: "7s" }} />
+        <circle cx="100" cy="150" r="5" fill={CREAM} opacity=".85" className="ldc-anim-flicker" style={{ animationDuration: "6s" }} />
         {/* side tick scales */}
         {Array.from({ length: 18 }, (_, i) => (
-          <line key={`tl${i}`} x1="14" y1={24 + i * 14} x2={i % 3 === 0 ? 22 : 19} y2={24 + i * 14} stroke="rgba(226,92,128,.4)" strokeWidth=".7" />
+          <line key={`tl${i}`} x1="14" y1={24 + i * 14} x2={i % 3 === 0 ? 22 : 19} y2={24 + i * 14} stroke="rgba(243,199,122,.35)" strokeWidth=".7" />
         ))}
         {Array.from({ length: 18 }, (_, i) => (
-          <line key={`tr${i}`} x1="186" y1={24 + i * 14} x2={i % 3 === 0 ? 178 : 181} y2={24 + i * 14} stroke="rgba(226,92,128,.4)" strokeWidth=".7" />
+          <line key={`tr${i}`} x1="186" y1={24 + i * 14} x2={i % 3 === 0 ? 178 : 181} y2={24 + i * 14} stroke="rgba(243,199,122,.35)" strokeWidth=".7" />
         ))}
-        <text x="100" y="34" textAnchor="middle" fontSize="8" letterSpacing="4" fill="#a0586e">ARCANA LABORATORIUM</text>
-        <text x="100" y="272" textAnchor="middle" fontSize="7" letterSpacing="3" fill="#8f4559">SPECIMEN · FACE DOWN</text>
+        <text x="100" y="34" textAnchor="middle" fontSize="8" letterSpacing="4" fill="rgba(233,230,242,.5)">ARCANA LABORATORIUM</text>
+        <text x="100" y="272" textAnchor="middle" fontSize="7" letterSpacing="3" fill="rgba(243,199,122,.45)">SPECIMEN · FACE DOWN</text>
       </svg>
     </div>
   );
@@ -558,12 +527,12 @@ function CardFront({ card }: { card: Arcana }) {
       <svg viewBox="0 0 200 300" style={{ width: "100%", height: "100%", display: "block" }} role="img" aria-label={`${card.name} tarot card`}>
         <defs>
           <linearGradient id={gid} x1="0" y1="0" x2="0" y2="1">
-            <stop offset="0%" stopColor="rgba(64,12,34,.96)" />
-            <stop offset="55%" stopColor="rgba(30,7,18,.98)" />
-            <stop offset="100%" stopColor="rgba(20,4,12,1)" />
+            <stop offset="0%" stopColor="rgba(35,28,60,.97)" />
+            <stop offset="55%" stopColor="rgba(18,15,34,.98)" />
+            <stop offset="100%" stopColor="rgba(12,10,22,1)" />
           </linearGradient>
           <radialGradient id={`${gid}-halo`} cx="50%" cy="46%" r="50%">
-            <stop offset="0%" stopColor={card.hue} stopOpacity=".3" />
+            <stop offset="0%" stopColor={card.hue} stopOpacity=".28" />
             <stop offset="100%" stopColor={card.hue} stopOpacity="0" />
           </radialGradient>
         </defs>
@@ -584,13 +553,13 @@ function CardFront({ card }: { card: Arcana }) {
         <g className="ldc-anim-spinr" style={{ animationDuration: "70s", transformOrigin: "100px 146px" }}>
           <circle cx="100" cy="146" r="52" fill="none" stroke={card.hue} strokeOpacity=".35" strokeWidth=".7" strokeDasharray="2 7" />
         </g>
-        <circle cx="100" cy="146" r="58" fill="none" stroke="rgba(226,92,128,.2)" strokeWidth=".6" />
+        <circle cx="100" cy="146" r="58" fill="none" stroke="rgba(183,148,246,.2)" strokeWidth=".6" />
         {/* name plate */}
         <line x1="52" y1="228" x2="148" y2="228" stroke={card.hue} strokeOpacity=".4" strokeWidth=".7" />
-        <text x="100" y="252" textAnchor="middle" fontSize="12" letterSpacing="2.5" fill="#ffeef2" style={{ fontFamily: "Georgia, serif" }}>
+        <text x="100" y="252" textAnchor="middle" fontSize="12" letterSpacing="2.5" fill={TEXT_HI} style={{ fontFamily: "Georgia, serif" }}>
           {card.name}
         </text>
-        <text x="100" y="274" textAnchor="middle" fontSize="6.5" letterSpacing="3" fill="#8f4559">
+        <text x="100" y="274" textAnchor="middle" fontSize="6.5" letterSpacing="3" fill="rgba(243,199,122,.45)">
           MAJOR ARCANA · LAB SEAL {card.numeral}
         </text>
         {/* corner ornaments */}
@@ -608,259 +577,171 @@ function CardFront({ card }: { card: Arcana }) {
 }
 
 /* ------------------------------------------------------------------ */
-/* Background layers                                                   */
+/* Backdrop — production magic sky                                     */
 /* ------------------------------------------------------------------ */
 
-function BgRing() {
-  const C = 400;
+function WheelSvg() {
+  const C = 500;
   const ROMAN = ["I", "II", "III", "IV", "V", "VI", "VII", "VIII", "IX", "X", "XI", "XII"];
-  const ticks = Array.from({ length: 96 }, (_, i) => {
-    const long = i % 8 === 0;
-    const p1 = polar(C, C, 384, i * 3.75);
-    const p2 = polar(C, C, long ? 366 : 374, i * 3.75);
-    return <line key={i} x1={p1.x} y1={p1.y} x2={p2.x} y2={p2.y} stroke={long ? "rgba(255,177,92,.7)" : "rgba(226,92,128,.5)"} strokeWidth={long ? 1.4 : .8} />;
-  });
   return (
-    <svg viewBox="0 0 800 800" style={{ position: "absolute", left: -340, top: "6%", width: 790, height: 790, opacity: .13 }} aria-hidden>
-      <g className="ldc-anim-spin" style={{ animationDuration: "180s", transformOrigin: "400px 400px" }}>
-        <circle cx={C} cy={C} r="384" fill="none" stroke="rgba(226,92,128,.6)" strokeWidth="1" />
-        {ticks}
-        <circle cx={C} cy={C} r="330" fill="none" stroke="rgba(255,177,92,.5)" strokeWidth=".8" strokeDasharray="3 7" />
-        {ROMAN.map((n, i) => {
-          const p = polar(C, C, 302, i * 30 - 90);
-          return (
-            <text key={n} x={p.x} y={p.y} textAnchor="middle" dominantBaseline="central" fontSize="20" letterSpacing="2" fill="rgba(255,138,60,.8)" style={{ fontFamily: "Georgia, serif" }}>
+    <svg viewBox="0 0 1000 1000" className="h-full w-full">
+      <circle cx={C} cy={C} r={486} fill="none" stroke={GOLD} strokeWidth={1} />
+      <circle cx={C} cy={C} r={430} fill="none" stroke={GOLD} strokeWidth={0.6} />
+      <circle cx={C} cy={C} r={330} fill="none" stroke={VIOLET_SOFT} strokeWidth={0.6} />
+      <circle cx={C} cy={C} r={150} fill="none" stroke={GOLD} strokeWidth={0.5} />
+      {Array.from({ length: 120 }, (_, k) => {
+        const a = k * 3;
+        const p1 = polar(C, C, 430, a);
+        const p2 = polar(C, C, 486, a);
+        return <line key={k} x1={p1.x} y1={p1.y} x2={p2.x} y2={p2.y} stroke={GOLD} strokeWidth={k % 10 === 0 ? 1.4 : 0.5} />;
+      })}
+      {ROMAN.map((n, i) => {
+        const p = polar(C, C, 458, i * 30 + 15);
+        const a = polar(C, C, 330, i * 30);
+        const b = polar(C, C, 486, i * 30);
+        return (
+          <g key={n}>
+            <line x1={a.x} y1={a.y} x2={b.x} y2={b.y} stroke={GOLD} strokeWidth={0.5} />
+            <text x={p.x} y={p.y} textAnchor="middle" dominantBaseline="central" fontSize={22} letterSpacing={2} fill={CREAM} style={{ fontFamily: "Georgia, serif" }}>
               {n}
             </text>
-          );
-        })}
-        <circle cx={C} cy={C} r="240" fill="none" stroke="rgba(226,92,128,.45)" strokeWidth=".7" />
-      </g>
-    </svg>
-  );
-}
-
-function BgDiagram() {
-  const C = 320;
-  const pts8 = Array.from({ length: 8 }, (_, i) => polar(C, C, 270, i * 45 - 90));
-  const sq1 = [0, 2, 4, 6].map((i) => pts8[i]);
-  const sq2 = [1, 3, 5, 7].map((i) => pts8[i]);
-  const poly = (pp: { x: number; y: number }[]) => pp.map((p) => `${p.x},${p.y}`).join(" ");
-  return (
-    <svg viewBox="0 0 640 640" style={{ position: "absolute", right: -280, top: "38%", width: 680, height: 680, opacity: .15 }} aria-hidden>
-      <g className="ldc-anim-spinr" style={{ animationDuration: "150s", transformOrigin: "320px 320px" }}>
-        <circle cx={C} cy={C} r="308" fill="none" stroke="rgba(226,92,128,.55)" strokeWidth="1" />
-        <circle cx={C} cy={C} r="270" fill="none" stroke="rgba(255,177,92,.5)" strokeWidth=".8" strokeDasharray="2 6" />
-        <polygon points={poly(sq1)} fill="none" stroke="rgba(255,92,140,.7)" strokeWidth="1.2" />
-        <polygon points={poly(sq2)} fill="none" stroke="rgba(196,125,255,.65)" strokeWidth="1.2" />
-        {pts8.map((p, i) => (
-          <g key={i}>
-            <line x1={p.x} y1={p.y} x2={C} y2={C} stroke="rgba(226,92,128,.3)" strokeWidth=".6" />
-            <circle cx={p.x} cy={p.y} r="5" fill="none" stroke="rgba(255,138,60,.7)" strokeWidth="1" />
           </g>
-        ))}
-        {ZODIAC_RING.map((g, i) => {
-          const p = polar(C, C, 292, i * 30 - 90);
-          return (
-            <text key={i} x={p.x} y={p.y} textAnchor="middle" dominantBaseline="central" fontSize="18" fill="rgba(255,177,92,.65)">
-              {g}
-            </text>
-          );
-        })}
-      </g>
+        );
+      })}
+      {Array.from({ length: 12 }, (_, i) => {
+        const p = polar(C, C, 330, i * 30 + 15);
+        return <line key={i} x1={C} y1={C} x2={p.x} y2={p.y} stroke={VIOLET_SOFT} strokeWidth={0.35} />;
+      })}
+      {[0, 90, 45, 135, 60, 150].map((a, i) => {
+        const p1 = polar(C, C, 150, a);
+        const p2 = polar(C, C, 150, a + 120);
+        return <line key={i} x1={p1.x} y1={p1.y} x2={p2.x} y2={p2.y} stroke={GOLD} strokeWidth={0.45} />;
+      })}
     </svg>
   );
 }
 
-function BgConstruction() {
-  const crosses: React.ReactNode[] = [];
-  for (let y = 200; y < 3600; y += 280) {
-    crosses.push(
-      <g key={`c${y}`} stroke="rgba(255,177,92,.35)" strokeWidth=".8">
-        <path d={`M68 ${y} h8 M72 ${y - 4} v8`} />
-        <path d={`M1364 ${y + 130} h8 M1368 ${y + 126} v8`} />
-      </g>,
-    );
-  }
-  return (
-    <svg viewBox="0 0 1440 3600" preserveAspectRatio="none" style={{ position: "absolute", inset: 0, width: "100%", height: "100%", opacity: .55 }} aria-hidden>
-      {[72, 420, 1020, 1368].map((x) => (
-        <line key={`v${x}`} x1={x} y1="0" x2={x} y2="3600" stroke="rgba(226,92,128,.13)" strokeWidth="1" />
-      ))}
-      {[700, 1240, 1800, 2380, 2960, 3380].map((y, i) => (
-        <g key={`h${y}`}>
-          <line x1="0" y1={y} x2="1440" y2={y} stroke="rgba(226,92,128,.11)" strokeWidth="1" />
-          <text x={i % 2 === 0 ? 90 : 1150} y={y - 8} fontSize="9" letterSpacing="3" fill="rgba(160,88,110,.5)" className="ldc-mono">
-            {`SECT. ${("0" + (i + 2)).slice(-2)} · ARCANA REF ${["XVII", "0", "XIV", "VII", "XXI", "I"][i]}`}
-          </text>
-        </g>
-      ))}
-      <line x1="0" y1="820" x2="1440" y2="1300" stroke="rgba(196,125,255,.08)" strokeWidth="1" />
-      <line x1="1440" y1="2260" x2="0" y2="2780" stroke="rgba(196,125,255,.08)" strokeWidth="1" />
-      <circle cx="-100" cy="1050" r="310" fill="none" stroke="rgba(226,92,128,.16)" strokeWidth="1" />
-      <circle cx="-100" cy="1050" r="246" fill="none" stroke="rgba(255,177,92,.12)" strokeWidth=".8" strokeDasharray="3 6" />
-      <circle cx="1540" cy="2600" r="370" fill="none" stroke="rgba(226,92,128,.15)" strokeWidth="1" />
-      <circle cx="1540" cy="2600" r="298" fill="none" stroke="rgba(196,125,255,.12)" strokeWidth=".8" strokeDasharray="2 6" />
-      {crosses}
-    </svg>
-  );
-}
-
-function Background() {
+// two huge wheels hang half off-screen and counter-rotate behind everything
+function BackdropWheels() {
   return (
     <>
-      <div className="ldc-bg" aria-hidden>
-        <BgRing />
-        <BgDiagram />
-        {EMBERS.map((e, i) => (
-          <span
-            key={i}
-            className="ldc-ember"
-            style={{
-              left: `${e.l}%`,
-              width: e.s,
-              height: e.s,
-              background: e.c,
-              boxShadow: `0 0 7px ${e.c}`,
-              animationDuration: e.dur,
-              animationDelay: e.del,
-            }}
-          />
-        ))}
+      <div aria-hidden className="ldc-wheel-spin pointer-events-none fixed -top-[42vmin] -right-[48vmin] z-0 h-[155vmin] w-[155vmin] opacity-[0.07]">
+        <WheelSvg />
       </div>
-      <div className="ldc-bg-page" aria-hidden>
-        <BgConstruction />
-        {BG_NUMERALS.map((r, i) => (
-          <span
-            key={i}
-            aria-hidden
-            style={{
-              position: "absolute",
-              top: r.top,
-              left: r.left,
-              right: r.right,
-              fontSize: r.size,
-              lineHeight: 1,
-              color: r.c,
-              textShadow: `0 0 60px ${r.c}`,
-              transform: `rotate(${r.rot}deg)`,
-              fontFamily: "Georgia, serif",
-              userSelect: "none",
-            }}
-          >
-            {r.ch}
-          </span>
-        ))}
+      <div aria-hidden className="ldc-wheel-spin-rev pointer-events-none fixed -bottom-[46vmin] -left-[44vmin] z-0 h-[135vmin] w-[135vmin] opacity-[0.055]">
+        <WheelSvg />
       </div>
     </>
   );
 }
 
-/* ------------------------------------------------------------------ */
-/* Hero apparatus — face-down card suspended in a measurement ring     */
-/* ------------------------------------------------------------------ */
-
-function HeroApparatus() {
-  const CX = 300;
-  const CY = 290;
-  const ticks = Array.from({ length: 120 }, (_, i) => {
-    const long = i % 10 === 0;
-    const p1 = polar(CX, CY, 268, i * 3);
-    const p2 = polar(CX, CY, long ? 254 : 261, i * 3);
-    return <line key={`t${i}`} x1={p1.x} y1={p1.y} x2={p2.x} y2={p2.y} stroke={long ? "rgba(255,177,92,.5)" : "rgba(226,92,128,.28)"} strokeWidth={long ? 1.1 : 0.6} />;
-  });
-  const romanRing = ["0", "I", "II", "V", "VII", "X", "XIV", "XVII", "XXI", "IX", "XIII", "XX"].map((n, i) => {
-    const p = polar(CX, CY, 232, i * 30 - 90);
-    return (
-      <text key={`${n}-${i}`} x={p.x} y={p.y} textAnchor="middle" dominantBaseline="central" fontSize="13" letterSpacing="2" fill={i % 3 === 0 ? "#ffb15c" : "#b06a82"} style={{ fontFamily: "Georgia, serif" }}>
-        {n}
-      </text>
-    );
-  });
-  const diamonds = Array.from({ length: 8 }, (_, i) => {
-    const p = polar(CX, CY, 178, i * 45 + 22);
-    return <rect key={`d${i}`} x={p.x - 3} y={p.y - 3} width="6" height="6" transform={`rotate(45 ${p.x} ${p.y})`} fill="none" stroke="rgba(255,92,140,.6)" strokeWidth=".8" />;
-  });
+function Backdrop() {
   return (
-    <svg viewBox="0 0 600 580" className="w-full h-auto" role="img" aria-label="Face-down tarot card suspended in an apparatus ring">
-      <defs>
-        <radialGradient id="ldc-hbg" cx="50%" cy="50%" r="55%">
-          <stop offset="0%" stopColor="rgba(130,20,64,.42)" />
-          <stop offset="55%" stopColor="rgba(64,10,36,.18)" />
-          <stop offset="100%" stopColor="rgba(22,5,13,0)" />
-        </radialGradient>
-        <radialGradient id="ldc-scorch" cx="50%" cy="50%" r="50%">
-          <stop offset="0%" stopColor="rgba(5,1,2,.85)" />
-          <stop offset="60%" stopColor="rgba(20,7,6,.4)" />
-          <stop offset="100%" stopColor="rgba(30,10,8,0)" />
-        </radialGradient>
-      </defs>
+    <div aria-hidden className="pointer-events-none fixed inset-0 z-0 overflow-hidden">
+      {/* nebula washes */}
+      <div className="ldc-nebula absolute -left-[20vw] top-[8vh] h-[70vmin] w-[70vmin] bg-[radial-gradient(circle,rgba(162,90,223,0.11),transparent_65%)]" />
+      <div className="ldc-nebula absolute right-[-12vw] top-[52vh] h-[80vmin] w-[80vmin] bg-[radial-gradient(circle,rgba(243,199,122,0.08),transparent_65%)]" />
+      <div className="ldc-nebula absolute left-[24vw] bottom-[-18vh] h-[60vmin] w-[60vmin] bg-[radial-gradient(circle,rgba(183,148,246,0.07),transparent_65%)]" />
 
-      <rect x="0" y="0" width="600" height="580" fill="url(#ldc-hbg)" />
+      <svg viewBox="0 0 1600 1000" preserveAspectRatio="xMidYMid slice" className="absolute inset-0 h-full w-full">
+        {/* star specks */}
+        {STARS.map((s) =>
+          s.tw ? (
+            <circle key={s.key} cx={s.x} cy={s.y} r={s.r} fill={CREAM} className="ldc-twinkle" style={{ animationDelay: `${s.d}s`, opacity: s.o }} />
+          ) : (
+            <circle key={s.key} cx={s.x} cy={s.y} r={s.r} fill={TEXT_LO} opacity={s.o} />
+          ),
+        )}
 
-      {/* tilted orbit ellipse with satellite sparks */}
-      <ellipse cx={CX} cy={CY} rx="272" ry="88" transform={`rotate(-12 ${CX} ${CY})`} fill="none" stroke="rgba(255,92,140,.3)" strokeWidth=".8" strokeDasharray="4 7" className="ldc-anim-flow" style={{ animationDuration: "48s" }} />
-      {[0.12, 0.42, 0.68, 0.9].map((t, i) => {
-        const a = t * 360;
-        const x = CX + 272 * Math.cos(rad(a));
-        const y = CY + 88 * Math.sin(rad(a));
-        const hues = ["#ff3d6e", "#ffb15c", "#a55cff", "#ff8a3c"];
-        return (
-          <g key={`o${i}`} transform={`rotate(-12 ${CX} ${CY})`}>
-            <circle cx={x} cy={y} r="8" fill={hues[i]} opacity=".18" className="ldc-anim-pulse" style={{ animationDuration: `${7 + i * 3}s` }} />
-            <circle cx={x} cy={y} r="3.4" fill={hues[i]} opacity=".9" />
-          </g>
-        );
-      })}
+        {/* hairline orbit circles, centers pushed off-canvas */}
+        <circle cx={1730} cy={240} r={520} fill="none" stroke={GOLD_DEEP} strokeWidth={0.5} opacity={0.4} />
+        <circle cx={1730} cy={240} r={700} fill="none" stroke={GOLD_DEEP} strokeWidth={0.4} opacity={0.26} strokeDasharray="2 7" />
+        <circle cx={-160} cy={880} r={420} fill="none" stroke={VIOLET} strokeWidth={0.5} opacity={0.34} />
+        <circle cx={-160} cy={880} r={560} fill="none" stroke={VIOLET} strokeWidth={0.4} opacity={0.2} strokeDasharray="2 8" />
+        <circle cx={820} cy={1180} r={640} fill="none" stroke={GOLD_DEEP} strokeWidth={0.4} opacity={0.2} />
 
-      {/* static tick ring */}
-      <circle cx={CX} cy={CY} r="268" fill="none" stroke="rgba(226,92,128,.25)" strokeWidth=".8" />
-      {ticks}
-      <text x={CX} y={CY - 248} textAnchor="middle" fontSize="8" letterSpacing="4" fill="#a0586e">DRAW FIELD · SEALED</text>
+        {/* construction lines crossing the whole page */}
+        <line x1={-80} y1={180} x2={1700} y2={760} stroke={TEXT_LO} strokeWidth={0.4} opacity={0.18} />
+        <line x1={-80} y1={940} x2={1680} y2={120} stroke={TEXT_LO} strokeWidth={0.4} opacity={0.13} />
+        <line x1={1240} y1={-60} x2={1240} y2={1060} stroke={GOLD_DEEP} strokeWidth={0.4} opacity={0.18} strokeDasharray="1 6" />
+        <line x1={-60} y1={620} x2={1660} y2={620} stroke={GOLD_DEEP} strokeWidth={0.4} opacity={0.13} strokeDasharray="1 6" />
+        {[160, 380, 620, 860].map((y) => (
+          <line key={y} x1={1232} y1={y} x2={1248} y2={y} stroke={GOLD} strokeWidth={0.7} opacity={0.4} />
+        ))}
 
-      {/* rotating roman-numeral ring */}
-      <g className="ldc-anim-spin" style={{ animationDuration: "170s", transformOrigin: "300px 290px" }}>
-        <circle cx={CX} cy={CY} r="232" fill="none" stroke="rgba(255,177,92,.3)" strokeWidth=".7" strokeDasharray="2 5" />
-        {romanRing}
-      </g>
-
-      {/* counter-rotating diamond ring */}
-      <g className="ldc-anim-spinr" style={{ animationDuration: "110s", transformOrigin: "300px 290px" }}>
-        <circle cx={CX} cy={CY} r="178" fill="none" stroke="rgba(165,92,255,.35)" strokeWidth=".7" strokeDasharray="10 6" />
-        {diamonds}
-      </g>
-
-      {/* suspended face-down card */}
-      <g className="ldc-anim-bob" style={{ animationDuration: "11s" }}>
-        <g transform="rotate(-6 300 285)">
-          <rect x="238" y="203" width="124" height="168" rx="6" fill="rgba(26,6,16,.92)" stroke="rgba(255,92,140,.65)" strokeWidth="1.2" />
-          <rect x="245" y="210" width="110" height="154" rx="3" fill="none" stroke="rgba(226,92,128,.35)" strokeWidth=".7" />
-          <path d="M300 236 L305 260 L324 256 L310 272 L324 286 L305 282 L300 308 L295 282 L276 286 L290 272 L276 256 L295 260 Z" fill="none" stroke="#ff5c85" strokeWidth="1.1" className="ldc-anim-pulse" style={{ animationDuration: "6s" }} />
-          <circle cx="300" cy="272" r="4" fill="#ff3d6e" opacity=".85" className="ldc-anim-flicker" style={{ animationDuration: "5s" }} />
-          <text x="300" y="336" textAnchor="middle" fontSize="7" letterSpacing="3" fill="#8f4559">FACE DOWN</text>
-          {/* calibration clamps */}
-          <path d="M226 240 h14 M226 334 h14" stroke="rgba(255,177,92,.55)" strokeWidth="1.2" />
-          <path d="M374 240 h-14 M374 334 h-14" stroke="rgba(255,177,92,.55)" strokeWidth="1.2" />
+        {/* constellation: Lyra-ish */}
+        <g opacity={0.55}>
+          <polyline points="180,160 258,208 344,182 402,252 318,286 236,258" fill="none" stroke={VIOLET_SOFT} strokeWidth={0.6} opacity={0.5} />
+          {[
+            [180, 160],
+            [258, 208],
+            [344, 182],
+            [402, 252],
+            [318, 286],
+            [236, 258],
+          ].map(([x, y]) => (
+            <circle key={`${x}-${y}`} cx={x} cy={y} r={1.7} fill={TEXT_HI} opacity={0.8} />
+          ))}
         </g>
-        {/* pedestal */}
-        <ellipse cx="300" cy="436" rx="60" ry="11" fill="rgba(255,138,60,.14)" stroke="rgba(255,138,60,.5)" strokeWidth=".8" />
-      </g>
+        {/* constellation: Cygnus-ish, lower right */}
+        <g opacity={0.5}>
+          <polyline points="1150,760 1228,700 1306,748 1352,684 1430,712" fill="none" stroke={GOLD} strokeWidth={0.6} opacity={0.45} />
+          <line x1="1228" y1="700" x2="1268" y2="806" stroke={GOLD} strokeWidth={0.6} opacity={0.45} />
+          {[
+            [1150, 760],
+            [1228, 700],
+            [1306, 748],
+            [1352, 684],
+            [1430, 712],
+            [1268, 806],
+          ].map(([x, y]) => (
+            <circle key={`${x}-${y}`} cx={x} cy={y} r={1.7} fill={CREAM} opacity={0.75} />
+          ))}
+        </g>
+      </svg>
 
-      {/* scorch marks */}
-      <ellipse cx="300" cy="444" rx="96" ry="19" fill="url(#ldc-scorch)" opacity=".8" />
-      <ellipse cx="130" cy="220" rx="34" ry="9" fill="url(#ldc-scorch)" opacity=".5" />
-      <ellipse cx="486" cy="462" rx="30" ry="8" fill="url(#ldc-scorch)" opacity=".45" />
+      {/* giant dim glyphs drifting behind sections */}
+      <span className="ldc-glyph ldc-float-a absolute left-[3vw] top-[70vh] text-[24vmin] leading-none text-[#b794f6] opacity-[0.055]">
+        ☽{FE}
+      </span>
+      <span className="ldc-glyph ldc-float-b absolute right-[6vw] top-[150vh] text-[28vmin] leading-none text-[#f3c77a] opacity-[0.05]">
+        ♄{FE}
+      </span>
+      <span className="ldc-glyph ldc-float-a absolute left-[38vw] top-[240vh] text-[22vmin] leading-none text-[#e9e6f2] opacity-[0.04]">
+        ☉{FE}
+      </span>
 
-      {/* crosshair markers + micro readouts */}
-      <g stroke="rgba(255,177,92,.55)" strokeWidth=".8" fill="none">
-        <path d="M300 22 v14 M293 29 h14" />
-        <path d="M300 544 v14 M293 551 h14" />
-        <path d="M20 290 h14 M27 283 v14" />
-        <path d="M566 290 h14 M573 283 v14" />
+      {/* occasional shooting stars */}
+      <span className="ldc-shoot" style={{ top: "14vh", right: "-12vw" }} />
+      <span className="ldc-shoot ldc-shoot-b" style={{ top: "46vh", right: "-18vw" }} />
+    </div>
+  );
+}
+
+// a large wheel fragment bleeding off the left edge, directly behind the chamber
+function ChamberWheel() {
+  const C = 400;
+  const ROMAN = ["0", "I", "II", "V", "VII", "X", "XIV", "XVII", "XXI", "IX", "XIII", "XX"];
+  return (
+    <svg viewBox="0 0 800 800" className="pointer-events-none absolute hidden lg:block" style={{ left: "-34%", top: "-16%", width: "88%", opacity: 0.09 }} aria-hidden>
+      <g className="ldc-anim-spin" style={{ animationDuration: "220s", transformOrigin: "400px 400px" }}>
+        <circle cx={C} cy={C} r={384} fill="none" stroke={GOLD} strokeWidth={1} />
+        <circle cx={C} cy={C} r={330} fill="none" stroke={VIOLET_SOFT} strokeWidth={0.7} strokeDasharray="3 7" />
+        {Array.from({ length: 96 }, (_, i) => {
+          const long = i % 8 === 0;
+          const p1 = polar(C, C, 384, i * 3.75);
+          const p2 = polar(C, C, long ? 366 : 374, i * 3.75);
+          return <line key={i} x1={p1.x} y1={p1.y} x2={p2.x} y2={p2.y} stroke={long ? CREAM : GOLD} strokeWidth={long ? 1.4 : 0.7} />;
+        })}
+        {ROMAN.map((n, i) => {
+          const p = polar(C, C, 300, i * 30 - 90);
+          return (
+            <text key={`${n}-${i}`} x={p.x} y={p.y} textAnchor="middle" dominantBaseline="central" fontSize={20} letterSpacing={2} fill={CREAM} style={{ fontFamily: "Georgia, serif" }}>
+              {n}
+            </text>
+          );
+        })}
       </g>
-      <text x="52" y="282" fontSize="8" letterSpacing="3" fill="#8f4559">DECK 8/8</text>
-      <text x="52" y="308" fontSize="8" letterSpacing="3" fill="#8f4559">FLUX · LOW</text>
-      <text x="500" y="52" fontSize="8" letterSpacing="2" fill="#8f4559">☿︎ DIRECT</text>
     </svg>
   );
 }
@@ -896,27 +777,26 @@ function DrawChamber() {
   };
 
   return (
-    <div className="ldc-panel" style={{ transform: "rotate(-.7deg)", margin: "0 -14px" }}>
+    <div className="ldc-panel" style={{ transform: "rotate(-.5deg)", margin: "0 -10px", boxShadow: "0 24px 60px rgba(0,0,0,.5), 0 0 40px rgba(162,90,223,.08)" }}>
       <PanelHead title="Daily Draw Chamber" right="SPECIMEN BAY 01 · COLD" />
-      <PanelGrime v={0} />
-      <div className="grid grid-cols-1 gap-10 p-6 pt-9 sm:p-9 lg:grid-cols-[1fr_.92fr] lg:gap-4">
+      <div className="grid grid-cols-1 gap-8 p-5 pt-7 sm:p-7 lg:grid-cols-[1fr_.94fr] lg:gap-3">
         {/* stage — holder ring + flip card */}
         <div className="ldc-stage-shift relative flex flex-col items-center">
-          <div className="relative" style={{ width: "min(320px, 78vw)" }}>
+          <div className="relative" style={{ width: "min(272px, 72vw)" }}>
             {/* holder ring behind the card */}
-            <svg viewBox="0 0 400 400" className="pointer-events-none absolute" style={{ inset: "-19% -12%", width: "124%", height: "138%", opacity: .8 }} aria-hidden>
+            <svg viewBox="0 0 400 400" className="pointer-events-none absolute" style={{ inset: "-19% -12%", width: "124%", height: "138%", opacity: .85 }} aria-hidden>
               <g className="ldc-anim-spin" style={{ animationDuration: "120s", transformOrigin: "200px 200px" }}>
-                <circle cx="200" cy="200" r="188" fill="none" stroke="rgba(226,92,128,.3)" strokeWidth=".8" />
+                <circle cx="200" cy="200" r="188" fill="none" stroke="rgba(243,199,122,.3)" strokeWidth=".8" />
                 {Array.from({ length: 60 }, (_, i) => {
                   const p1 = polar(200, 200, 188, i * 6);
                   const p2 = polar(200, 200, i % 5 === 0 ? 178 : 183, i * 6);
-                  return <line key={i} x1={p1.x} y1={p1.y} x2={p2.x} y2={p2.y} stroke={i % 5 === 0 ? "rgba(255,177,92,.55)" : "rgba(226,92,128,.35)"} strokeWidth={i % 5 === 0 ? 1 : .6} />;
+                  return <line key={i} x1={p1.x} y1={p1.y} x2={p2.x} y2={p2.y} stroke={i % 5 === 0 ? "rgba(255,221,156,.55)" : "rgba(243,199,122,.32)"} strokeWidth={i % 5 === 0 ? 1 : .6} />;
                 })}
               </g>
               <g className="ldc-anim-spinr" style={{ animationDuration: "85s", transformOrigin: "200px 200px" }}>
-                <circle cx="200" cy="200" r="164" fill="none" stroke="rgba(165,92,255,.35)" strokeWidth=".7" strokeDasharray="8 8" />
+                <circle cx="200" cy="200" r="164" fill="none" stroke="rgba(183,148,246,.4)" strokeWidth=".7" strokeDasharray="8 8" />
               </g>
-              <ellipse cx="200" cy="200" rx="196" ry="70" transform="rotate(-16 200 200)" fill="none" stroke="rgba(255,92,140,.22)" strokeWidth=".7" strokeDasharray="3 8" className="ldc-anim-flow" style={{ animationDuration: "40s" }} />
+              <ellipse cx="200" cy="200" rx="196" ry="70" transform="rotate(-16 200 200)" fill="none" stroke="rgba(243,199,122,.22)" strokeWidth=".7" strokeDasharray="3 8" className="ldc-anim-flow" style={{ animationDuration: "40s" }} />
             </svg>
 
             {/* the flip stage */}
@@ -937,20 +817,20 @@ function DrawChamber() {
           </div>
 
           {/* controls */}
-          <div className="mt-8 flex flex-wrap items-center justify-center gap-4">
+          <div className="mt-7 flex flex-wrap items-center justify-center gap-4">
             <button type="button" className="ldc-btn" onClick={draw} disabled={busy}>
-              <span className="ldc-hdot" style={{ background: "#ffd9e2", boxShadow: "0 0 6px #ffd9e2" }} />
+              <span className="ldc-hdot" style={{ background: CREAM, boxShadow: `0 0 6px ${CREAM}` }} />
               {busy ? "CALIBRATING…" : card ? "RESEAL · DRAW AGAIN" : "DRAW YOUR CARD"}
             </button>
           </div>
           <div className="mt-4 flex flex-wrap items-center justify-center gap-x-5 gap-y-1">
-            <span className="ldc-caps-sm ldc-mono" style={{ color: "#8f4559" }}>
+            <span className="ldc-caps-sm ldc-mono" style={{ color: "rgba(183,148,246,.6)" }}>
               DECK 8/8 MAJOR
             </span>
-            <span className="ldc-caps-sm ldc-mono" style={{ color: "#8f4559" }}>
-              DRAW NO. <span style={{ color: "#ffb15c", textShadow: "0 0 8px rgba(255,138,60,.7)" }}>{String(draws).padStart(3, "0")}</span>
+            <span className="ldc-caps-sm ldc-mono" style={{ color: "rgba(183,148,246,.6)" }}>
+              DRAW NO. <span style={{ color: GOLD, textShadow: `0 0 8px rgba(243,199,122,.7)` }}>{String(draws).padStart(3, "0")}</span>
             </span>
-            <span className="ldc-caps-sm ldc-mono ldc-anim-flicker" style={{ color: "#a0586e", animationDuration: "9s" }}>
+            <span className="ldc-caps-sm ldc-mono ldc-anim-flicker" style={{ color: "rgba(243,199,122,.55)", animationDuration: "9s" }}>
               {busy ? "FLUX RISING" : flipped ? "SEAL BROKEN" : "SEAL INTACT"}
             </span>
           </div>
@@ -959,26 +839,25 @@ function DrawChamber() {
 
         {/* readout — overlaps the chamber's right edge on wide screens */}
         <div className="relative flex items-center">
-          <div className="ldc-readout ldc-panel relative w-full" style={{ zIndex: 3, boxShadow: "inset 0 0 0 1px rgba(0,0,0,.55), inset 0 0 36px rgba(96,10,42,.28), 0 18px 44px rgba(0,0,0,.6), 0 0 30px rgba(255,61,110,.14)" }}>
+          <div className="ldc-readout ldc-panel relative w-full" style={{ zIndex: 3, boxShadow: "0 18px 44px rgba(0,0,0,.55), 0 0 30px rgba(243,199,122,.1)" }}>
             <CornerTicks />
-            <PanelGrime v={1} />
             {card ? (
-              <div key={`${cardIdx}-${draws}`} className="ldc-readout-swap p-6">
+              <div key={`${cardIdx}-${draws}`} className="ldc-readout-swap p-5 sm:p-6">
                 <div className="flex items-center gap-3">
                   <span className="ldc-hdot ldc-anim-pulse" style={{ background: card.hue, boxShadow: `0 0 6px ${card.hue}`, animationDuration: "5s" }} />
-                  <span className="ldc-caps-sm ldc-mono" style={{ color: "#8f4559" }}>
+                  <span className="ldc-caps-sm ldc-mono" style={{ color: "rgba(183,148,246,.6)" }}>
                     SPECIMEN NO. {String(draws).padStart(3, "0")} · MAJOR ARCANA
                   </span>
                 </div>
-                <div className="mt-4 flex items-baseline gap-4">
-                  <span style={{ fontSize: 44, lineHeight: 1, color: card.hue, textShadow: `0 0 18px ${card.hue}`, fontFamily: "Georgia, serif" }}>
+                <div className="mt-3 flex items-baseline gap-4">
+                  <span style={{ fontSize: 40, lineHeight: 1, color: card.hue, textShadow: `0 0 18px ${card.hue}`, fontFamily: "Georgia, serif" }}>
                     {card.numeral}
                   </span>
-                  <h3 className="ldc-caps" style={{ fontSize: "clamp(17px, 2.2vw, 24px)", color: "#ffeef2", margin: 0 }}>
+                  <h2 className="ldc-caps ldc-serif" style={{ fontSize: "clamp(17px, 2.2vw, 23px)", color: TEXT_HI, margin: 0 }}>
                     {card.name}
-                  </h3>
+                  </h2>
                 </div>
-                <div className="mt-4 flex flex-wrap gap-2">
+                <div className="mt-3 flex flex-wrap gap-2">
                   {card.keywords.map((k) => (
                     <span
                       key={k}
@@ -988,49 +867,49 @@ function DrawChamber() {
                         border: `1px solid ${card.hue}55`,
                         padding: "3px 9px",
                         textShadow: `0 0 8px ${card.hue}`,
-                        background: "rgba(22,5,13,.6)",
+                        background: "rgba(10,9,18,.6)",
                       }}
                     >
                       {k}
                     </span>
                   ))}
                 </div>
-                <div className="ldc-rule mt-5" style={{ opacity: .7 }} />
-                <p className="mt-4" style={{ fontSize: 14.5, lineHeight: 1.8, color: "#d5a0b0", margin: 0 }}>{card.guidance}</p>
-                <div className="mt-5 grid grid-cols-3 gap-2">
+                <div className="ldc-rule mt-4" style={{ opacity: .7 }} />
+                <p className="mt-3" style={{ fontSize: 14.5, lineHeight: 1.8, color: TEXT_LO, margin: 0 }}>{card.guidance}</p>
+                <div className="mt-4 grid grid-cols-3 gap-2">
                   {[
                     { k: "ELEMENT", v: ["FIRE", "AETHER", "WATER", "EARTH"][idx % 4] },
                     { k: "POLARITY", v: idx % 2 === 0 ? "ACTIVE" : "RECEPTIVE" },
                     { k: "WINDOW", v: "24 HOURS" },
                   ].map((r) => (
-                    <div key={r.k} style={{ border: "1px solid rgba(226,92,128,.16)", background: "rgba(22,5,13,.5)", padding: "6px 9px" }}>
-                      <div className="ldc-caps-sm" style={{ color: "#6e3a4a", fontSize: 7 }}>{r.k}</div>
-                      <div className="ldc-mono mt-1" style={{ fontSize: 10, color: "#cf93a6" }}>{r.v}</div>
+                    <div key={r.k} style={{ border: "1px solid rgba(243,199,122,.16)", background: "rgba(10,9,18,.5)", padding: "6px 9px" }}>
+                      <div className="ldc-caps-sm" style={{ color: "rgba(183,148,246,.5)", fontSize: 7 }}>{r.k}</div>
+                      <div className="ldc-mono mt-1" style={{ fontSize: 10, color: TEXT_HI }}>{r.v}</div>
                     </div>
                   ))}
                 </div>
               </div>
             ) : (
-              <div className="p-6">
+              <div className="p-5 sm:p-6">
                 <div className="flex items-center gap-3">
-                  <span className="ldc-hdot" style={{ background: "#8f4559", boxShadow: "0 0 6px #8f4559" }} />
-                  <span className="ldc-caps-sm ldc-mono" style={{ color: "#8f4559" }}>READOUT · AWAITING SPECIMEN</span>
+                  <span className="ldc-hdot" style={{ background: "rgba(183,148,246,.6)", boxShadow: "0 0 6px rgba(183,148,246,.6)" }} />
+                  <span className="ldc-caps-sm ldc-mono" style={{ color: "rgba(183,148,246,.6)" }}>READOUT · AWAITING SPECIMEN</span>
                 </div>
-                <h3 className="mt-4" style={{ fontSize: "clamp(19px, 2.4vw, 26px)", lineHeight: 1.3, color: "#f3d3dc", fontWeight: 400, margin: 0 }}>
+                <h2 className="mt-3" style={{ fontSize: "clamp(19px, 2.4vw, 25px)", lineHeight: 1.3, color: TEXT_HI, fontWeight: 400, margin: 0 }}>
                   The card is sealed face down.
                   <br />
-                  <em style={{ color: "#ffb15c", textShadow: "0 0 16px rgba(255,138,60,.6)" }}>Break the seal.</em>
-                </h3>
-                <div className="ldc-rule mt-5" style={{ opacity: .7 }} />
-                <p className="mt-4" style={{ fontSize: 14, lineHeight: 1.8, color: "#cf9dad", margin: 0 }}>
+                  <em style={{ color: GOLD, textShadow: "0 0 16px rgba(243,199,122,.6)" }}>Break the seal.</em>
+                </h2>
+                <div className="ldc-rule mt-4" style={{ opacity: .7 }} />
+                <p className="mt-3" style={{ fontSize: 14, lineHeight: 1.8, color: TEXT_LO, margin: 0 }}>
                   One card per day, drawn cold from a chamber of eight major arcana. Press the draw — the apparatus
                   calibrates, reseals the deck, and turns your specimen face up.
                 </p>
-                <div className="mt-5 flex items-center gap-3">
-                  <div style={{ flex: 1, background: "rgba(226,92,128,.12)", height: 5, position: "relative", overflow: "hidden" }}>
-                    <i className="ldc-anim-pulse" style={{ display: "block", height: "100%", width: "12%", background: "linear-gradient(90deg,#7a1030,#ff3d6e)", boxShadow: "0 0 10px rgba(255,61,110,.75)", animationDuration: "8s" }} />
+                <div className="mt-4 flex items-center gap-3">
+                  <div style={{ flex: 1, background: "rgba(243,199,122,.12)", height: 5, position: "relative", overflow: "hidden" }}>
+                    <i className="ldc-anim-pulse" style={{ display: "block", height: "100%", width: "12%", background: `linear-gradient(90deg,${GOLD_DEEP},${GOLD})`, boxShadow: "0 0 10px rgba(243,199,122,.75)", animationDuration: "8s" }} />
                   </div>
-                  <span className="ldc-mono" style={{ fontSize: 11, color: "#ff5c85", textShadow: "0 0 9px rgba(255,61,110,.8)" }}>IDLE</span>
+                  <span className="ldc-mono" style={{ fontSize: 11, color: GOLD, textShadow: "0 0 9px rgba(243,199,122,.8)" }}>IDLE</span>
                 </div>
               </div>
             )}
@@ -1050,190 +929,131 @@ export default function DailyCardPage() {
     <main className="ldc-root min-h-screen">
       <style>{CSS}</style>
 
-      {/* deep background: numeral wheels, construction lines, embers */}
-      <Background />
-
-      {/* dust-noise + fine-scratch overlays, fixed above the whole page */}
-      <div className="ldc-grime-noise" aria-hidden />
-      <div className="ldc-scratches" aria-hidden />
+      {/* production magic sky: wheels, stars, orbits, glyphs */}
+      <BackdropWheels />
+      <Backdrop />
 
       <div className="relative" style={{ zIndex: 1 }}>
         {/* ============================================================ */}
-        {/* 1 · TOP BAR — full bleed                                      */}
+        {/* 1 · COMPACT HEADER + TAROT CROSS-NAV — full bleed, slim       */}
         {/* ============================================================ */}
         <header className="ldc-panel" style={{ borderLeft: "none", borderRight: "none", borderTop: "none" }}>
-          <div className="mx-auto flex max-w-6xl items-center gap-4 px-4 py-3 sm:px-6">
+          <div className="mx-auto flex max-w-6xl items-center gap-3 px-4 pt-3 sm:px-6">
             <span className="ldc-hdot" />
-            <a href="#" className="ldc-caps ldc-mono" style={{ fontSize: 12, color: "#ffd9e2", textShadow: "0 0 10px rgba(255,61,110,.6)", textDecoration: "none" }}>
+            <Link href="/tarot" className="ldc-caps ldc-mono" style={{ fontSize: 11, color: CREAM, textShadow: "0 0 10px rgba(243,199,122,.55)", textDecoration: "none" }}>
               ASTRO SCOPE
-            </a>
-            <span className="ldc-caps-sm ldc-mono hidden md:inline" style={{ color: "#8f4559" }}>TAROT · SPREADS</span>
+            </Link>
+            <span className="ldc-caps-sm ldc-mono hidden md:inline" style={{ color: "rgba(183,148,246,.6)" }}>TAROT · SPREAD 01</span>
             <span className="ldc-rule" style={{ flex: 1 }} />
-            <nav className="flex items-center gap-4 sm:gap-6">
-              {["ALL SPREADS", "ALL CARDS", "HOROSCOPES"].map((n) => (
-                <a key={n} href="#" className="ldc-caps-sm ldc-mono hidden sm:inline" style={{ color: "#cf93a6", textDecoration: "none" }}>
-                  {n}
-                </a>
-              ))}
-              <a href="#ldc-draw" className="ldc-btn-ghost" style={{ padding: "7px 14px", textDecoration: "none" }}>
-                TO THE CHAMBER
-              </a>
-            </nav>
+            <span className="ldc-caps-sm ldc-mono ldc-anim-flicker hidden sm:inline" style={{ color: "rgba(243,199,122,.55)", animationDuration: "9s" }}>
+              ☿{FE} DIRECT · SEALS NOMINAL
+            </span>
           </div>
+          <nav className="mx-auto flex max-w-6xl flex-wrap items-center gap-1.5 px-4 pb-3 pt-2.5 sm:px-6" aria-label="Tarot pages">
+            {NAV.map((n, i) => (
+              <Link
+                key={n.href}
+                href={n.href}
+                aria-current={n.active ? "page" : undefined}
+                className={`ldc-tab ldc-mono${n.active ? " ldc-tab-active" : ""}`}
+                style={{ transform: TAB_DIRT[i] }}
+              >
+                {n.label}
+              </Link>
+            ))}
+          </nav>
           <div className="ldc-ticks" />
         </header>
 
         {/* ============================================================ */}
-        {/* 2 · HERO — apparatus bleeds off the right edge                */}
+        {/* 2 · THE DRAW CHAMBER — the tool IS the page, top of viewport  */}
         {/* ============================================================ */}
-        <section className="relative">
-          {/* hairline construction rule crossing the hero */}
-          <div className="pointer-events-none absolute hidden lg:block" style={{ left: "50%", top: 40, bottom: 40, width: 1, background: "rgba(226,92,128,.14)" }} aria-hidden />
-          <div className="mx-auto grid max-w-6xl grid-cols-1 items-center gap-10 px-4 pb-16 pt-14 sm:px-6 lg:grid-cols-[1.05fr_.95fr] lg:pt-20">
-            <div className="relative">
+        <section id="ldc-draw" className="relative mx-auto max-w-6xl scroll-mt-6 px-4 pb-16 pt-7 sm:px-6 lg:pt-9">
+          <ChamberWheel />
+          {/* vertical tick ruler straddling the section's left edge */}
+          <div className="ldc-ticks-v pointer-events-none absolute hidden lg:block" style={{ left: -16, top: 90, height: "64%", opacity: .45 }} aria-hidden />
+
+          <div className="relative mb-5 flex flex-wrap items-end gap-x-5 gap-y-2" style={{ transform: "rotate(-.3deg)" }}>
+            <div>
               <div className="flex items-center gap-3">
                 <span className="ldc-hdot" />
-                <span className="ldc-caps ldc-mono" style={{ fontSize: 11, color: "#ff8aa8", textShadow: "0 0 10px rgba(255,61,110,.7)" }}>
-                  DAILY CARD · SPREAD 01
+                <span className="ldc-caps ldc-mono" style={{ fontSize: 10, color: GOLD, textShadow: "0 0 10px rgba(243,199,122,.6)" }}>
+                  DAILY CARD · SINGLE-CARD SPREAD
                 </span>
-                <span className="ldc-rule" style={{ width: 60 }} />
-                <span className="ldc-caps-sm ldc-mono" style={{ color: "#8f4559" }}>BAY SEALED</span>
               </div>
-
-              <h1 className="mt-7" style={{ fontSize: "clamp(38px, 5.6vw, 64px)", lineHeight: 1.06, color: "#ffeef2", fontWeight: 400, transform: "rotate(-.6deg)", transformOrigin: "left center" }}>
-                One card.
-                <br />
-                One day.{" "}
-                <em style={{ color: "#ff5c85", textShadow: "0 0 22px rgba(255,61,110,.75)", fontStyle: "italic" }}>
-                  Drawn cold.
-                </em>
+              <h1 className="ldc-serif mt-2" style={{ fontSize: "clamp(26px, 3.6vw, 40px)", lineHeight: 1.1, color: TEXT_HI, fontWeight: 400, margin: 0 }}>
+                One card, one day —{" "}
+                <em style={{ color: GOLD, textShadow: "0 0 20px rgba(243,199,122,.6)" }}>drawn cold.</em>
               </h1>
-
-              <p className="mt-6 max-w-md" style={{ fontSize: 16, lineHeight: 1.75, color: "#d5a0b0" }}>
-                The oldest spread is also the smallest: a single card, pulled before the day has a shape. No positions,
-                no cross — just one archetype weighed against twenty-four hours.
-              </p>
-
-              <div className="mt-9 flex flex-wrap items-center gap-4">
-                <a href="#ldc-draw" className="ldc-btn" style={{ textDecoration: "none" }}>
-                  <span className="ldc-hdot" style={{ background: "#ffd9e2", boxShadow: "0 0 6px #ffd9e2" }} />
-                  DRAW YOUR CARD
-                </a>
-                <a href="#ldc-method" className="ldc-btn-ghost" style={{ textDecoration: "none" }}>
-                  HOW TO READ IT ↓
-                </a>
-              </div>
-
-              {/* hero micro-readouts — tilted, wider than the column */}
-              <div
-                className="ldc-panel mt-11 grid grid-cols-3 divide-x"
-                style={{ borderColor: "rgba(226,92,128,.2)", transform: "rotate(.5deg)", width: "calc(100% + 56px)", marginLeft: -14 }}
-              >
-                <PanelGrime v={1} />
-                {[
-                  { k: "CARDS IN BAY", v: "8 MAJOR", h: "#ff5c85" },
-                  { k: "DRAW COST", v: "0 — FREE", h: "#ffb15c" },
-                  { k: "VALIDITY", v: "24 H", h: "#c47dff" },
-                ].map((r) => (
-                  <div key={r.k} className="px-4 py-3" style={{ borderColor: "rgba(226,92,128,.16)" }}>
-                    <div className="ldc-caps-sm" style={{ color: "#8f4559" }}>{r.k}</div>
-                    <div className="ldc-mono mt-1" style={{ fontSize: 15, color: r.h, textShadow: `0 0 9px ${r.h}` }}>{r.v}</div>
-                  </div>
-                ))}
-              </div>
-              <div className="ldc-ticks mt-1" style={{ opacity: .5, width: "80%" }} />
             </div>
-
-            <div className="ldc-hero-bleed">
-              <CornerTicks />
-              <HeroApparatus />
-              <div className="pointer-events-none absolute bottom-3 left-3 flex items-center gap-2">
-                <span className="ldc-hdot ldc-anim-pulse" style={{ animationDuration: "4s" }} />
-                <span className="ldc-caps-sm ldc-mono" style={{ color: "#a0586e" }}>SUSPENSION RING · ONLINE</span>
-              </div>
-            </div>
+            <span className="ldc-rule hidden sm:block" style={{ flex: 1, minWidth: 40, marginBottom: 10 }} />
+            <span className="ldc-caps-sm ldc-mono" style={{ color: "rgba(183,148,246,.6)", marginBottom: 6 }}>
+              1 SPECIMEN / DAY · UNLOGGED HERE
+            </span>
           </div>
-        </section>
 
-        {/* ============================================================ */}
-        {/* 3 · THE DRAW CHAMBER — centerpiece, tilted, juts wide         */}
-        {/* ============================================================ */}
-        <section id="ldc-draw" className="relative mx-auto max-w-7xl scroll-mt-8 px-4 pb-24 sm:px-6">
-          {/* vertical tick ruler straddling the section's left edge */}
-          <div className="ldc-ticks-v pointer-events-none absolute hidden lg:block" style={{ left: -18, top: 60, height: "72%", opacity: .5 }} aria-hidden />
-          <div className="mb-6 flex items-center gap-4" style={{ transform: "rotate(.3deg)" }}>
-            <span className="ldc-hdot" />
-            <h2 className="ldc-caps" style={{ fontSize: 14, color: "#ffeef2", margin: 0 }}>The Draw Chamber</h2>
-            <span className="ldc-rule" style={{ flex: 1 }} />
-            <span className="ldc-caps-sm ldc-mono" style={{ color: "#8f4559" }}>1 SPECIMEN / DAY · UNLOGGED HERE</span>
-          </div>
           <DrawChamber />
         </section>
 
         {/* ============================================================ */}
-        {/* 4 · HOW TO READ — staggered, overlapping protocol plates      */}
+        {/* 3 · HOW TO READ — condensed protocol, staggered plates        */}
         {/* ============================================================ */}
-        <section id="ldc-method" className="mx-auto max-w-6xl scroll-mt-8 px-4 pb-24 sm:px-6">
-          <div className="mb-8 flex items-center gap-4">
+        <section className="relative mx-auto max-w-6xl px-4 pb-16 sm:px-6">
+          <div className="mb-6 flex items-center gap-4">
             <span className="ldc-engrave">Reading Protocol</span>
             <span className="ldc-rule" style={{ flex: 1 }} />
-            <span className="ldc-caps-sm ldc-mono" style={{ color: "#8f4559" }}>4 OPERATIONS · 24 H CYCLE</span>
+            <span className="ldc-caps-sm ldc-mono" style={{ color: "rgba(183,148,246,.6)" }}>4 OPERATIONS · 24 H CYCLE</span>
           </div>
-          <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-4 lg:gap-4">
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4 lg:gap-3.5">
             {STEPS.map((s, i) => (
-              <article key={s.id} className="ldc-panel p-5" style={STEP_DIRT[i]}>
-                <CornerTicks c="rgba(226,92,128,.35)" />
+              <article key={s.id} className="ldc-panel p-4" style={STEP_DIRT[i]}>
+                <CornerTicks c="rgba(243,199,122,.3)" />
                 <div className="flex items-center justify-between gap-3">
                   <span
                     style={{
-                      fontSize: 34,
+                      fontSize: 30,
                       lineHeight: 1,
                       color: "transparent",
-                      WebkitTextStroke: "1px rgba(255,92,140,.55)",
+                      WebkitTextStroke: "1px rgba(243,199,122,.55)",
                       fontFamily: "Georgia, serif",
                     }}
                   >
-                    {("0" + (i + 1)).slice(-2)}
+                    {s.id}
                   </span>
-                  <span className="ldc-caps-sm ldc-mono" style={{ color: "#8f4559", fontSize: 7 }}>{s.id}</span>
+                  <span className="ldc-caps-sm ldc-mono" style={{ color: "rgba(183,148,246,.55)", fontSize: 7 }}>
+                    STEP {s.id}
+                  </span>
                 </div>
-                <h3 className="ldc-caps mt-4" style={{ fontSize: 13, color: "#ffeef2", margin: 0, marginTop: 16 }}>
+                <h3 className="ldc-caps" style={{ fontSize: 12, color: TEXT_HI, margin: 0, marginTop: 12 }}>
                   {s.title}
                 </h3>
-                <p className="mt-3" style={{ fontSize: 13, lineHeight: 1.75, color: "#cf9dad", margin: 0, marginTop: 12 }}>
-                  {s.copy}
-                </p>
-                <div className="mt-4 flex items-center gap-2" style={{ borderTop: "1px solid rgba(226,92,128,.16)", paddingTop: 10 }}>
-                  <span className="ldc-hdot ldc-anim-pulse" style={{ width: 4, height: 4, animationDuration: `${5 + i}s` }} />
-                  <span className="ldc-caps-sm ldc-mono" style={{ color: "#a0586e", fontSize: 8 }}>{s.readout}</span>
-                </div>
+                <p style={{ fontSize: 12.5, lineHeight: 1.7, color: TEXT_LO, margin: 0, marginTop: 8 }}>{s.copy}</p>
               </article>
             ))}
           </div>
-          {/* connector hairline under the staggered plates */}
-          <div className="ldc-rule mt-8 hidden lg:block" style={{ width: "64%", marginLeft: "18%", transform: "rotate(-.4deg)", opacity: .6 }} />
+          <div className="ldc-rule mt-7 hidden lg:block" style={{ width: "64%", marginLeft: "18%", transform: "rotate(-.4deg)", opacity: .6 }} />
         </section>
 
         {/* ============================================================ */}
-        {/* 5 · FAQ — CHAMBER NOTES, staggered off-center                 */}
+        {/* 4 · FAQ — CHAMBER NOTES, staggered off-center                 */}
         {/* ============================================================ */}
-        <section className="mx-auto max-w-4xl px-4 pb-20 sm:px-6 lg:ml-[9%]">
-          <div className="mb-6 flex items-center gap-4">
+        <section className="mx-auto max-w-4xl px-4 pb-14 sm:px-6 lg:ml-[9%]">
+          <div className="mb-5 flex items-center gap-4">
             <span className="ldc-hdot" />
-            <h2 className="ldc-caps" style={{ fontSize: 14, color: "#ffeef2", margin: 0 }}>Chamber Notes</h2>
+            <h2 className="ldc-caps" style={{ fontSize: 13, color: TEXT_HI, margin: 0 }}>Chamber Notes</h2>
             <span className="ldc-rule" style={{ flex: 1 }} />
-            <span className="ldc-caps-sm ldc-mono" style={{ color: "#8f4559" }}>3 ENTRIES</span>
+            <span className="ldc-caps-sm ldc-mono" style={{ color: "rgba(183,148,246,.6)" }}>3 ENTRIES</span>
           </div>
           <div className="flex flex-col gap-3">
             {FAQ.map((f, i) => (
               <details key={f.id} className="ldc-faq" style={FAQ_DIRT[i]}>
                 <summary>
-                  <span className="ldc-caps-sm ldc-mono" style={{ color: "#8f4559", whiteSpace: "nowrap" }}>{f.id}</span>
-                  <span style={{ fontSize: 15, color: "#f3d3dc", flex: 1 }}>{f.q}</span>
-                  <span className="ldc-faq-x ldc-mono" style={{ color: "#ff5c85", fontSize: 14, textShadow: "0 0 8px rgba(255,61,110,.7)" }}>+</span>
+                  <span className="ldc-caps-sm ldc-mono" style={{ color: "rgba(243,199,122,.55)", whiteSpace: "nowrap" }}>{f.id}</span>
+                  <span style={{ fontSize: 15, color: TEXT_HI, flex: 1 }}>{f.q}</span>
+                  <span className="ldc-faq-x ldc-mono" style={{ color: GOLD, fontSize: 14, textShadow: "0 0 8px rgba(243,199,122,.7)" }}>+</span>
                 </summary>
-                <div style={{ borderTop: "1px solid rgba(226,92,128,.16)", padding: "12px 16px 14px 16px" }}>
-                  <p style={{ fontSize: 13.5, lineHeight: 1.75, color: "#cf9dad", margin: 0 }}>{f.a}</p>
+                <div style={{ borderTop: "1px solid rgba(243,199,122,.14)", padding: "12px 16px 14px 16px" }}>
+                  <p style={{ fontSize: 13.5, lineHeight: 1.75, color: TEXT_LO, margin: 0 }}>{f.a}</p>
                 </div>
               </details>
             ))}
@@ -1241,59 +1061,51 @@ export default function DailyCardPage() {
         </section>
 
         {/* ============================================================ */}
-        {/* 6 · CTA — full bleed                                          */}
+        {/* 5 · CTA — slim full-bleed band back to the tool               */}
         {/* ============================================================ */}
         <section className="ldc-panel" style={{ borderLeft: "none", borderRight: "none" }}>
-          <div className="relative mx-auto max-w-4xl px-4 py-16 text-center sm:px-6">
+          <div className="relative mx-auto flex max-w-5xl flex-wrap items-center justify-center gap-x-10 gap-y-5 px-4 py-10 text-center sm:px-6">
             <CornerTicks />
-            <PanelGrime v={0} />
-            <div className="ldc-ticks mx-auto mb-8" style={{ width: 180, opacity: .6 }} />
-            <h2 style={{ fontSize: "clamp(26px, 4vw, 44px)", lineHeight: 1.2, color: "#ffeef2", fontWeight: 400, margin: 0, transform: "rotate(-.4deg)" }}>
-              The deck is warmed.
-              <br />
-              <em style={{ color: "#ffb15c", textShadow: "0 0 20px rgba(255,138,60,.7)" }}>The seal is yours to break.</em>
+            <h2 className="ldc-serif" style={{ fontSize: "clamp(20px, 2.8vw, 30px)", lineHeight: 1.25, color: TEXT_HI, fontWeight: 400, margin: 0, transform: "rotate(-.4deg)" }}>
+              The deck is warmed.{" "}
+              <em style={{ color: GOLD, textShadow: "0 0 18px rgba(243,199,122,.65)" }}>The seal is yours to break.</em>
             </h2>
-            <p className="mx-auto mt-5 max-w-md" style={{ fontSize: 14.5, lineHeight: 1.75, color: "#d5a0b0" }}>
-              One draw, one theme, one line in the log tonight. The chamber takes less than a minute of your morning.
-            </p>
-            <a href="#ldc-draw" className="ldc-btn mt-9 inline-flex" style={{ textDecoration: "none", fontSize: 11, padding: "13px 30px" }}>
-              <span className="ldc-hdot" style={{ background: "#ffd9e2", boxShadow: "0 0 6px #ffd9e2" }} />
+            <a href="#ldc-draw" className="ldc-btn" style={{ textDecoration: "none", fontSize: 10 }}>
+              <span className="ldc-hdot" style={{ background: CREAM, boxShadow: `0 0 6px ${CREAM}` }} />
               DRAW YOUR DAILY CARD
             </a>
-            <div className="ldc-ticks mx-auto mt-8" style={{ width: 180, opacity: .6 }} />
           </div>
         </section>
 
         {/* ============================================================ */}
-        {/* 7 · FOOTER — lab status strip juts wider than the column      */}
+        {/* 6 · FOOTER — lab status strip juts wider than the column      */}
         {/* ============================================================ */}
-        <footer className="mx-auto max-w-6xl px-4 py-10 sm:px-6">
-          <div className="ldc-panel" style={{ margin: "0 -22px", transform: "rotate(.3deg)" }}>
-            <PanelGrime v={1} />
+        <footer className="mx-auto max-w-6xl px-4 py-8 sm:px-6">
+          <div className="ldc-panel" style={{ margin: "0 -20px", transform: "rotate(.3deg)" }}>
             <div className="flex flex-wrap items-center gap-x-5 gap-y-2 px-4 py-2.5">
               {[
-                { k: "CHAMBER", v: "SEALED", h: "#ff5c85" },
-                { k: "DECK", v: "8/8 MAJOR", h: "#ffb15c" },
-                { k: "MERCURY", v: "☿︎ DIRECT", h: "#c47dff" },
-                { k: "DRAW WINDOW", v: "24 H", h: "#ff8a3c" },
-                { k: "LOG", v: "AWAITING LINE", h: "#ff5c85" },
+                { k: "CHAMBER", v: "SEALED", h: GOLD },
+                { k: "DECK", v: "8/8 MAJOR", h: CREAM },
+                { k: "MERCURY", v: `☿${FE} DIRECT`, h: VIOLET_SOFT },
+                { k: "DRAW WINDOW", v: "24 H", h: GOLD_HOT },
+                { k: "LOG", v: "AWAITING LINE", h: GOLD },
               ].map((s) => (
                 <span key={s.k} className="flex items-center gap-2">
                   <span className="ldc-hdot ldc-anim-pulse" style={{ width: 4, height: 4, background: s.h, boxShadow: `0 0 5px ${s.h}`, animationDuration: "6s" }} />
-                  <span className="ldc-caps-sm ldc-mono" style={{ color: "#8f4559", fontSize: 8 }}>{s.k}</span>
-                  <span className="ldc-mono" style={{ fontSize: 10, color: s.h, textShadow: `0 0 7px ${s.h}` }}>{s.v}</span>
+                  <span className="ldc-caps-sm ldc-mono" style={{ color: "rgba(183,148,246,.55)", fontSize: 8 }}>{s.k}</span>
+                  <span className="ldc-mono ldc-glyph" style={{ fontSize: 10, color: s.h, textShadow: `0 0 7px ${s.h}` }}>{s.v}</span>
                 </span>
               ))}
               <span className="ldc-rule" style={{ flex: 1, minWidth: 30 }} />
-              <span className="ldc-caps-sm ldc-mono ldc-anim-flicker" style={{ color: "#a0586e", animationDuration: "9s", fontSize: 8 }}>
+              <span className="ldc-caps-sm ldc-mono ldc-anim-flicker" style={{ color: "rgba(243,199,122,.5)", animationDuration: "9s", fontSize: 8 }}>
                 BAY STATUS · ALL SEALS NOMINAL
               </span>
             </div>
           </div>
           <div className="ldc-ticks mt-1" style={{ opacity: .4 }} />
           <div className="mt-4 flex flex-wrap items-center justify-between gap-3">
-            <span className="ldc-caps-sm ldc-mono" style={{ color: "#6e3a4a", fontSize: 8 }}>© ASTRO SCOPE · ARCANA LABORATORIUM</span>
-            <span className="ldc-caps-sm ldc-mono" style={{ color: "#6e3a4a", fontSize: 8 }}>DAILY CARD · SPREAD 01 · VOL. VII</span>
+            <span className="ldc-caps-sm ldc-mono" style={{ color: "rgba(183,148,246,.4)", fontSize: 8 }}>© ASTRO SCOPE · TAROT LABORATORIUM</span>
+            <span className="ldc-caps-sm ldc-mono" style={{ color: "rgba(183,148,246,.4)", fontSize: 8 }}>DAILY CARD · SPREAD 01</span>
           </div>
         </footer>
       </div>
