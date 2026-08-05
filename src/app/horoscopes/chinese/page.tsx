@@ -41,9 +41,12 @@ const NAV = [
   { href: "/tarot", label: "Tarot", idx: "00", active: false },
   { href: "/tarot/spreads/daily-card", label: "Daily Card", idx: "01", active: false },
   { href: "/tarot/spreads/yes-no", label: "Yes / No", idx: "02", active: false },
-  { href: "/tarot/birth-arcana", label: "Birth Arcana", idx: "03", active: false },
-  { href: "/matrix", label: "Matrix", idx: "04", active: false },
-  { href: "/horoscopes/chinese", label: "Horoscope", idx: "05", active: true },
+  { href: "/tarot/spreads/past-present-future", label: "Past · Present · Future", idx: "03", active: false },
+  { href: "/tarot/spreads/love-three-card", label: "Love", idx: "04", active: false },
+  { href: "/tarot/birth-arcana", label: "Birth Arcana", idx: "05", active: false },
+  { href: "/tarot/cards", label: "All Cards", idx: "06", active: false },
+  { href: "/matrix", label: "Matrix", idx: "07", active: false },
+  { href: "/horoscopes/chinese", label: "Horoscope", idx: "08", active: true },
 ];
 
 // the twelve plates ride a shallow arc: edges sag, center rides highest;

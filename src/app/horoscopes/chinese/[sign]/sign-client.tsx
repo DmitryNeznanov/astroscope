@@ -317,7 +317,10 @@ function Header({ sign }: { sign: ChineseZodiacSign }) {
     { href: "/tarot", label: "Tarot Hub" },
     { href: "/tarot/spreads/daily-card", label: "Daily Card" },
     { href: "/tarot/spreads/yes-no", label: "Yes / No" },
+    { href: "/tarot/spreads/past-present-future", label: "Past · Present · Future" },
+    { href: "/tarot/spreads/love-three-card", label: "Love" },
     { href: "/tarot/birth-arcana", label: "Birth Arcana" },
+    { href: "/tarot/cards", label: "All Cards" },
     { href: "/matrix", label: "Matrix" },
     { href: `/horoscopes/chinese/${sign.key}`, label: sign.name, active: true },
   ];
