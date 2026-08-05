@@ -529,6 +529,15 @@ export default function Home() {
           <Link href="/lab/tabs" className="transition hover:text-amber-200">
             Tab Instruments
           </Link>
+          <Link href="/matrix/v2" className="transition hover:text-amber-200">
+            Matrix v2
+          </Link>
+          <Link href="/matrix/v3" className="transition hover:text-amber-200">
+            Matrix v3
+          </Link>
+          <Link href="/matrix/v4" className="transition hover:text-amber-200">
+            Matrix v4
+          </Link>
           <Link href="/lab/matrix" className="transition hover:text-amber-200">
             Matrix Lab
           </Link>
