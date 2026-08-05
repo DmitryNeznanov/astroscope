@@ -363,6 +363,7 @@ export default function Home() {
                   ["/tarot/spreads/love-three-card", "Love Three-Card"],
                   ["/tarot/birth-arcana", "Birth Arcana"],
                   ["/matrix", "Destiny Matrix"],
+                  ["/horoscopes/chinese/tiger", "Tiger Horoscope"],
                   ["/tarot/cards", "Cards cabinet"],
                 ].map(([href, label]) => (
                   <li key={href}>
@@ -516,6 +517,12 @@ export default function Home() {
             className="transition hover:text-amber-200"
           >
             Destiny Matrix
+          </Link>
+          <Link
+            href="/horoscopes/chinese/tiger"
+            className="transition hover:text-amber-200"
+          >
+            Tiger Horoscope
           </Link>
           <Link href="/gallery/orrery" className="transition hover:text-amber-200">
             Decks
