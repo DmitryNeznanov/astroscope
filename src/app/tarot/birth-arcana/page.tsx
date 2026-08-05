@@ -125,6 +125,7 @@ const TAROT_TABS = [
   { href: "/tarot/spreads/love-three-card", label: "Love Three-Card" },
   { href: "/tarot/birth-arcana", label: "Birth Arcana", active: true },
   { href: "/tarot/cards", label: "All Cards" },
+  { href: "/tarot/destiny-matrix", label: "Matrix" },
 ];
 
 const STEPS = [

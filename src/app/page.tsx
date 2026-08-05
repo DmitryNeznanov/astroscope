@@ -362,6 +362,7 @@ export default function Home() {
                   ["/tarot/spreads/past-present-future", "Past · Present · Future"],
                   ["/tarot/spreads/love-three-card", "Love Three-Card"],
                   ["/tarot/birth-arcana", "Birth Arcana"],
+                  ["/tarot/destiny-matrix", "Destiny Matrix"],
                   ["/tarot/cards", "Cards cabinet"],
                 ].map(([href, label]) => (
                   <li key={href}>
