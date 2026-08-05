@@ -522,6 +522,9 @@ export default function Home() {
           <Link href="/lab/tabs" className="transition hover:text-amber-200">
             Tab Instruments
           </Link>
+          <Link href="/lab/matrix" className="transition hover:text-amber-200">
+            Matrix Lab
+          </Link>
           <Link
             href="/reference/card-lab"
             className="transition hover:text-amber-200"

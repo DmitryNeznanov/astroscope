@@ -92,6 +92,28 @@ export default function MatrixLab() {
             );
           })}
         </div>
+
+        <p className="mt-16 text-center text-xs text-neutral-600">
+          Related:{" "}
+          {[
+            ["/lab/tabs", "Tab Instruments"],
+            ["/lab/aurum", "Aurum"],
+            ["/lab/codex", "Codex"],
+            ["/lab/selene", "Selene"],
+            ["/lab/forge", "Forge"],
+            ["/", "Index"],
+          ].map(([href, label], i) => (
+            <span key={href}>
+              {i > 0 && " · "}
+              <Link
+                href={href}
+                className="underline underline-offset-4 transition hover:text-neutral-300"
+              >
+                {label}
+              </Link>
+            </span>
+          ))}
+        </p>
       </div>
     </main>
   );
