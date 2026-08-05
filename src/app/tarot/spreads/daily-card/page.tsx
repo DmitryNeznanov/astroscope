@@ -141,6 +141,7 @@ const NAV: { label: string; href: string; active?: boolean }[] = [
   { label: "BIRTH ARCANA", href: "/tarot/birth-arcana" },
   { label: "ALL CARDS", href: "/tarot/cards" },
   { label: "MATRIX", href: "/matrix" },
+  { label: "HOROSCOPE", href: "/horoscopes/chinese" },
 ];
 
 // tab "dirt": slight rotations so the nav refuses to sit straight

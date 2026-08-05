@@ -76,6 +76,7 @@ const TAROT_TABS = [
   { href: "/tarot/birth-arcana", label: "Birth Arcana" },
   { href: "/tarot/cards", label: "Cards" },
   { href: "/matrix", label: "Matrix", active: true },
+  { href: "/horoscopes/chinese", label: "Horoscope" },
 ];
 
 interface ChakraRow {

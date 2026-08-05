@@ -83,6 +83,7 @@ const TABS = [
   { label: "Birth Arcana", href: "/tarot/birth-arcana" },
   { label: "All Cards", href: "/tarot/cards" },
   { label: "Matrix", href: "/matrix" },
+  { label: "Horoscope", href: "/horoscopes/chinese" },
 ];
 
 type CardKind = "moon" | "star" | "lantern" | "wheel" | "sun" | "veil" | "fool" | "threshold";

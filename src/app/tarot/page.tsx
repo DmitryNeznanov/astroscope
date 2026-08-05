@@ -134,6 +134,7 @@ const NAV = [
   { href: "/tarot/birth-arcana", label: "Birth Arcana", idx: "05", active: false },
   { href: "/tarot/cards", label: "Cards", idx: "06", active: false },
   { href: "/matrix", label: "Matrix", idx: "07", active: false },
+  { href: "/horoscopes/chinese", label: "Horoscope", idx: "08", active: false },
 ];
 
 const SUITS = [

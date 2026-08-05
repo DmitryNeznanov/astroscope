@@ -52,6 +52,7 @@ const TAROT_TABS = [
   { href: "/tarot/birth-arcana", label: "Birth Arcana" },
   { href: "/tarot/cards", label: "All Cards" },
   { href: "/matrix", label: "Matrix" },
+  { href: "/horoscopes/chinese", label: "Horoscope" },
 ];
 const ACTIVE_TAB = "/tarot/spreads/yes-no";
 

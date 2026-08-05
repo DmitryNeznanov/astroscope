@@ -1,23 +1,26 @@
 "use client";
 
-// HOROSCOPES / CHINESE / TIGER — the Tiger sign page. Tool-page structure:
-// compact header + cross-nav tabs, the period instrument at the top of the
-// viewport, condensed sign dossier below. Broken layout + magic background,
-// production palette (bg rgb(10,9,18), gold/violet accents).
+// HOROSCOPES / CHINESE / [sign] — client body of the dynamic sign page.
+// Renders any of the 12 Chinese zodiac signs from the shared dataset.
+// Tool-page structure: compact header + cross-nav tabs, the period
+// instrument at the top of the viewport, condensed sign dossier below.
+// Broken layout + magic background, production palette (bg rgb(10,9,18),
+// gold/violet accents).
 // Instruments: an ORBIT DIAL drives the period selector (Today … 2026) with
 // a pivoting needle and a reading plate; a CELESTIAL RING holds the 12
-// animals of the cycle with the Tiger pinned at the zenith.
+// animals of the cycle with the current sign pinned at the zenith.
 // Self-contained: inline SVG + Tailwind + one scoped <style> block (ltg-
-// prefixed). No emojis — the Tiger mark is a drawn SVG paw sigil. All motion
-// is CSS-only and guarded by prefers-reduced-motion.
+// prefixed). No emojis — marks are drawn SVG sigils. All motion is CSS-only
+// and guarded by prefers-reduced-motion.
 
 import { useState } from "react";
 import Link from "next/link";
+import { CHINESE_ZODIAC_SIGNS } from "@/lib/chinese-zodiac";
+import type { ChineseZodiacSign } from "@/lib/chinese-zodiac";
 
 /* ------------------------------------------------------------------ */
 /* Production palette (from lab/remix-v2)                              */
 /* ------------------------------------------------------------------ */
-const BG = "#0a0912"; // rgb(10,9,18)
 const GOLD = "#f3c77a";
 const GOLD_DEEP = "#c9a227";
 const CREAM = "#ffdd9c";
@@ -61,93 +64,34 @@ const STARS = (() => {
 })();
 
 /* ------------------------------------------------------------------ */
-/* Data                                                                */
+/* Data helpers                                                        */
 /* ------------------------------------------------------------------ */
+
+const ROMAN12 = ["I", "II", "III", "IV", "V", "VI", "VII", "VIII", "IX", "X", "XI", "XII"] as const;
+const ROMAN5 = ["I", "II", "III", "IV", "V"] as const;
+
+const signIndex = (key: string) => CHINESE_ZODIAC_SIGNS.findIndex((s) => s.key === key);
+const signName = (key: string) => CHINESE_ZODIAC_SIGNS.find((s) => s.key === key)?.name ?? key;
 
 const PERIODS = ["Today", "Tomorrow", "Weekly", "Monthly", "2026"] as const;
 type Period = (typeof PERIODS)[number];
 
-const READINGS: Record<Period, string> = {
-  Today:
-    "The Tiger moves first today — speak before the room settles, and the room follows.",
-  Tomorrow:
-    "A rival's hesitation is your opening; strike cleanly and do not look back.",
-  Weekly:
-    "Midweek rewards the bold ask — name the number, hold the silence after it.",
-  Monthly:
-    "A long pursuit turns in your favor; spend the month consolidating, not chasing.",
-  "2026":
-    "The Year of the Horse feeds your fire: lead one campaign well instead of five badly.",
-};
+// per-period sample readings, re-engraved with the sign's name
+function readingsFor(name: string): Record<Period, string> {
+  return {
+    Today: `The ${name} moves first today — speak before the room settles, and the room follows.`,
+    Tomorrow: `A quiet door opens for the ${name} tomorrow; walk through before it is announced.`,
+    Weekly: `Midweek rewards the bold ask — the ${name} who names the number holds the silence after it.`,
+    Monthly: `A long pursuit turns in the ${name}'s favor; spend the month consolidating, not chasing.`,
+    "2026": `The year feeds the ${name}'s fire: lead one campaign well instead of five badly.`,
+  };
+}
 
-const ANIMALS = [
-  "Rat",
-  "Ox",
-  "Tiger",
-  "Rabbit",
-  "Dragon",
-  "Snake",
-  "Horse",
-  "Goat",
-  "Monkey",
-  "Rooster",
-  "Dog",
-  "Pig",
-] as const;
-
-const YEARS = [1926, 1938, 1950, 1962, 1974, 1986, 1998, 2010, 2022, 2034];
-
-const TRAITS = ["Brave", "Competitive", "Confident", "Charismatic", "Independent"];
-
-const LUCKY = [
-  { label: "Numeri", value: "1 · 3 · 4" },
-  { label: "Colores", value: "Orange · Gray · Blue" },
-  { label: "Directiones", value: "East · South" },
-];
-
-const STRENGTHS = [
-  "Natural leadership and charisma",
-  "Courage and bravery in challenges",
-  "Strong competitive spirit",
-  "Independent and self-reliant",
-  "Passionate and energetic nature",
-];
-
-const GROWTH = [
-  "Can be impulsive and reckless",
-  "Sometimes too aggressive",
-  "May lack patience",
-  "Can be overly competitive",
-  "Difficulty with authority",
-];
-
-const COMPATIBILITY = [
-  { tier: "Excellent", animals: ["Horse", "Dog"], tone: "gold" as const },
-  {
-    tier: "Good",
-    animals: ["Rat", "Ox", "Rabbit", "Dragon", "Snake", "Goat", "Rooster", "Pig"],
-    tone: "violet" as const,
-  },
-  { tier: "Challenging", animals: ["Monkey"], tone: "dim" as const },
-];
-
-const FAMOUS = [
-  { name: "Queen Elizabeth II", year: 1926 },
-  { name: "Marilyn Monroe", year: 1926 },
-  { name: "Leonardo DiCaprio", year: 1974 },
-  { name: "Lady Gaga", year: 1986 },
-  { name: "Tom Hardy", year: 1977 },
-  { name: "Emma Stone", year: 1988 },
-];
-
-const NAV_TABS = [
-  { href: "/tarot", label: "Tarot Hub" },
-  { href: "/tarot/spreads/daily-card", label: "Daily Card" },
-  { href: "/tarot/spreads/yes-no", label: "Yes / No" },
-  { href: "/tarot/birth-arcana", label: "Birth Arcana" },
-  { href: "/matrix", label: "Matrix" },
-  { href: "/horoscopes/chinese/tiger", label: "Tiger", active: true },
-];
+// "Queen Elizabeth II (1926)" → { name, year }
+function parseCelebrity(raw: string): { name: string; year: string } {
+  const m = raw.match(/^(.*)\s\((\d+)\)$/);
+  return m ? { name: m[1], year: m[2] } : { name: raw, year: "" };
+}
 
 /* ------------------------------------------------------------------ */
 /* Scoped styles (ltg- prefix)                                         */
@@ -175,13 +119,6 @@ const LTG_STYLES = `
     background: rgba(10,9,18,0.88); padding: 4px 10px; font-size: 9.5px;
     letter-spacing: 0.2em; text-transform: uppercase; color: #f3c77a;
   }
-  .ltg-gold-link {
-    color: #f3c77a; text-decoration: none;
-    background-image: linear-gradient(#f3c77a, #f3c77a);
-    background-size: 0% 1px; background-repeat: no-repeat; background-position: 0 100%;
-    transition: background-size 0.35s ease, color 0.2s ease;
-  }
-  .ltg-gold-link:hover { color: #ffdd9c; background-size: 100% 1px; }
 
   /* ---- orbit dial (period selector) ---- */
   .ltg-needle {
@@ -208,14 +145,15 @@ const LTG_STYLES = `
     display: block; border: 1px solid rgba(183,148,246,0.4);
     background: rgba(14,11,26,0.92); padding: 5px 11px;
     font-size: 9.5px; letter-spacing: 0.16em; text-transform: uppercase;
-    color: #b7b1cc; cursor: pointer; white-space: nowrap; text-decoration: none;
+    color: #b7b1cc; white-space: nowrap; text-decoration: none;
     transition: transform 0.8s cubic-bezier(0.3, 1.05, 0.4, 1), border-color 0.25s ease,
       color 0.25s ease, box-shadow 0.3s ease;
   }
-  .ltg-ring-chip:hover { color: #e9e6f2; border-color: rgba(183,148,246,0.8); }
+  a.ltg-ring-chip { cursor: pointer; }
+  a.ltg-ring-chip:hover { color: #e9e6f2; border-color: rgba(183,148,246,0.8); }
   .ltg-ring-on {
     color: #0a0912; background: #f3c77a; border-color: #ffdd9c;
-    box-shadow: 0 0 22px rgba(243,199,122,0.55); cursor: default;
+    box-shadow: 0 0 22px rgba(243,199,122,0.55);
   }
   .ltg-marker {
     color: #f3c77a; font-size: 12px;
@@ -235,6 +173,10 @@ const LTG_STYLES = `
     box-shadow: 0 0 16px rgba(243,199,122,0.18), inset 0 1px 0 rgba(255,221,156,0.08);
   }
 
+  /* ---- compatibility chips ---- */
+  .ltg-compat { transition: border-color 0.25s ease, color 0.25s ease, box-shadow 0.3s ease; }
+  a.ltg-compat:hover { box-shadow: 0 0 14px rgba(243,199,122,0.2); }
+
   /* ---- background motion (slow, guarded below) ---- */
   @keyframes ltg-twinkle { 0%,100% { opacity: 0.1; } 50% { opacity: 0.7; } }
   @keyframes ltg-floatA { 0%,100% { transform: translate(0,0) rotate(-2deg); } 50% { transform: translate(1.4vw,-2vh) rotate(1deg); } }
@@ -250,29 +192,21 @@ const LTG_STYLES = `
     .ltg-twinkle, .ltg-float-a, .ltg-float-b, .ltg-nebula, .ltg-spin-slow {
       animation: none !important;
     }
-    .ltg-needle, .ltg-ring, .ltg-ring-chip, .ltg-year, .ltg-orbit-tab {
+    .ltg-needle, .ltg-ring, .ltg-ring-chip, .ltg-year, .ltg-orbit-tab, .ltg-compat {
       transition: none !important;
     }
   }
 `;
 
 /* ------------------------------------------------------------------ */
-/* Tiger paw sigil — drawn mark, replaces the emoji                    */
+/* Star sigil — drawn mark shared by all 12 signs, replaces the emoji  */
 /* ------------------------------------------------------------------ */
-function PawSigil({ className }: { className?: string }) {
+function StarSigil({ className }: { className?: string }) {
   return (
     <svg viewBox="0 0 24 24" className={className} aria-hidden fill="none">
-      {/* pad */}
-      <path
-        d="M12 13.2c-2.6 0-4.6 2-4.6 4.2 0 1.6 1.2 2.6 2.7 2.6 1 0 1.4-.4 1.9-.4s.9.4 1.9.4c1.5 0 2.7-1 2.7-2.6 0-2.2-2-4.2-4.6-4.2Z"
-        stroke="currentColor"
-        strokeWidth="1.1"
-      />
-      {/* toes */}
-      <ellipse cx="5.6" cy="9.4" rx="1.7" ry="2.3" transform="rotate(-18 5.6 9.4)" stroke="currentColor" strokeWidth="1.1" />
-      <ellipse cx="9.6" cy="6.2" rx="1.7" ry="2.4" transform="rotate(-6 9.6 6.2)" stroke="currentColor" strokeWidth="1.1" />
-      <ellipse cx="14.4" cy="6.2" rx="1.7" ry="2.4" transform="rotate(6 14.4 6.2)" stroke="currentColor" strokeWidth="1.1" />
-      <ellipse cx="18.4" cy="9.4" rx="1.7" ry="2.3" transform="rotate(18 18.4 9.4)" stroke="currentColor" strokeWidth="1.1" />
+      <circle cx="12" cy="12" r="10.2" stroke="currentColor" strokeWidth="0.9" />
+      <path d="M12 3.6 13.9 10.1 20.4 12 13.9 13.9 12 20.4 10.1 13.9 3.6 12 10.1 10.1Z" stroke="currentColor" strokeWidth="1" strokeLinejoin="round" />
+      <circle cx="12" cy="12" r="1.6" fill="currentColor" />
     </svg>
   );
 }
@@ -378,7 +312,15 @@ function Backdrop() {
 /* ------------------------------------------------------------------ */
 /* Header + cross-nav tabs                                             */
 /* ------------------------------------------------------------------ */
-function Header() {
+function Header({ sign }: { sign: ChineseZodiacSign }) {
+  const navTabs = [
+    { href: "/tarot", label: "Tarot Hub" },
+    { href: "/tarot/spreads/daily-card", label: "Daily Card" },
+    { href: "/tarot/spreads/yes-no", label: "Yes / No" },
+    { href: "/tarot/birth-arcana", label: "Birth Arcana" },
+    { href: "/matrix", label: "Matrix" },
+    { href: `/horoscopes/chinese/${sign.key}`, label: sign.name, active: true },
+  ];
   return (
     <header className="relative border-b border-white/[0.07]">
       <div className="mx-auto flex max-w-6xl items-center gap-5 px-5 py-3 md:px-8">
@@ -389,7 +331,7 @@ function Header() {
           <span className="ltg-serif text-[16px] tracking-wide text-[#e9e6f2]">Astro Scope</span>
         </Link>
         <span className="hidden font-mono text-[9px] tracking-[0.3em] text-[#b7b1cc]/50 sm:inline">
-          CHINESE ZODIAC · TIGER
+          CHINESE ZODIAC · {sign.name.toUpperCase()}
         </span>
         <div className="ml-auto flex items-center gap-3">
           <Link
@@ -403,7 +345,7 @@ function Header() {
 
       <nav aria-label="Tools and signs" className="border-t border-white/[0.05]">
         <div className="mx-auto flex max-w-6xl items-stretch gap-1 overflow-x-auto px-4 py-2 md:px-8">
-          {NAV_TABS.map((t, i) =>
+          {navTabs.map((t, i) =>
             t.active ? (
               <span
                 key={t.href}
@@ -438,8 +380,9 @@ const ORBIT_CX = 300;
 const ORBIT_CY = 340;
 const ORBIT_R = 270;
 
-function OrbitDial() {
+function OrbitDial({ sign }: { sign: ChineseZodiacSign }) {
   const [active, setActive] = useState<Period>("Today");
+  const readings = readingsFor(sign.name);
   const idx = PERIODS.indexOf(active);
   const arcStart = fromTop(ORBIT_CX, ORBIT_CY, ORBIT_R, -52);
   const arcEnd = fromTop(ORBIT_CX, ORBIT_CY, ORBIT_R, 52);
@@ -515,10 +458,10 @@ function OrbitDial() {
       </div>
       <div className="ltg-plate relative mt-6 px-5 py-4">
         <span className="ltg-caps block text-[9px] text-[#b7b1cc]/70">
-          Dial position {ORBIT_ANGLES[idx]}° · Tiger reading — {active}
+          Dial position {ORBIT_ANGLES[idx]}° · {sign.name} reading — {active}
         </span>
         <p key={active} className="ltg-serif mt-1.5 text-[15.5px] leading-relaxed text-[#e9e6f2]">
-          {READINGS[active]}
+          {readings[active]}
         </p>
       </div>
     </div>
@@ -526,11 +469,11 @@ function OrbitDial() {
 }
 
 /* ------------------------------------------------------------------ */
-/* Instrument II — celestial ring of the 12 animals, Tiger at zenith   */
+/* Instrument II — celestial ring of the 12 animals, sign at zenith    */
 /* ------------------------------------------------------------------ */
-function CelestialRing() {
-  const activeIdx = ANIMALS.indexOf("Tiger"); // 2
-  const ringRot = -activeIdx * 30; // bring the Tiger to the top marker
+function CelestialRing({ sign }: { sign: ChineseZodiacSign }) {
+  const activeIdx = signIndex(sign.key);
+  const ringRot = -activeIdx * 30; // bring the current sign to the top marker
   const R = 128; // ring radius in px (ring box is 320px)
   return (
     <div className="relative mx-auto h-[320px] w-[320px]">
@@ -559,29 +502,24 @@ function CelestialRing() {
       <span aria-hidden className="ltg-marker absolute left-1/2 top-[-4px] -translate-x-1/2">
         ▼
       </span>
-      {/* the ring of animals, rotated so the Tiger stands at the zenith */}
+      {/* the ring of animals, rotated so the current sign stands at the zenith */}
       <div className="ltg-ring absolute inset-0" style={{ transform: `rotate(${ringRot}deg)` }}>
-        {ANIMALS.map((a, i) => {
-          const on = a === "Tiger";
-          const chip = (
-            <span
-              className={`ltg-ring-chip ${on ? "ltg-ring-on" : ""}`}
-              style={{ transform: `rotate(${(activeIdx - i) * 30}deg)` }}
-            >
-              {a}
-            </span>
-          );
+        {CHINESE_ZODIAC_SIGNS.map((s, i) => {
+          const on = s.key === sign.key;
+          const style = { transform: `rotate(${(activeIdx - i) * 30}deg)` };
           return (
             <div
-              key={a}
+              key={s.key}
               className="absolute left-1/2 top-1/2"
               style={{ transform: `translate(-50%, -50%) rotate(${i * 30}deg) translateY(-${R}px)` }}
             >
               {on ? (
-                <span aria-current="page">{chip}</span>
+                <span aria-current="page" className={`ltg-ring-chip ltg-ring-on`} style={style}>
+                  {s.name}
+                </span>
               ) : (
-                <Link href="#" aria-label={`${a} — sign page not yet open`}>
-                  {chip}
+                <Link href={`/horoscopes/chinese/${s.key}`} className="ltg-ring-chip" style={style}>
+                  {s.name}
                 </Link>
               )}
             </div>
@@ -591,8 +529,10 @@ function CelestialRing() {
       {/* hub readout */}
       <div className="pointer-events-none absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 text-center">
         <span className="ltg-caps block text-[8px] text-[#b7b1cc]/60">cycle</span>
-        <span className="ltg-serif block text-[19px] text-[#ffdd9c]">Tiger</span>
-        <span className="ltg-caps block text-[8px] text-[#b7b1cc]/60">03 / 12</span>
+        <span className="ltg-serif block text-[19px] text-[#ffdd9c]">{sign.name}</span>
+        <span className="ltg-caps block text-[8px] text-[#b7b1cc]/60">
+          {String(activeIdx + 1).padStart(2, "0")} / 12
+        </span>
       </div>
     </div>
   );
@@ -627,16 +567,67 @@ function SectionShell(props: {
 }
 
 /* ------------------------------------------------------------------ */
-/* Page                                                                */
+/* Compatibility tier row                                              */
 /* ------------------------------------------------------------------ */
-export default function TigerPage() {
+function CompatTier({
+  tier,
+  keys,
+  tone,
+}: {
+  tier: string;
+  keys: string[];
+  tone: "gold" | "violet" | "dim";
+}) {
+  return (
+    <div className="border-t border-white/[0.07] pt-3 first:border-t-0 first:pt-0">
+      <span
+        className={`ltg-caps block text-[9px] ${
+          tone === "gold" ? "text-[#f3c77a]" : tone === "violet" ? "text-[#b794f6]" : "text-[#b7b1cc]/60"
+        }`}
+      >
+        {tier}
+      </span>
+      <div className="mt-2 flex flex-wrap gap-1.5">
+        {keys.map((k, i) => (
+          <Link
+            key={k}
+            href={`/horoscopes/chinese/${k}`}
+            className={`ltg-compat border px-2.5 py-1 text-[9.5px] uppercase tracking-[0.16em] ${
+              i % 2 === 0 ? "rotate-[0.3deg]" : "-rotate-[0.3deg]"
+            } ${
+              tone === "gold"
+                ? "border-[#f3c77a]/50 bg-[#f3c77a]/10 text-[#ffdd9c]"
+                : tone === "violet"
+                  ? "border-[#b794f6]/35 text-[#b7b1cc] hover:text-[#e9e6f2]"
+                  : "border-white/[0.12] text-[#b7b1cc]/55 hover:text-[#b7b1cc]"
+            }`}
+          >
+            {signName(k)}
+          </Link>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+/* ------------------------------------------------------------------ */
+/* Page body                                                           */
+/* ------------------------------------------------------------------ */
+export default function SignClient({ sign }: { sign: ChineseZodiacSign }) {
+  const idx = signIndex(sign.key);
+  const polarity = idx % 2 === 0 ? "YANG" : "YIN";
+  const lucky = [
+    { label: "Numeri", value: sign.luckyNumbers.join(" · ") },
+    { label: "Colores", value: sign.luckyColors.join(" · ") },
+    { label: "Directiones", value: sign.luckyDirections.join(" · ") },
+  ];
   return (
     <main className="relative min-h-screen overflow-x-clip bg-[#0a0912] font-sans text-[#e9e6f2] antialiased selection:bg-[#f3c77a]/25">
       <style>{LTG_STYLES}</style>
       <Backdrop />
 
       <div className="relative z-10">
-        <Header />
+        <Header sign={sign} />
 
         {/* ================= HERO + PERIOD INSTRUMENT — top of viewport ==== */}
         <section id="ltg-instrument" className="relative overflow-visible">
@@ -646,31 +637,30 @@ export default function TigerPage() {
             aria-hidden
           />
           <span aria-hidden className="absolute right-5 top-24 hidden rotate-90 font-mono text-[7px] tracking-[0.3em] text-[#b7b1cc]/35 lg:inline">
-            ANNVS TIGRIS · III / XII
+            SIGNVM {ROMAN12[idx]} / XII
           </span>
 
           <div className="mx-auto max-w-6xl px-5 pb-16 pt-10 md:px-8 md:pb-20 md:pt-12">
             <div className="grid items-start gap-10 lg:grid-cols-[minmax(0,1fr)_minmax(0,1fr)] lg:gap-14">
               {/* left: sign identity */}
               <div className="relative z-10">
-                <p className="ltg-chip -rotate-[0.5deg]">Wood Element · Chinese Zodiac</p>
+                <p className="ltg-chip -rotate-[0.5deg]">{sign.element} Element · Chinese Zodiac</p>
                 <h1 className="ltg-serif mt-5 flex items-center gap-4 text-[clamp(38px,5.5vw,64px)] leading-[1.02] tracking-tight text-[#e9e6f2]">
                   <span className="grid h-[0.9em] w-[0.9em] shrink-0 place-items-center border border-[#f3c77a]/40 bg-[#f3c77a]/[0.06] rotate-[0.5deg]">
-                    <PawSigil className="h-[0.55em] w-[0.55em] text-[#f3c77a]" />
+                    <StarSigil className="h-[0.55em] w-[0.55em] text-[#f3c77a]" />
                   </span>
-                  <span>
-                    TIGER <span className="text-[#f3c77a]">虎</span>
+                  <span className="uppercase">
+                    {sign.name.slice(0, -1)}
+                    <span className="text-[#f3c77a]">{sign.name.slice(-1)}</span>
                   </span>
                 </h1>
                 <p className="mt-4 max-w-lg text-[14px] leading-relaxed text-[#b7b1cc]">
-                  The Tiger symbolizes courage, strength, and leadership. People born in the Year of
-                  the Tiger are natural leaders with magnetic personalities. They are brave,
-                  competitive, and independent, often taking on challenges that others might avoid.
+                  {sign.description}
                 </p>
 
                 {/* trait chips, straddling and tilted */}
                 <div className="mt-7 flex max-w-lg flex-wrap gap-2">
-                  {TRAITS.map((t, i) => (
+                  {sign.traits.map((t, i) => (
                     <span
                       key={t}
                       className={`border border-[#f3c77a]/30 bg-[#0a0912]/70 px-3 py-1.5 text-[10px] uppercase tracking-[0.2em] text-[#f3c77a] ${
@@ -684,9 +674,9 @@ export default function TigerPage() {
 
                 {/* micro readout strip */}
                 <div className="mt-7 flex max-w-lg flex-wrap items-center gap-x-6 gap-y-2 font-mono text-[8px] tracking-[0.22em] text-[#b7b1cc]/45">
-                  <span>SIGNVM III · TIGRIS</span>
-                  <span className="text-[#b794f6]">◆ ELEMENTVM · WOOD</span>
-                  <span>POLARITAS · YANG</span>
+                  <span>SIGNVM {ROMAN12[idx]} · {sign.name.toUpperCase()}</span>
+                  <span className="text-[#b794f6]">◆ ELEMENTVM · {sign.element.toUpperCase()}</span>
+                  <span>POLARITAS · {polarity}</span>
                 </div>
               </div>
 
@@ -698,10 +688,10 @@ export default function TigerPage() {
                 <h2 className="ltg-label">Period selector</h2>
                 <p className="mt-2 text-[12.5px] leading-relaxed text-[#b7b1cc]/85">
                   Turn the dial to a period — the needle swings and the reading plate below is
-                  re-engraved for the Tiger.
+                  re-engraved for the {sign.name}.
                 </p>
                 <div className="mt-5">
-                  <OrbitDial />
+                  <OrbitDial sign={sign} />
                 </div>
               </div>
             </div>
@@ -723,19 +713,20 @@ export default function TigerPage() {
         >
           <div className="grid items-center gap-8 lg:grid-cols-[minmax(0,340px)_minmax(0,1fr)]">
             <div className="-rotate-[0.4deg]">
-              <CelestialRing />
+              <CelestialRing sign={sign} />
             </div>
             <div className="lg:pl-6">
               <p className="max-w-xl text-[13px] leading-relaxed text-[#b7b1cc]">
-                Twelve animals hold the cycle in turn; the Tiger stands third, at the zenith of this
-                ring. Its station is lit in gold — the other stations are engraved but not yet open.
+                Twelve animals hold the cycle in turn; the {sign.name} stands{" "}
+                {["first", "second", "third", "fourth", "fifth", "sixth", "seventh", "eighth", "ninth", "tenth", "eleventh", "twelfth"][idx]},
+                at the zenith of this ring. Follow any station to read that sign.
               </p>
 
               {/* years of birth, small plates */}
               <div className="mt-7">
-                <span className="ltg-caps block text-[9px] text-[#b7b1cc]/70">Years of the Tiger</span>
+                <span className="ltg-caps block text-[9px] text-[#b7b1cc]/70">Years of the {sign.name}</span>
                 <div className="mt-3 grid max-w-xl grid-cols-5 gap-2">
-                  {YEARS.map((y, i) => (
+                  {sign.years.map((y, i) => (
                     <span key={y} className={`ltg-year ${i % 2 === 0 ? "-rotate-[0.5deg]" : "rotate-[0.4deg]"}`}>
                       {y}
                     </span>
@@ -745,7 +736,7 @@ export default function TigerPage() {
 
               {/* lucky elements register */}
               <div className="mt-7 grid max-w-xl gap-2 sm:grid-cols-3">
-                {LUCKY.map((l, i) => (
+                {lucky.map((l, i) => (
                   <div
                     key={l.label}
                     className={`border border-white/[0.08] bg-[#0a0912]/50 px-3 py-2.5 font-mono ${
@@ -774,10 +765,10 @@ export default function TigerPage() {
                 <span className="ltg-chip absolute -top-3 left-6 !text-[9px]">Vires</span>
                 <h2 className="ltg-serif text-[clamp(20px,2.6vw,28px)] text-[#e9e6f2]">Strengths</h2>
                 <ol className="mt-4 space-y-3">
-                  {STRENGTHS.map((s, i) => (
+                  {sign.strengths.map((s, i) => (
                     <li key={s} className="flex items-baseline gap-4">
                       <span className="ltg-serif shrink-0 text-[18px] leading-none text-[#f3c77a]">
-                        {["I", "II", "III", "IV", "V"][i]}
+                        {ROMAN5[i]}
                       </span>
                       <p className="text-[12.5px] leading-relaxed text-[#b7b1cc]">{s}</p>
                     </li>
@@ -794,10 +785,10 @@ export default function TigerPage() {
                   Areas for growth
                 </h2>
                 <ol className="mt-4 space-y-3">
-                  {GROWTH.map((s, i) => (
+                  {sign.weaknesses.map((s, i) => (
                     <li key={s} className="flex items-baseline gap-4">
                       <span className="ltg-serif shrink-0 text-[18px] leading-none text-[#b794f6]">
-                        {["I", "II", "III", "IV", "V"][i]}
+                        {ROMAN5[i]}
                       </span>
                       <p className="text-[12.5px] leading-relaxed text-[#b7b1cc]">{s}</p>
                     </li>
@@ -808,7 +799,7 @@ export default function TigerPage() {
           </div>
         </section>
 
-        {/* ================= COMPATIBILITY + FAMOUS TIGERS ================= */}
+        {/* ================= COMPATIBILITY + FAMOUS ======================= */}
         <section className="relative pb-14">
           <div className="mx-auto max-w-6xl px-5 md:px-8">
             <div className="grid gap-5 lg:grid-cols-[minmax(0,1.2fr)_minmax(0,1fr)] lg:gap-8">
@@ -819,65 +810,38 @@ export default function TigerPage() {
                   Compatibility
                 </h2>
                 <div className="mt-5 space-y-4">
-                  {COMPATIBILITY.map((c) => (
-                    <div key={c.tier} className="border-t border-white/[0.07] pt-3 first:border-t-0 first:pt-0">
-                      <span
-                        className={`ltg-caps block text-[9px] ${
-                          c.tone === "gold"
-                            ? "text-[#f3c77a]"
-                            : c.tone === "violet"
-                              ? "text-[#b794f6]"
-                              : "text-[#b7b1cc]/60"
-                        }`}
-                      >
-                        {c.tier}
-                      </span>
-                      <div className="mt-2 flex flex-wrap gap-1.5">
-                        {c.animals.map((a, i) => (
-                          <span
-                            key={a}
-                            className={`border px-2.5 py-1 text-[9.5px] uppercase tracking-[0.16em] ${
-                              i % 2 === 0 ? "rotate-[0.3deg]" : "-rotate-[0.3deg]"
-                            } ${
-                              c.tone === "gold"
-                                ? "border-[#f3c77a]/50 bg-[#f3c77a]/10 text-[#ffdd9c]"
-                                : c.tone === "violet"
-                                  ? "border-[#b794f6]/35 text-[#b7b1cc]"
-                                  : "border-white/[0.12] text-[#b7b1cc]/55"
-                            }`}
-                          >
-                            {a}
-                          </span>
-                        ))}
-                      </div>
-                    </div>
-                  ))}
+                  <CompatTier tier="Excellent" keys={sign.compatibility.best} tone="gold" />
+                  <CompatTier tier="Good" keys={sign.compatibility.good} tone="violet" />
+                  <CompatTier tier="Challenging" keys={sign.compatibility.bad} tone="dim" />
                 </div>
               </div>
 
-              {/* famous tigers — counter-tilted, overlapping */}
+              {/* famous of the sign — counter-tilted, overlapping */}
               <div className="ltg-panel relative -rotate-[0.5deg] px-6 py-7 lg:-ml-6 lg:mt-10">
-                <span className="ltg-chip absolute -top-3 right-6 !text-[9px]">Tigres Illustres</span>
+                <span className="ltg-chip absolute -top-3 right-6 !text-[9px]">Illustres</span>
                 <h2 className="ltg-serif text-[clamp(20px,2.6vw,28px)] text-[#e9e6f2]">
-                  Famous Tigers
+                  Famous {sign.name}s
                 </h2>
                 <ul className="mt-5 space-y-0">
-                  {FAMOUS.map((f, i) => (
-                    <li
-                      key={f.name}
-                      className={`flex items-baseline justify-between gap-4 border-t border-white/[0.06] py-2.5 first:border-t-0 ${
-                        i % 2 === 0 ? "-rotate-[0.2deg]" : "rotate-[0.2deg]"
-                      }`}
-                    >
-                      <span className="text-[13px] text-[#e9e6f2]">{f.name}</span>
-                      <span className="font-mono text-[10px] tracking-[0.18em] text-[#f3c77a]/80">
-                        {f.year}
-                      </span>
-                    </li>
-                  ))}
+                  {sign.celebrities.map((raw, i) => {
+                    const c = parseCelebrity(raw);
+                    return (
+                      <li
+                        key={raw}
+                        className={`flex items-baseline justify-between gap-4 border-t border-white/[0.06] py-2.5 first:border-t-0 ${
+                          i % 2 === 0 ? "-rotate-[0.2deg]" : "rotate-[0.2deg]"
+                        }`}
+                      >
+                        <span className="text-[13px] text-[#e9e6f2]">{c.name}</span>
+                        <span className="font-mono text-[10px] tracking-[0.18em] text-[#f3c77a]/80">
+                          {c.year}
+                        </span>
+                      </li>
+                    );
+                  })}
                 </ul>
                 <p className="mt-4 font-mono text-[7px] tracking-[0.24em] text-[#b7b1cc]/45">
-                  CENSVS · ANNI TIGRIS VERIFICATI
+                  CENSVS · ANNI VERIFICATI
                 </p>
               </div>
             </div>
@@ -894,11 +858,11 @@ export default function TigerPage() {
           <div className="mx-auto flex max-w-6xl flex-col items-center gap-4 px-5 py-8 md:flex-row md:justify-between md:px-8">
             <div className="flex items-center gap-2.5">
               <span className="grid h-6 w-6 place-items-center border border-[#f3c77a]/40 bg-[#f3c77a]/[0.07]">
-                <PawSigil className="h-3.5 w-3.5 text-[#f3c77a]" />
+                <StarSigil className="h-3.5 w-3.5 text-[#f3c77a]" />
               </span>
               <span className="ltg-serif text-[14px] text-[#e9e6f2]">Astro Scope</span>
               <span className="font-mono text-[7px] tracking-[0.26em] text-[#b7b1cc]/45">
-                CHINESE ZODIAC · TIGER
+                CHINESE ZODIAC · {sign.name.toUpperCase()}
               </span>
             </div>
             <nav className="flex flex-wrap justify-center gap-x-5 gap-y-1 font-mono text-[8px] uppercase tracking-[0.2em] text-[#b7b1cc]/60">

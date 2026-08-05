@@ -112,6 +112,7 @@ const TAROT_NAV = [
   { label: "Birth Arcana", href: "/tarot/birth-arcana", active: false },
   { label: "All Cards", href: "/tarot/cards", active: false },
   { label: "Matrix", href: "/matrix", active: false },
+  { label: "Horoscope", href: "/horoscopes/chinese", active: false },
 ];
 
 interface LoveCard {
