@@ -511,6 +511,12 @@ export default function Home() {
           <Link href="/tarot" className="transition hover:text-amber-200">
             Tarot
           </Link>
+          <Link
+            href="/tarot/destiny-matrix"
+            className="transition hover:text-amber-200"
+          >
+            Destiny Matrix
+          </Link>
           <Link href="/gallery/orrery" className="transition hover:text-amber-200">
             Decks
           </Link>
