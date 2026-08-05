@@ -362,6 +362,8 @@ export default function Home() {
                   ["/tarot/spreads/past-present-future", "Past · Present · Future"],
                   ["/tarot/spreads/love-three-card", "Love Three-Card"],
                   ["/tarot/birth-arcana", "Birth Arcana"],
+                  ["/matrix", "Destiny Matrix"],
+                  ["/horoscopes/chinese", "Horoscope"],
                   ["/tarot/cards", "Cards cabinet"],
                 ].map(([href, label]) => (
                   <li key={href}>
@@ -441,6 +443,8 @@ export default function Home() {
                   ["living-cosmos", "Living Cosmos"],
                   ["laboratorium", "Laboratorium"],
                   ["silver-depths", "Silver Depths"],
+                  ["tabs", "Tab Instruments"],
+                  ["matrix", "Matrix Lab"],
                 ].map(([slug, label]) => (
                   <li key={slug}>
                     <Link
@@ -503,9 +507,54 @@ export default function Home() {
           </div>
         </nav>
 
-        <p className="mt-14 text-center text-xs text-neutral-600">
-          Astro Scope — design explorations for the Birth Arcana Calculator.
-        </p>
+        <footer className="mt-14 flex flex-wrap items-center justify-center gap-x-5 gap-y-2 border-t border-neutral-800 pt-6 text-xs text-neutral-500">
+          <span>Astro Scope — design explorations</span>
+          <Link href="/tarot" className="transition hover:text-amber-200">
+            Tarot
+          </Link>
+          <Link
+            href="/matrix"
+            className="transition hover:text-amber-200"
+          >
+            Destiny Matrix
+          </Link>
+          <Link
+            href="/horoscopes/chinese"
+            className="transition hover:text-amber-200"
+          >
+            Horoscope
+          </Link>
+          <Link href="/gallery/orrery" className="transition hover:text-amber-200">
+            Decks
+          </Link>
+          <Link href="/landing/orrery" className="transition hover:text-amber-200">
+            Landings
+          </Link>
+          <Link href="/lab/aurum" className="transition hover:text-amber-200">
+            Lab
+          </Link>
+          <Link href="/lab/tabs" className="transition hover:text-amber-200">
+            Tab Instruments
+          </Link>
+          <Link href="/matrix/v2" className="transition hover:text-amber-200">
+            Matrix v2
+          </Link>
+          <Link href="/matrix/v3" className="transition hover:text-amber-200">
+            Matrix v3
+          </Link>
+          <Link href="/matrix/v4" className="transition hover:text-amber-200">
+            Matrix v4
+          </Link>
+          <Link href="/lab/matrix" className="transition hover:text-amber-200">
+            Matrix Lab
+          </Link>
+          <Link
+            href="/reference/card-lab"
+            className="transition hover:text-amber-200"
+          >
+            Archive
+          </Link>
+        </footer>
       </div>
     </main>
   );

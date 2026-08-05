@@ -49,6 +49,8 @@ const NAV: { href: string; label: string; active?: boolean }[] = [
   { href: "/tarot/spreads/love-three-card", label: "LOVE ×3" },
   { href: "/tarot/birth-arcana", label: "BIRTH ARCANA" },
   { href: "/tarot/cards", label: "CARDS", active: true },
+  { href: "/matrix", label: "MATRIX" },
+  { href: "/horoscopes/chinese", label: "HOROSCOPE" },
 ];
 
 const TAB_DIRT = [
