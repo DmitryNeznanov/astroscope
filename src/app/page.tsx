@@ -362,7 +362,7 @@ export default function Home() {
                   ["/tarot/spreads/past-present-future", "Past · Present · Future"],
                   ["/tarot/spreads/love-three-card", "Love Three-Card"],
                   ["/tarot/birth-arcana", "Birth Arcana"],
-                  ["/tarot/destiny-matrix", "Destiny Matrix"],
+                  ["/matrix", "Destiny Matrix"],
                   ["/tarot/cards", "Cards cabinet"],
                 ].map(([href, label]) => (
                   <li key={href}>
@@ -512,7 +512,7 @@ export default function Home() {
             Tarot
           </Link>
           <Link
-            href="/tarot/destiny-matrix"
+            href="/matrix"
             className="transition hover:text-amber-200"
           >
             Destiny Matrix

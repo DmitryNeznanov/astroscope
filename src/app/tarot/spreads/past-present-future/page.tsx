@@ -82,7 +82,7 @@ const TABS = [
   { label: "Love — Three Card", href: "/tarot/spreads/love-three-card" },
   { label: "Birth Arcana", href: "/tarot/birth-arcana" },
   { label: "All Cards", href: "/tarot/cards" },
-  { label: "Matrix", href: "/tarot/destiny-matrix" },
+  { label: "Matrix", href: "/matrix" },
 ];
 
 type CardKind = "moon" | "star" | "lantern" | "wheel" | "sun" | "veil" | "fool" | "threshold";

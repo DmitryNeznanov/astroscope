@@ -111,7 +111,7 @@ const TAROT_NAV = [
   { label: "Love Three-Card", href: "/tarot/spreads/love-three-card", active: true },
   { label: "Birth Arcana", href: "/tarot/birth-arcana", active: false },
   { label: "All Cards", href: "/tarot/cards", active: false },
-  { label: "Matrix", href: "/tarot/destiny-matrix", active: false },
+  { label: "Matrix", href: "/matrix", active: false },
 ];
 
 interface LoveCard {

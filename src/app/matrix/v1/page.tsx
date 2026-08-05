@@ -75,7 +75,7 @@ const TAROT_TABS = [
   { href: "/tarot/spreads/love-three-card", label: "Love" },
   { href: "/tarot/birth-arcana", label: "Birth Arcana" },
   { href: "/tarot/cards", label: "Cards" },
-  { href: "/tarot/destiny-matrix", label: "Matrix", active: true },
+  { href: "/matrix", label: "Matrix", active: true },
 ];
 
 interface ChakraRow {
@@ -340,6 +340,39 @@ function Header() {
                 }`}
               >
                 {t.label}
+              </Link>
+            ),
+          )}
+        </div>
+      </nav>
+
+      {/* variant switcher */}
+      <nav aria-label="Matrix variants" className="border-t border-white/[0.05]">
+        <div className="mx-auto flex max-w-6xl items-center gap-2 overflow-x-auto px-4 py-1.5 md:px-8">
+          <span className="text-[9px] uppercase tracking-[0.22em] text-[#b7b1cc]/50">
+            Variants
+          </span>
+          {[
+            { href: "/matrix/v1", label: "V1", active: true },
+            { href: "/matrix/v2", label: "V2", active: false },
+            { href: "/matrix/v3", label: "V3", active: false },
+            { href: "/matrix/v4", label: "V4", active: false },
+          ].map((v) =>
+            v.active ? (
+              <span
+                key={v.href}
+                aria-current="page"
+                className="ldm-chip shrink-0 !border-[#f3c77a]/70 !bg-[#f3c77a]/15 !text-[#ffdd9c]"
+              >
+                {v.label}
+              </span>
+            ) : (
+              <Link
+                key={v.href}
+                href={v.href}
+                className="shrink-0 border border-transparent px-2.5 py-0.5 text-[10px] uppercase tracking-[0.18em] text-[#b7b1cc]/75 transition-colors hover:border-[#f3c77a]/30 hover:text-[#f3c77a]"
+              >
+                {v.label}
               </Link>
             ),
           )}
